@@ -1,0 +1,68 @@
+{
+  "name": "wl-draw",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --fix",
+    "lint:style": "stylelint \"**/*.{css,vue,scss}\" --fix",
+    "format": "prettier --write \"**/*.{js,ts,vue,css,scss,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,vue,css,scss,json,md}\"",
+    "prepare": "husky",
+    "preinstall": "npx only-allow pnpm"
+  },
+  "lint-staged": {
+    "*.{js,ts,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,scss}": [
+      "stylelint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "npm": "Use pnpm instead",
+    "yarn": "Use pnpm instead",
+    "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.6.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.8.1",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.5.1",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
+    "only-allow": "^1.2.1",
+    "prettier": "^3.6.2",
+    "prettier-plugin-vue": "^1.1.6",
+    "stylelint": "^16.25.0",
+    "stylelint-config-prettier": "^9.0.5",
+    "stylelint-config-standard": "^39.0.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.3",
+    "vite": "npm:rolldown-vite@7.1.14",
+    "vue-eslint-parser": "^10.2.0",
+    "vue-tsc": "^3.1.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "npm:rolldown-vite@7.1.14"
+    }
+  }
+}

@@ -11,12 +11,27 @@ const count = ref(0)
   <h1>{{ msg }}</h1>
 
   <div class="card">
-     <button type="button" @click="count++">count is {{ count }}</button>
-    <p> Edit <code>components/HelloWorld.vue</code> to test HMR </p>
+     <n-button type="primary" @click="count++"
+      > <i-mdi:counter class="mr-1" /> count is {{ count }} </n-button
+    >
+    <p class="mt-4">
+       <i-lucide:edit class="inline-block mr-1" /> Edit <code>components/HelloWorld.vue</code> to
+      test HMR
+    </p>
+     <!-- 图标示例 -->
+    <div class="mt-4 flex gap-4 items-center">
+       <span class="flex items-center gap-1"
+        > <i-heroicons:hand-raised-solid class="text-blue-500" /> <span>平移工具</span> </span
+      > <span class="flex items-center gap-1"
+        > <i-material-symbols:square-outline class="text-green-500" /> <span>矩形工具</span> </span
+      > <span class="flex items-center gap-1"
+        > <i-lucide:circle class="text-purple-500" /> <span>圆形工具</span> </span
+      >
+    </div>
 
   </div>
 
-  <p>
+  <p class="text-red-500">
      Check out <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank"
       >create-vue</a
     >, the official Vue + Vite starter

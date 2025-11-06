@@ -1,2 +1,16 @@
-pnpm exec commitlint --edit "$1"
+#!/usr/bin/env sh
+# Add common pnpm installation paths to PATH
+if [ -n "$APPDATA" ]; then
+  # Windows
+  export PATH="$APPDATA/npm:$APPDATA/pnpm:$PATH"
+elif [ -n "$HOME" ]; then
+  # Unix-like systems
+  export PATH="$HOME/.local/share/pnpm:$HOME/.npm-global/bin:$PATH"
+fi
 
+# Try to use pnpm, fallback to npx if pnpm is not found
+if command -v pnpm >/dev/null 2>&1; then
+  pnpm exec commitlint --edit "$1"
+else
+  npx commitlint --edit "$1"
+fi

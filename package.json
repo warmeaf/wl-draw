@@ -34,6 +34,9 @@
     "pnpm": ">=8.0.0"
   },
   "dependencies": {
+    "@vueuse/core": "^14.0.0",
+    "leafer": "^1.9.12",
+    "leafer-draw": "^1.9.12",
     "naive-ui": "^2.43.1",
     "pinia": "^3.0.4",
     "vue": "^3.5.22"

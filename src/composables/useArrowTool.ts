@@ -5,7 +5,6 @@ import { Line } from 'leafer-ui'
 import type { DragEvent } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
-import { themeColors } from '@/config/theme'
 import type { Point, Tree, LeaferElement } from './types'
 
 export function useArrowTool(
@@ -24,8 +23,8 @@ export function useArrowTool(
 
     const arrowLine = new Line({
       points: [point.x, point.y, point.x, point.y],
-      stroke: store.strokeColor || themeColors.stroke,
-      strokeWidth: store.strokeWidth || 2,
+      stroke: store.strokeColor,
+      strokeWidth: store.strokeWidth,
       endArrow: 'arrow',
       editable: true,
     })

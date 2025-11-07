@@ -7,6 +7,7 @@ import { Editor } from '@leafer-in/editor'
 import '@leafer-in/arrow'
 import { useCanvasStore } from '@/stores/canvas'
 import { useCanvasTools } from '@/composables/useCanvasTools'
+import { themeColors } from '@/config/theme'
 
 const canvasContainer = ref<HTMLElement | null>(null)
 const store = useCanvasStore()
@@ -19,7 +20,7 @@ onMounted(() => {
 
   app = new App({
     view: canvasContainer.value,
-    tree: { fill: '#ffffff' },
+    tree: { fill: themeColors.canvasBackground },
     editor: {},
     sky: {},
   })

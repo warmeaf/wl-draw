@@ -4,7 +4,6 @@
 import { Ellipse } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
-import { themeColors } from '@/config/theme'
 import type { Point, Tree, LeaferElement } from './types'
 
 export function useCircleTool(
@@ -26,9 +25,8 @@ export function useCircleTool(
       y: point.y,
       width: 0,
       height: 0,
-      fill: store.fillColor || themeColors.fill,
-      stroke: store.strokeColor || themeColors.stroke,
-      strokeWidth: store.strokeWidth || 2,
+      fill: store.fillColor,
+      strokeWidth: 0,
       editable: true,
     })
 

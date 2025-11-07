@@ -5,7 +5,6 @@ import { Path } from 'leafer-ui'
 import type { DragEvent } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
-import { themeColors } from '@/config/theme'
 import type { Point, Tree, LeaferElement } from './types'
 
 export function useLineTool(
@@ -24,9 +23,8 @@ export function useLineTool(
 
     const linePath = new Path({
       path: `M ${point.x} ${point.y} L ${point.x} ${point.y}`,
-      stroke: store.strokeColor || themeColors.stroke,
-      strokeWidth: store.strokeWidth || 2,
-      fill: 'none',
+      stroke: store.strokeColor,
+      strokeWidth: store.strokeWidth,
       editable: true,
     })
 

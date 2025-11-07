@@ -5,7 +5,6 @@ import { Pen } from 'leafer-ui'
 import type { DragEvent } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
-import { themeColors } from '@/config/theme'
 import type { Point, Tree, LeaferElement } from './types'
 
 export function usePenTool(
@@ -25,8 +24,8 @@ export function usePenTool(
 
     const pen = new Pen()
     pen.setStyle({
-      stroke: store.strokeColor || themeColors.stroke,
-      strokeWidth: store.strokeWidth || 2,
+      stroke: store.strokeColor,
+      strokeWidth: store.strokeWidth,
       strokeCap: 'round',
       strokeJoin: 'round',
     })

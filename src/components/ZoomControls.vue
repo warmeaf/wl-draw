@@ -22,31 +22,30 @@ function handleZoomReset() {
 </script>
 
 <template>
-
   <div
     class="toolbar-module flex items-center gap-2 px-3 py-2 shadow-lg backdrop-blur-md bg-white/70 border border-gray-200/50 rounded-full"
   >
-     <n-tooltip trigger="hover"
-      > <template #trigger
-        > <n-button quaternary size="medium" circle @click="handleZoomOut"
-          > <template #icon> <i-lucide-zoom-out class="text-xl"></i-lucide-zoom-out> </template>
-          </n-button
-        > </template
-      > 缩小 </n-tooltip
-    > <n-tooltip trigger="hover"
-      > <template #trigger
-        > <n-button quaternary size="medium" @click="handleZoomReset"> {{ zoomPercent }}% </n-button
-        > </template
-      > 点击重置到 100% </n-tooltip
-    > <n-tooltip trigger="hover"
-      > <template #trigger
-        > <n-button quaternary size="medium" circle @click="handleZoomIn"
-          > <template #icon> <i-lucide-zoom-in class="text-xl"></i-lucide-zoom-in> </template>
-          </n-button
-        > </template
-      > 放大 </n-tooltip
-    >
+    <n-tooltip trigger="hover">
+      <template #trigger>
+        <n-button quaternary size="medium" circle @click="handleZoomOut">
+          <template #icon> <i-lucide-zoom-out class="text-xl"></i-lucide-zoom-out> </template>
+        </n-button>
+      </template>
+      缩小
+    </n-tooltip>
+    <n-tooltip trigger="hover">
+      <template #trigger>
+        <n-button quaternary size="medium" @click="handleZoomReset"> {{ zoomPercent }}% </n-button>
+      </template>
+      点击重置到 100%
+    </n-tooltip>
+    <n-tooltip trigger="hover">
+      <template #trigger>
+        <n-button quaternary size="medium" circle @click="handleZoomIn">
+          <template #icon> <i-lucide-zoom-in class="text-xl"></i-lucide-zoom-in> </template>
+        </n-button>
+      </template>
+      放大
+    </n-tooltip>
   </div>
-
 </template>
-

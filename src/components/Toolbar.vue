@@ -7,10 +7,7 @@ import ZoomControls from './ZoomControls.vue'
 </script>
 
 <template>
-
   <div class="toolbar-container fixed top-4 left-1/2 -translate-x-1/2 flex items-center gap-3 z-50">
-     <ToolSelector /> <HistoryControls /> <ZoomControls />
+    <ToolSelector /> <HistoryControls /> <ZoomControls />
   </div>
-
 </template>
-

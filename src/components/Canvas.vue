@@ -184,8 +184,5 @@ function cleanupKeyboardEvents() {
 </script>
 
 <template>
-
   <div ref="canvasContainer" class="w-full h-full relative overflow-hidden bg-white"></div>
-
 </template>
-

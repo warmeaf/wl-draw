@@ -6,6 +6,5 @@
   "useTabs": false,
   "trailingComma": "es5",
   "arrowParens": "always",
-  "endOfLine": "lf",
-  "plugins": ["prettier-plugin-vue"]
+  "endOfLine": "lf"
 }

@@ -3,21 +3,19 @@ zoom functionality. */
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useZoomTool } from '@/composables/useZoomTool'
 
 const store = useCanvasStore()
+const { zoomIn, zoomOut, resetZoom } = useZoomTool()
 
 const zoomPercent = computed(() => Math.round(store.zoom * 100))
 
 function handleZoomIn() {
-  store.updateZoom(0.1)
+  zoomIn(0.1)
 }
 
 function handleZoomOut() {
-  store.updateZoom(-0.1)
-}
-
-function handleZoomReset() {
-  store.setZoom(1)
+  zoomOut(0.1)
 }
 </script>
 
@@ -35,7 +33,7 @@ function handleZoomReset() {
     </n-tooltip>
     <n-tooltip trigger="hover">
       <template #trigger>
-        <n-button quaternary size="medium" style="width: 60px" @click="handleZoomReset">
+        <n-button quaternary size="medium" style="width: 60px" @click="resetZoom">
           {{ zoomPercent }}%
         </n-button>
       </template>

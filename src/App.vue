@@ -1,15 +1,10 @@
 /** * Main application component that sets up the drawing canvas interface. * Manages keyboard
 shortcuts for undo/redo and initializes the application layout. */
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useCanvasStore } from '@/stores/canvas'
-import { useEventListener } from '@vueuse/core'
 import type { GlobalThemeOverrides } from 'naive-ui'
 import { themeColors } from '@/config/theme'
 import Toolbar from '@/components/Toolbar.vue'
 import Canvas from '@/components/Canvas.vue'
-
-const store = useCanvasStore()
 
 const themeOverrides: GlobalThemeOverrides = {
   common: {
@@ -19,25 +14,6 @@ const themeOverrides: GlobalThemeOverrides = {
     primaryColorSuppl: themeColors.primarySuppl,
   },
 }
-
-onMounted(() => {
-  store.saveHistory()
-
-  useEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-      e.preventDefault()
-      if (store.canUndo) {
-        store.undo()
-      }
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
-      e.preventDefault()
-      if (store.canRedo) {
-        store.redo()
-      }
-    }
-  })
-})
 </script>
 
 <template>

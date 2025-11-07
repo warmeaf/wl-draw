@@ -4,7 +4,6 @@
  */
 import { defineStore } from 'pinia'
 import type { App } from 'leafer-ui'
-import type { Editor } from '@leafer-in/editor'
 import { themeColors } from '@/config/theme'
 
 export type ToolType =
@@ -53,7 +52,6 @@ export const useCanvasStore = defineStore('canvas', {
     previousTool: null as ToolType | null,
     isPanningWithSpace: false,
     appInstance: null as App | null,
-    editorInstance: null as Editor | null,
     objects: [] as CanvasObject[],
     selectedObjectId: null as string | null,
     zoom: 1,
@@ -126,10 +124,6 @@ export const useCanvasStore = defineStore('canvas', {
 
     setAppInstance(app: App) {
       this.appInstance = app
-    },
-
-    setEditorInstance(editor: Editor) {
-      this.editorInstance = editor
     },
 
     addObject(object: CanvasObject) {

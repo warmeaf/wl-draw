@@ -5,6 +5,7 @@
 import { defineStore } from 'pinia'
 import type { App } from 'leafer-ui'
 import type { Editor } from '@leafer-in/editor'
+import { themeColors } from '@/config/theme'
 
 export type ToolType =
   | 'select'
@@ -58,12 +59,11 @@ export const useCanvasStore = defineStore('canvas', {
     zoom: 1,
     history: [] as HistoryState[],
     historyIndex: -1,
-    // Style properties
-    fillColor: '#3b82f6',
-    strokeColor: '#1e40af',
+    fillColor: themeColors.fill,
+    strokeColor: themeColors.stroke,
     strokeWidth: 2,
     fontSize: 16,
-    textColor: '#000000',
+    textColor: themeColors.text,
   }),
 
   getters: {

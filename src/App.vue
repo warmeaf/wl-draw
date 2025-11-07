@@ -4,11 +4,21 @@ shortcuts for undo/redo and initializes the application layout. */
 import { onMounted } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useEventListener } from '@vueuse/core'
+import type { GlobalThemeOverrides } from 'naive-ui'
+import { themeColors } from '@/config/theme'
 import Toolbar from '@/components/Toolbar.vue'
 import Canvas from '@/components/Canvas.vue'
-import BottomToolbar from '@/components/BottomToolbar.vue'
 
 const store = useCanvasStore()
+
+const themeOverrides: GlobalThemeOverrides = {
+  common: {
+    primaryColor: themeColors.primary,
+    primaryColorHover: themeColors.primaryHover,
+    primaryColorPressed: themeColors.primaryPressed,
+    primaryColorSuppl: themeColors.primarySuppl,
+  },
+}
 
 onMounted(() => {
   store.saveHistory()
@@ -31,12 +41,12 @@ onMounted(() => {
 </script>
 
 <template>
-   <n-config-provider
+   <n-config-provider :theme-overrides="themeOverrides"
     >
     <div class="w-screen h-screen flex flex-col bg-gray-50">
        <Toolbar />
-      <div class="flex-1 relative overflow-hidden"> <Canvas /> </div>
-       <BottomToolbar />
+      <div class="flex-1 relative overflow-hidden pt-0"> <Canvas /> </div>
+
     </div>
      </n-config-provider
   >

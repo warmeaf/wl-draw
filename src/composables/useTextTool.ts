@@ -3,6 +3,7 @@
  */
 import { Text } from 'leafer-ui'
 import type { useCanvasStore } from '@/stores/canvas'
+import { themeColors } from '@/config/theme'
 import type { Point, Tree } from './types'
 
 export function useTextTool(tree: Tree, store: ReturnType<typeof useCanvasStore>) {
@@ -14,7 +15,7 @@ export function useTextTool(tree: Tree, store: ReturnType<typeof useCanvasStore>
       y: point.y,
       text: '文本',
       fontSize: store.fontSize || 16,
-      fill: store.textColor || '#000000',
+      fill: store.textColor || themeColors.text,
       editable: true,
     })
 

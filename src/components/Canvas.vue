@@ -7,6 +7,8 @@ import { Editor } from '@leafer-in/editor'
 import '@leafer-in/arrow'
 import { useCanvasStore } from '@/stores/canvas'
 import { useCanvasTools } from '@/composables/useCanvasTools'
+import { useDeleteTool } from '@/composables/useDeleteTool'
+import { useSelectTool } from '@/composables/useSelectTool'
 import { themeColors } from '@/config/theme'
 
 const canvasContainer = ref<HTMLElement | null>(null)
@@ -14,6 +16,8 @@ const store = useCanvasStore()
 
 let app: App | null = null
 let editor: Editor | null = null
+let cleanupDeleteTool: (() => void) | null = null
+let cleanupSelectTool: (() => void) | null = null
 
 onMounted(() => {
   if (!canvasContainer.value) return
@@ -35,28 +39,17 @@ onMounted(() => {
   app.editor = editor
   store.setEditorInstance(editor)
 
-  editor.on('select', (event: { list?: unknown[] }) => {
-    const selectedElements = event.list || []
-    if (selectedElements.length > 0) {
-      const selectedElement = selectedElements[0]
-      const obj = store.objects.find((o) => o.element === selectedElement)
-      if (obj) {
-        store.selectObject(obj.id)
-      } else {
-        store.selectObject(null)
-      }
-    } else {
-      store.selectObject(null)
-    }
-  })
-
   useCanvasTools(app, editor, canvasContainer.value)
+  cleanupSelectTool = useSelectTool(editor, store)
+  cleanupDeleteTool = useDeleteTool(app, editor, store)
 
   setupKeyboardEvents()
   updateCursor()
 })
 
 onBeforeUnmount(() => {
+  cleanupSelectTool?.()
+  cleanupDeleteTool?.()
   cleanupKeyboardEvents()
 
   if (editor) {
@@ -77,36 +70,6 @@ watch(
     if (app?.tree?.zoomLayer) {
       app.tree.zoomLayer.scaleX = newZoom
       app.tree.zoomLayer.scaleY = newZoom
-    }
-  }
-)
-
-// Sync store selection to Editor
-watch(
-  () => store.selectedObjectId,
-  (selectedId) => {
-    if (!editor) return
-
-    try {
-      if (selectedId) {
-        const obj = store.objects.find((o) => o.id === selectedId)
-        if (obj?.element) {
-          // Ensure element is editable
-          if (obj.element.editable !== false) {
-            obj.element.editable = true
-          }
-          // Only select if not already selected to avoid infinite loop
-          if (editor.target !== obj.element) {
-            editor.select(obj.element)
-          }
-        }
-      } else {
-        if (editor.target) {
-          editor.select([])
-        }
-      }
-    } catch (error) {
-      console.error('Error syncing selection:', error)
     }
   }
 )

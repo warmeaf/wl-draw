@@ -39,9 +39,9 @@ onMounted(() => {
   app.editor = editor
   store.setEditorInstance(editor)
 
-  useCanvasTools(app, editor, canvasContainer.value)
-  cleanupSelectTool = useSelectTool(editor, store)
-  cleanupDeleteTool = useDeleteTool(app, editor, store)
+  useCanvasTools(app, canvasContainer.value)
+  cleanupSelectTool = useSelectTool(app, store)
+  cleanupDeleteTool = useDeleteTool(app, store)
 
   setupKeyboardEvents()
   updateCursor()

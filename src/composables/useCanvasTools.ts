@@ -5,7 +5,6 @@
 import { ref, watch, onBeforeUnmount, computed } from 'vue'
 import type { App } from 'leafer-ui'
 import { DragEvent, PointerEvent } from 'leafer-ui'
-import type { Editor } from '@leafer-in/editor'
 import { useCanvasStore } from '@/stores/canvas'
 import { useKeyModifier } from '@vueuse/core'
 
@@ -19,7 +18,7 @@ import { useTextTool } from './useTextTool'
 import { useImageTool } from './useImageTool'
 import type { Point, LeaferElement } from './types'
 
-export function useCanvasTools(app: App, _editor: Editor | null, container?: HTMLElement | null) {
+export function useCanvasTools(app: App, container?: HTMLElement | null) {
   const store = useCanvasStore()
   const tree = app.tree
 

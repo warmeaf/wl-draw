@@ -3,11 +3,12 @@
  * Handles synchronization between Editor selection and store state
  */
 import { watch } from 'vue'
-import type { Editor } from '@leafer-in/editor'
+import { type App } from 'leafer-ui'
+// import type { Editor } from '@leafer-in/editor'
 import type { useCanvasStore } from '@/stores/canvas'
 
-export function useSelectTool(editor: Editor | null, store: ReturnType<typeof useCanvasStore>) {
-  if (!editor) return () => {}
+export function useSelectTool(app: App | null, store: ReturnType<typeof useCanvasStore>) {
+  if (!app) return () => {}
 
   const handleEditorSelect = (event: { list?: unknown[] }) => {
     const selectedElements = event.list || []
@@ -24,12 +25,12 @@ export function useSelectTool(editor: Editor | null, store: ReturnType<typeof us
     }
   }
 
-  editor.on('select', handleEditorSelect)
+  app.on('select', handleEditorSelect)
 
   const stopWatch = watch(
     () => store.selectedObjectId,
     (selectedId) => {
-      if (!editor) return
+      if (!app) return
 
       try {
         if (selectedId) {
@@ -38,13 +39,13 @@ export function useSelectTool(editor: Editor | null, store: ReturnType<typeof us
             if (obj.element.editable !== false) {
               obj.element.editable = true
             }
-            if (editor.target !== obj.element) {
-              editor.select(obj.element)
+            if (app.editor.target !== obj.element) {
+              app.editor.select(obj.element)
             }
           }
         } else {
-          if (editor.target) {
-            editor.select([])
+          if (app.editor.target) {
+            app.editor.select([])
           }
         }
       } catch (error) {
@@ -54,7 +55,7 @@ export function useSelectTool(editor: Editor | null, store: ReturnType<typeof us
   )
 
   return () => {
-    editor.off('select', handleEditorSelect)
+    app.off('select', handleEditorSelect)
     stopWatch()
   }
 }

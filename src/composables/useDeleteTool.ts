@@ -3,19 +3,14 @@
  * Handles keyboard events to delete selected objects from the canvas
  */
 import { KeyEvent, type App } from 'leafer-ui'
-import type { Editor } from '@leafer-in/editor'
 import type { useCanvasStore } from '@/stores/canvas'
 
-export function useDeleteTool(
-  app: App | null,
-  editor: Editor | null,
-  store: ReturnType<typeof useCanvasStore>
-) {
-  if (!app || !editor) return () => {}
+export function useDeleteTool(app: App | null, store: ReturnType<typeof useCanvasStore>) {
+  if (!app) return () => {}
 
   const handleKeyDown = (e: { code?: string }) => {
     if (e.code === 'Delete' || e.code === 'Backspace') {
-      const list = editor.list || []
+      const list = app.editor.list || []
 
       list.forEach((item) => {
         const obj = store.objects.find((o) => o.element === item)

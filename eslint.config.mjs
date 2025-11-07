@@ -11,6 +11,9 @@ export default tseslint.config(
   ...pluginVue.configs['flat/recommended'],
   prettierConfig,
   {
+    ignores: ['dist/**', 'node_modules/**'],
+  },
+  {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
     languageOptions: {
       parser: vueParser,

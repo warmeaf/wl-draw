@@ -1,2 +1,5 @@
+/**
+ * Global stylesheet importing Tailwind CSS.
+ */
 /* stylelint-disable-next-line import-notation */
 @import 'tailwindcss';

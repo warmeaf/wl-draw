@@ -1,3 +1,7 @@
+/**
+ * Application entry point.
+ * Initializes Vue app with Pinia state management and mounts to DOM.
+ */
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './style.css'

@@ -1,0 +1,105 @@
+/**
+ * Circle tool composable for drawing circles/ellipses on canvas
+ */
+import { Ellipse } from 'leafer-ui'
+import type { Ref } from 'vue'
+import type { useCanvasStore } from '@/stores/canvas'
+import type { Point, Tree, LeaferElement } from './types'
+
+export function useCircleTool(
+  tree: Tree,
+  store: ReturnType<typeof useCanvasStore>,
+  isDrawing: Ref<boolean>,
+  startPoint: Ref<Point | null>,
+  currentElement: Ref<LeaferElement>,
+  isShiftPressed: Ref<boolean>
+) {
+  function handleMouseDown(point: Point) {
+    if (!tree) return
+
+    isDrawing.value = true
+    startPoint.value = point
+
+    const ellipse = new Ellipse({
+      x: point.x,
+      y: point.y,
+      width: 0,
+      height: 0,
+      fill: store.fillColor || '#3b82f6',
+      stroke: store.strokeColor || '#1e40af',
+      strokeWidth: store.strokeWidth || 2,
+      editable: true,
+    })
+
+    currentElement.value = ellipse
+    tree.add(ellipse)
+  }
+
+  function updateDrawing(bounds: { x: number; y: number; width: number; height: number }) {
+    if (!currentElement.value || !startPoint.value) return
+
+    let width = bounds.width
+    let height = bounds.height
+
+    if (isShiftPressed.value) {
+      const size = Math.max(Math.abs(width), Math.abs(height))
+      width = width < 0 ? -size : size
+      height = height < 0 ? -size : size
+    }
+
+    currentElement.value.set({
+      x: bounds.x,
+      y: bounds.y,
+      width: Math.abs(width),
+      height: Math.abs(height),
+    })
+  }
+
+  function finishDrawing() {
+    if (!currentElement.value || !startPoint.value) return
+
+    const ellipse = currentElement.value
+    if (!(ellipse instanceof Ellipse)) return
+
+    const width = ellipse.width ?? 0
+    const height = ellipse.height ?? 0
+    const x = ellipse.x ?? 0
+    const y = ellipse.y ?? 0
+
+    if (width < 0) {
+      ellipse.x = x + width
+      ellipse.width = Math.abs(width)
+    }
+    if (height < 0) {
+      ellipse.y = y + height
+      ellipse.height = Math.abs(height)
+    }
+
+    const finalWidth = ellipse.width ?? 0
+    const finalHeight = ellipse.height ?? 0
+
+    if (finalWidth < 5 || finalHeight < 5) {
+      tree.remove(ellipse)
+      currentElement.value = null
+      return
+    }
+
+    const id = `circle-${Date.now()}`
+    store.addObject({
+      id,
+      type: 'circle',
+      element: ellipse,
+    })
+
+    ellipse.draggable = true
+    currentElement.value = null
+    store.setTool('select')
+    store.selectObject(id)
+  }
+
+  return {
+    handleMouseDown,
+    updateDrawing,
+    finishDrawing,
+  }
+}

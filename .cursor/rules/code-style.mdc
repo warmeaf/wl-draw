@@ -1,0 +1,86 @@
+---
+alwaysApply: true
+---
+
+# Cursor Rules for wl-draw Project
+
+## Code Style Guidelines for src/ Directory
+
+### 1. File Documentation (Required)
+
+- Every file in the `src/` directory MUST start with a file-level comment block describing what the file does
+- The comment should be concise but clear about the file's purpose and main responsibilities
+- Format: Use JSDoc-style comments for TypeScript/JavaScript files, or appropriate comment syntax for the file type
+
+Example:
+
+```typescript
+/**
+ * Canvas store for managing drawing state, tools, objects, and history.
+ * Provides Pinia store with state management for the drawing application.
+ */
+```
+
+### 2. Avoid Redundant Comments
+
+- DO NOT add inline comments that simply restate what the code does
+- DO NOT add comments for obvious variable names or simple operations
+- Comments should only explain WHY, not WHAT (the code should be self-explanatory)
+- Remove comments like `// 选择工具` when the variable name already conveys the meaning (e.g., `selectTool`)
+
+Bad examples:
+
+```typescript
+// 当前选中的工具
+const currentTool = 'select'
+
+// 初始化 Leafer 画布
+leafer = new Leafer({...})
+```
+
+Good examples:
+
+```typescript
+const currentSelectedTool = 'select'
+
+// Initialize Leafer with white background for drawing canvas
+leafer = new Leafer({...})
+```
+
+### 3. Semantic Naming
+
+- Use descriptive, self-documenting names for variables, functions, and types
+- Names should clearly express intent and purpose
+- Prefer longer, descriptive names over short abbreviations
+- Use consistent naming conventions:
+  - Variables/functions: camelCase
+  - Types/Interfaces: PascalCase
+  - Constants: UPPER_SNAKE_CASE (if truly constant)
+
+Examples:
+
+- ✅ `handleMouseDown`, `currentSelectedObjectId`, `isPanningWithSpace`
+- ❌ `md`, `obj`, `pan`, `tool`
+
+### 4. Comment Guidelines
+
+Only add comments when:
+
+- Explaining complex business logic or algorithms
+- Documenting non-obvious behavior or edge cases
+- Providing context for why a particular approach was chosen
+- Warning about potential issues or gotchas
+- Documenting public APIs or exported functions
+
+### 5. File Structure
+
+- Each file should have a clear, single responsibility
+- File names should be descriptive and match their purpose
+- Group related functionality together
+
+### Summary
+
+- ✅ File-level documentation: REQUIRED
+- ✅ Semantic naming: REQUIRED
+- ❌ Redundant inline comments: AVOID
+- ✅ Comments for complex logic: ALLOWED

@@ -11,12 +11,30 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BottomToolbar: typeof import('./src/components/BottomToolbar.vue')['default']
+    Canvas: typeof import('./src/components/Canvas.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     'IHeroicons:handRaisedSolid': typeof import('~icons/heroicons/hand-raised-solid')['default']
     'ILucide:circle': typeof import('~icons/lucide/circle')['default']
     'ILucide:edit': typeof import('~icons/lucide/edit')['default']
     'IMaterialSymbols:squareOutline': typeof import('~icons/material-symbols/square-outline')['default']
     'IMdi:counter': typeof import('~icons/mdi/counter')['default']
+    IMdiArrowRight: typeof import('~icons/mdi/arrow-right')['default']
+    IMdiCircleOutline: typeof import('~icons/mdi/circle-outline')['default']
+    IMdiCursorPointer: typeof import('~icons/mdi/cursor-pointer')['default']
+    IMdiFormatLetterCase: typeof import('~icons/mdi/format-letter-case')['default']
+    IMdiHandBackRight: typeof import('~icons/mdi/hand-back-right')['default']
+    IMdiImage: typeof import('~icons/mdi/image')['default']
+    IMdiMinus: typeof import('~icons/mdi/minus')['default']
+    IMdiMinusCircleOutline: typeof import('~icons/mdi/minus-circle-outline')['default']
+    IMdiPen: typeof import('~icons/mdi/pen')['default']
+    IMdiPlusCircleOutline: typeof import('~icons/mdi/plus-circle-outline')['default']
+    IMdiRectangleOutline: typeof import('~icons/mdi/rectangle-outline')['default']
+    IMdiRedo: typeof import('~icons/mdi/redo')['default']
+    IMdiUndo: typeof import('~icons/mdi/undo')['default']
     NButton: typeof import('naive-ui')['NButton']
+    NConfigProvider: typeof import('naive-ui')['NConfigProvider']
+    NTooltip: typeof import('naive-ui')['NTooltip']
+    Toolbar: typeof import('./src/components/Toolbar.vue')['default']
   }
 }

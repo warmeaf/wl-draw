@@ -21,13 +21,16 @@ onMounted(() => {
   app = new App({
     view: canvasContainer.value,
     tree: { fill: themeColors.canvasBackground },
-    editor: {},
     sky: {},
   })
 
   store.setAppInstance(app)
 
-  editor = new Editor({ target: app.tree })
+  editor = new Editor({
+    target: app.tree,
+    stroke: themeColors.selectionBox,
+    pointStroke: themeColors.controlPoint,
+  })
   app.sky.add(editor)
   app.editor = editor
   store.setEditorInstance(editor)

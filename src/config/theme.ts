@@ -11,6 +11,8 @@ export const themeColors = {
   stroke: '#4FC3F7',
   text: '#000000',
   canvasBackground: '#F5F5F5',
+  selectionBox: '#FFD243',
+  controlPoint: '#FFD243',
 }
 
 export type ThemeColors = typeof themeColors

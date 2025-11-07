@@ -35,7 +35,9 @@ function handleZoomReset() {
     </n-tooltip>
     <n-tooltip trigger="hover">
       <template #trigger>
-        <n-button quaternary size="medium" @click="handleZoomReset"> {{ zoomPercent }}% </n-button>
+        <n-button quaternary size="medium" style="width: 60px" @click="handleZoomReset">
+          {{ zoomPercent }}%
+        </n-button>
       </template>
       点击重置到 100%
     </n-tooltip>

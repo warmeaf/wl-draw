@@ -139,9 +139,9 @@ export const useCanvasStore = defineStore('canvas', {
       if (index !== -1) {
         const obj = this.objects[index]
         if (obj) {
-          // Remove element from tree
-          if (obj.element && this.appInstance?.tree) {
+          if (obj.element && this.appInstance?.tree && this.appInstance.editor) {
             this.appInstance.tree.remove(obj.element)
+            this.appInstance.editor.cancel()
           }
           this.objects.splice(index, 1)
           if (this.selectedObjectId === id) {

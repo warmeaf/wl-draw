@@ -29,6 +29,9 @@ onMounted(() => {
       pointStroke: themeColors.controlPoint,
     },
     sky: {},
+    move: {
+      holdSpaceKey: true,
+    },
   })
 
   store.setAppInstance(app)

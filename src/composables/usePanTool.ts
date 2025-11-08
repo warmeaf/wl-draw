@@ -1,7 +1,7 @@
 /**
  * Pan tool composable for canvas panning functionality
  */
-import type { DragEvent } from 'leafer-ui'
+import type { MoveEvent } from 'leafer-ui'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Tree } from './types'
 
@@ -9,7 +9,7 @@ export function usePanTool(tree: Tree, _store: ReturnType<typeof useCanvasStore>
   let panStartPoint: { x: number; y: number } | null = null
   let panStartView: { x: number; y: number } | null = null
 
-  function handleDragStart(e: DragEvent) {
+  function handleMoveStart(e: MoveEvent) {
     if (!tree) return
 
     const event =
@@ -31,7 +31,7 @@ export function usePanTool(tree: Tree, _store: ReturnType<typeof useCanvasStore>
     }
   }
 
-  function handleDrag(e: DragEvent) {
+  function handleMove(e: MoveEvent) {
     if (!tree || !panStartPoint || !panStartView) return
 
     const event =
@@ -59,14 +59,14 @@ export function usePanTool(tree: Tree, _store: ReturnType<typeof useCanvasStore>
     }
   }
 
-  function handleDragEnd() {
+  function handleMoveEnd() {
     panStartPoint = null
     panStartView = null
   }
 
   return {
-    handleDragStart,
-    handleDrag,
-    handleDragEnd,
+    handleMoveStart,
+    handleMove,
+    handleMoveEnd,
   }
 }

@@ -4,7 +4,7 @@
  */
 import { ref, watch, onBeforeUnmount, computed } from 'vue'
 import type { App } from 'leafer-ui'
-import { DragEvent, PointerEvent } from 'leafer-ui'
+import { DragEvent, PointerEvent, KeyEvent, MoveEvent } from 'leafer-ui'
 import { useCanvasStore } from '@/stores/canvas'
 import { useKeyModifier } from '@vueuse/core'
 
@@ -151,6 +151,33 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
     }
   }
 
+  const moveStartId = app.on_(MoveEvent.START, (e: MoveEvent) => {
+    const tool = store.currentTool
+
+    if (tool === 'pan') {
+      panTool.handleMoveStart(e)
+      return
+    }
+  })
+
+  const moveMoveId = app.on_(MoveEvent.MOVE, (e: MoveEvent) => {
+    const tool = store.currentTool
+
+    if (tool === 'pan') {
+      panTool.handleMove(e)
+      return
+    }
+  })
+
+  const moveEndId = app.on_(MoveEvent.END, (_e: MoveEvent) => {
+    const tool = store.currentTool
+
+    if (tool === 'pan') {
+      panTool.handleMoveEnd()
+      return
+    }
+  })
+
   const dragStartId = app.on_(DragEvent.START, (e: DragEvent) => {
     const tool = store.currentTool
 
@@ -159,7 +186,6 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
     }
 
     if (tool === 'pan') {
-      panTool.handleDragStart(e)
       return
     }
 
@@ -196,7 +222,6 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
     const tool = store.currentTool
 
     if (tool === 'pan') {
-      panTool.handleDrag(e)
       return
     }
 
@@ -207,11 +232,26 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
     const tool = store.currentTool
 
     if (tool === 'pan') {
-      panTool.handleDragEnd()
       return
     }
 
     handleDragEnd()
+  })
+
+  const tapId = app.on_(PointerEvent.TAP, (e: PointerEvent) => {
+    handleTap(e)
+  })
+
+  const keyDownId = app.on_(KeyEvent.DOWN, (e: KeyboardEvent) => {
+    if (e.code === 'Space') {
+      store.enablePanWithSpace()
+    }
+  })
+
+  const keyUpId = app.on_(KeyEvent.UP, (e: KeyboardEvent) => {
+    if (e.code === 'Space') {
+      store.disablePanWithSpace()
+    }
   })
 
   function handleWheel(e: WheelEvent) {
@@ -234,10 +274,6 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
     }
   }
 
-  const tapId = app.on_(PointerEvent.TAP, (e: PointerEvent) => {
-    handleTap(e)
-  })
-
   const wheelHandler = (e: WheelEvent) => handleWheel(e)
   const viewElement =
     container ||
@@ -249,10 +285,15 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
   }
 
   onBeforeUnmount(() => {
+    app.off_(moveStartId)
+    app.off_(moveMoveId)
+    app.off_(moveEndId)
     app.off_(dragStartId)
     app.off_(dragId)
     app.off_(dragEndId)
     app.off_(tapId)
+    app.off_(keyDownId)
+    app.off_(keyUpId)
     if (viewElement && viewElement instanceof HTMLElement) {
       viewElement.removeEventListener('wheel', wheelHandler)
     }

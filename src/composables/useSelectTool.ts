@@ -4,7 +4,6 @@
  */
 import { watch } from 'vue'
 import { type App } from 'leafer-ui'
-// import type { Editor } from '@leafer-in/editor'
 import type { useCanvasStore } from '@/stores/canvas'
 
 export function useSelectTool(app: App | null, store: ReturnType<typeof useCanvasStore>) {

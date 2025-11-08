@@ -7,6 +7,7 @@ import '@leafer-in/editor'
 import '@leafer-in/viewport'
 import '@leafer-in/view'
 import '@leafer-in/arrow'
+import '@leafer-in/text-editor'
 
 import { useCanvasTools } from '@/composables/useCanvasTools'
 import { useDeleteTool } from '@/composables/useDeleteTool'

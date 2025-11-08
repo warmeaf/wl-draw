@@ -13,11 +13,9 @@ export function useDeleteTool(app: App | null, store: ReturnType<typeof useCanva
       const list = app.editor.list || []
 
       list.forEach((item) => {
-        const obj = store.objects.find((o) => o.element === item)
+        const obj = store.objects.find((o) => o.element.innerId === item.innerId)
         if (obj) {
           store.removeObject(obj.id)
-        } else {
-          item.remove()
         }
       })
     }

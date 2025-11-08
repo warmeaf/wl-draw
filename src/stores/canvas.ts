@@ -74,34 +74,12 @@ export const useCanvasStore = defineStore('canvas', {
   },
 
   actions: {
-    setTool(tool: ToolType, isTemporary = false) {
-      if (!isTemporary) {
-        if (tool === 'pan' && this.isPanningWithSpace) {
-          this.isPanningWithSpace = false
-          this.previousTool = null
-        }
-        if (!this.isPanningWithSpace && tool !== 'pan') {
-          this.previousTool = tool
-        }
-      }
-
+    setTool(tool: ToolType) {
       this.currentTool = tool
 
-      // Clear selection when switching tools (except select)
       if (tool !== 'select') {
         this.selectedObjectId = null
       }
-
-      // Update draggable state based on tool
-      this.objects.forEach((obj) => {
-        if (obj.element) {
-          if (tool === 'pan') {
-            obj.element.draggable = false
-          } else if (tool === 'select') {
-            obj.element.draggable = true
-          }
-        }
-      })
     },
 
     enablePanWithSpace() {
@@ -110,7 +88,7 @@ export const useCanvasStore = defineStore('canvas', {
 
       this.isPanningWithSpace = true
       this.previousTool = this.currentTool
-      this.setTool('pan', true)
+      this.setTool('pan')
     },
 
     disablePanWithSpace() {
@@ -119,7 +97,7 @@ export const useCanvasStore = defineStore('canvas', {
       this.isPanningWithSpace = false
       const toolToRestore = this.previousTool || 'select'
       this.previousTool = null
-      this.setTool(toolToRestore, false)
+      this.setTool(toolToRestore)
     },
 
     setAppInstance(app: App) {

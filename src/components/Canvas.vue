@@ -4,11 +4,15 @@ initialization, Editor integration, and viewport controls */
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { App } from 'leafer-ui'
 import '@leafer-in/editor'
+import '@leafer-in/viewport'
 import '@leafer-in/arrow'
-import { useCanvasStore } from '@/stores/canvas'
+
 import { useCanvasTools } from '@/composables/useCanvasTools'
 import { useDeleteTool } from '@/composables/useDeleteTool'
 import { useSelectTool } from '@/composables/useSelectTool'
+
+import { useCanvasStore } from '@/stores/canvas'
+
 import { themeColors } from '@/config/theme'
 
 const canvasContainer = ref<HTMLElement | null>(null)
@@ -23,20 +27,16 @@ onMounted(() => {
 
   app = new App({
     view: canvasContainer.value,
-    tree: { fill: themeColors.canvasBackground },
     editor: {
       stroke: themeColors.selectionBox,
       pointStroke: themeColors.controlPoint,
     },
-    sky: {},
-    move: {
-      holdSpaceKey: true,
-    },
   })
+  app.tree.fill = themeColors.canvasBackground
 
   store.setAppInstance(app)
 
-  useCanvasTools(app, canvasContainer.value)
+  useCanvasTools(app)
   cleanupSelectTool = useSelectTool(app, store)
   cleanupDeleteTool = useDeleteTool(app, store)
 })

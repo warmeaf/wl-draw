@@ -14,6 +14,9 @@ dependencies:
   '@leafer-in/editor':
     specifier: ^1.9.12
     version: 1.9.12(@leafer-in/interface@1.9.12)(@leafer-in/resize@1.9.12)(@leafer-ui/core@1.9.12)(@leafer-ui/draw@1.9.12)(@leafer-ui/interface@1.9.12)
+  '@leafer-in/viewport':
+    specifier: 1.9.12
+    version: 1.9.12(@leafer-in/interface@1.9.12)(@leafer-ui/core@1.9.12)(@leafer-ui/interface@1.9.12)
   '@vueuse/core':
     specifier: ^14.0.0
     version: 14.0.0(vue@3.5.23)
@@ -644,6 +647,18 @@ packages:
     dependencies:
       '@leafer-in/interface': 1.9.12(@leafer-ui/interface@1.9.12)(@leafer/interface@1.9.12)
       '@leafer-ui/draw': 1.9.12
+      '@leafer-ui/interface': 1.9.12
+    dev: false
+
+  /@leafer-in/viewport@1.9.12(@leafer-in/interface@1.9.12)(@leafer-ui/core@1.9.12)(@leafer-ui/interface@1.9.12):
+    resolution: {integrity: sha512-OM6iyy49gW0MHbWaszQBrBl0szjOf73OnWI+c1RwmC+NwE1B0alCDyAiQPX9MzcfrVnF5q46bv8+HFTFQsxUuA==}
+    peerDependencies:
+      '@leafer-in/interface': ^1.9.12
+      '@leafer-ui/core': ^1.9.12
+      '@leafer-ui/interface': ^1.9.12
+    dependencies:
+      '@leafer-in/interface': 1.9.12(@leafer-ui/interface@1.9.12)(@leafer/interface@1.9.12)
+      '@leafer-ui/core': 1.9.12
       '@leafer-ui/interface': 1.9.12
     dev: false
 

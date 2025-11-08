@@ -4,11 +4,10 @@
  */
 import { ref, watch, onBeforeUnmount, computed } from 'vue'
 import type { App } from 'leafer-ui'
-import { DragEvent, PointerEvent, KeyEvent, MoveEvent } from 'leafer-ui'
+import { DragEvent, PointerEvent, KeyEvent } from 'leafer-ui'
 import { useCanvasStore } from '@/stores/canvas'
 import { useKeyModifier } from '@vueuse/core'
 
-import { usePanTool } from './usePanTool'
 import { useRectTool } from './useRectTool'
 import { useCircleTool } from './useCircleTool'
 import { useLineTool } from './useLineTool'
@@ -18,10 +17,9 @@ import { useTextTool } from './useTextTool'
 import { useImageTool } from './useImageTool'
 import type { Point, LeaferElement } from './types'
 
-export function useCanvasTools(app: App, container?: HTMLElement | null) {
+export function useCanvasTools(app: App) {
   const store = useCanvasStore()
   const tree = app.tree
-  const editor = app.editor
 
   const isDrawing = ref(false)
   const startPoint = ref<Point | null>(null)
@@ -30,7 +28,6 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
   const isShiftPressedRaw = useKeyModifier('Shift', { events: ['keydown', 'keyup'] })
   const isShiftPressed = computed(() => isShiftPressedRaw.value ?? false)
 
-  const panTool = usePanTool(tree, store)
   const rectTool = useRectTool(tree, store, isDrawing, startPoint, currentElement, isShiftPressed)
   const circleTool = useCircleTool(
     tree,
@@ -53,10 +50,10 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
       startPoint.value = null
       currentElement.value = null
       penPathPoints.value = []
-      if (newTool === 'select') {
-        editor.config.selector = true
+      if (newTool === 'select' || newTool === 'pan') {
+        app.mode = 'normal'
       } else {
-        editor.config.selector = false
+        app.mode = 'draw'
       }
     }
   )
@@ -151,33 +148,6 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
     }
   }
 
-  const moveStartId = app.on_(MoveEvent.START, (e: MoveEvent) => {
-    const tool = store.currentTool
-
-    if (tool === 'pan') {
-      panTool.handleMoveStart(e)
-      return
-    }
-  })
-
-  const moveMoveId = app.on_(MoveEvent.MOVE, (e: MoveEvent) => {
-    const tool = store.currentTool
-
-    if (tool === 'pan') {
-      panTool.handleMove(e)
-      return
-    }
-  })
-
-  const moveEndId = app.on_(MoveEvent.END, (_e: MoveEvent) => {
-    const tool = store.currentTool
-
-    if (tool === 'pan') {
-      panTool.handleMoveEnd()
-      return
-    }
-  })
-
   const dragStartId = app.on_(DragEvent.START, (e: DragEvent) => {
     const tool = store.currentTool
 
@@ -254,48 +224,12 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
     }
   })
 
-  function handleWheel(e: WheelEvent) {
-    if (!app || !tree) return
-
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault()
-      const delta = e.deltaY > 0 ? -0.1 : 0.1
-      store.updateZoom(delta)
-    } else {
-      e.preventDefault()
-      const zoomLayer = tree.zoomLayer
-      const scale = zoomLayer ? zoomLayer.scaleX || 1 : 1
-      const deltaY = e.deltaY / scale
-      if (zoomLayer) {
-        zoomLayer.y = (zoomLayer.y || 0) - deltaY
-      } else {
-        tree.y = (tree.y || 0) - deltaY
-      }
-    }
-  }
-
-  const wheelHandler = (e: WheelEvent) => handleWheel(e)
-  const viewElement =
-    container ||
-    (app.view as HTMLElement) ||
-    (app as unknown as { view?: { view?: HTMLElement } }).view?.view ||
-    undefined
-  if (viewElement && viewElement instanceof HTMLElement) {
-    viewElement.addEventListener('wheel', wheelHandler, { passive: false })
-  }
-
   onBeforeUnmount(() => {
-    app.off_(moveStartId)
-    app.off_(moveMoveId)
-    app.off_(moveEndId)
     app.off_(dragStartId)
     app.off_(dragId)
     app.off_(dragEndId)
     app.off_(tapId)
     app.off_(keyDownId)
     app.off_(keyUpId)
-    if (viewElement && viewElement instanceof HTMLElement) {
-      viewElement.removeEventListener('wheel', wheelHandler)
-    }
   })
 }

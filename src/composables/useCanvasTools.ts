@@ -21,6 +21,7 @@ import type { Point, LeaferElement } from './types'
 export function useCanvasTools(app: App, container?: HTMLElement | null) {
   const store = useCanvasStore()
   const tree = app.tree
+  const editor = app.editor
 
   const isDrawing = ref(false)
   const startPoint = ref<Point | null>(null)
@@ -47,11 +48,16 @@ export function useCanvasTools(app: App, container?: HTMLElement | null) {
 
   watch(
     () => store.currentTool,
-    () => {
+    (newTool) => {
       isDrawing.value = false
       startPoint.value = null
       currentElement.value = null
       penPathPoints.value = []
+      if (newTool === 'select') {
+        editor.config.selector = true
+      } else {
+        editor.config.selector = false
+      }
     }
   )
 

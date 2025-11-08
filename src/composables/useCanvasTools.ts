@@ -4,7 +4,7 @@
  */
 import { ref, watch, onBeforeUnmount, computed } from 'vue'
 import type { App } from 'leafer-ui'
-import { DragEvent, PointerEvent, KeyEvent } from 'leafer-ui'
+import { DragEvent, PointerEvent, KeyEvent, ZoomEvent } from 'leafer-ui'
 import { useCanvasStore } from '@/stores/canvas'
 import { useKeyModifier } from '@vueuse/core'
 
@@ -224,6 +224,10 @@ export function useCanvasTools(app: App) {
     }
   })
 
+  const zoomId = app.on_(ZoomEvent.ZOOM, (_e: ZoomEvent) => {
+    store.setZoom(app.tree.scale as number)
+  })
+
   onBeforeUnmount(() => {
     app.off_(dragStartId)
     app.off_(dragId)
@@ -231,5 +235,6 @@ export function useCanvasTools(app: App) {
     app.off_(tapId)
     app.off_(keyDownId)
     app.off_(keyUpId)
+    app.off_(zoomId)
   })
 }

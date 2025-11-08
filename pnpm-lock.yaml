@@ -14,6 +14,9 @@ dependencies:
   '@leafer-in/editor':
     specifier: ^1.9.12
     version: 1.9.12(@leafer-in/interface@1.9.12)(@leafer-in/resize@1.9.12)(@leafer-ui/core@1.9.12)(@leafer-ui/draw@1.9.12)(@leafer-ui/interface@1.9.12)
+  '@leafer-in/view':
+    specifier: 1.9.12
+    version: 1.9.12(@leafer-in/interface@1.9.12)(@leafer-ui/draw@1.9.12)(@leafer-ui/interface@1.9.12)
   '@leafer-in/viewport':
     specifier: 1.9.12
     version: 1.9.12(@leafer-in/interface@1.9.12)(@leafer-ui/core@1.9.12)(@leafer-ui/interface@1.9.12)
@@ -640,6 +643,18 @@ packages:
 
   /@leafer-in/resize@1.9.12(@leafer-in/interface@1.9.12)(@leafer-ui/draw@1.9.12)(@leafer-ui/interface@1.9.12):
     resolution: {integrity: sha512-TJ8upDHWQVx2ETkDoXiZ36lhnNyd5mt1kIBwL7oaOXGHrMCZRkZ7KySDczCmonpVxomJSwMq6Ju9A06FtrZAWg==}
+    peerDependencies:
+      '@leafer-in/interface': ^1.9.12
+      '@leafer-ui/draw': ^1.9.12
+      '@leafer-ui/interface': ^1.9.12
+    dependencies:
+      '@leafer-in/interface': 1.9.12(@leafer-ui/interface@1.9.12)(@leafer/interface@1.9.12)
+      '@leafer-ui/draw': 1.9.12
+      '@leafer-ui/interface': 1.9.12
+    dev: false
+
+  /@leafer-in/view@1.9.12(@leafer-in/interface@1.9.12)(@leafer-ui/draw@1.9.12)(@leafer-ui/interface@1.9.12):
+    resolution: {integrity: sha512-eW7jl08wpMHWljiTxFAlE+0lZ4PeJZQfiqzHfebqFwaJvYkyw75kZho8RJTuA7kWbA4IDV33F5KA7/CRjbWPhg==}
     peerDependencies:
       '@leafer-in/interface': ^1.9.12
       '@leafer-ui/draw': ^1.9.12

@@ -36,6 +36,7 @@
   "dependencies": {
     "@leafer-in/arrow": "^1.9.12",
     "@leafer-in/editor": "^1.9.12",
+    "@leafer-in/view": "1.9.12",
     "@leafer-in/viewport": "1.9.12",
     "@vueuse/core": "^14.0.0",
     "leafer-ui": "^1.9.12",

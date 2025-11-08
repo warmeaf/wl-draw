@@ -135,21 +135,15 @@ export const useCanvasStore = defineStore('canvas', {
     },
 
     updateZoom(delta: number) {
-      const newZoom = Math.max(0.1, Math.min(5, this.zoom + delta))
+      const newZoom = Math.max(0.02, Math.min(256, this.zoom + delta))
       this.zoom = newZoom
-      if (this.appInstance?.tree?.zoomLayer) {
-        this.appInstance.tree.zoomLayer.scaleX = newZoom
-        this.appInstance.tree.zoomLayer.scaleY = newZoom
-      }
+      this.appInstance?.zoom(newZoom)
     },
 
     setZoom(zoom: number) {
-      const newZoom = Math.max(0.1, Math.min(5, zoom))
+      const newZoom = Math.max(0.02, Math.min(256, zoom))
       this.zoom = newZoom
-      if (this.appInstance?.tree?.zoomLayer) {
-        this.appInstance.tree.zoomLayer.scaleX = newZoom
-        this.appInstance.tree.zoomLayer.scaleY = newZoom
-      }
+      this.appInstance?.zoom(newZoom)
     },
 
     saveHistory() {

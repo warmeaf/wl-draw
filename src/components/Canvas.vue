@@ -5,6 +5,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { App } from 'leafer-ui'
 import '@leafer-in/editor'
 import '@leafer-in/viewport'
+import '@leafer-in/view'
 import '@leafer-in/arrow'
 
 import { useCanvasTools } from '@/composables/useCanvasTools'
@@ -30,6 +31,10 @@ onMounted(() => {
     editor: {
       stroke: themeColors.selectionBox,
       pointStroke: themeColors.controlPoint,
+    },
+    zoom: { min: 0.02, max: 256 },
+    wheel: {
+      zoomSpeed: 0.1,
     },
   })
   app.tree.fill = themeColors.canvasBackground

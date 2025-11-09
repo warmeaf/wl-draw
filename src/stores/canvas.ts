@@ -7,7 +7,7 @@ import type { App } from 'leafer-ui'
 import { themeColors } from '@/config/theme'
 
 import type { Rect, Ellipse, Path, Line, Pen, Text, Image } from 'leafer-ui'
-import type { ToolType } from '@/composables/types'
+import type { ToolType } from '@/types'
 
 export type LeaferElement = Rect | Ellipse | Path | Line | Pen | Text | Image
 

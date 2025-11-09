@@ -2,7 +2,8 @@
 the currently active tool. */
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useCanvasStore, type ToolType } from '@/stores/canvas'
+import { useCanvasStore } from '@/stores/canvas'
+import { type ToolType } from '@/types'
 
 const store = useCanvasStore()
 

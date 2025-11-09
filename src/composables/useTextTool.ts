@@ -3,7 +3,7 @@
  */
 import { Text } from 'leafer-ui'
 import type { useCanvasStore } from '@/stores/canvas'
-import type { Point, Tree } from './types'
+import type { Point, Tree } from '@/types'
 
 export function useTextTool(tree: Tree, store: ReturnType<typeof useCanvasStore>) {
   function handleMouseDown(point: Point) {

@@ -1,6 +1,3 @@
-/**
- * Type definitions for canvas tool composables
- */
 import type { Ref } from 'vue'
 import type { DragEvent, App, Rect, Ellipse, Path, Line, Pen, Text, Image } from 'leafer-ui'
 import type { useCanvasStore } from '@/stores/canvas'

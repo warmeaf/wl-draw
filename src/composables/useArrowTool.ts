@@ -5,7 +5,7 @@ import { Line } from 'leafer-ui'
 import type { DragEvent } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
-import type { Point, Tree, LeaferElement } from './types'
+import type { Point, Tree, LeaferElement } from '@/types'
 
 export function useArrowTool(
   tree: Tree,

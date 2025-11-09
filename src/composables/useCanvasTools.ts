@@ -15,7 +15,7 @@ import { useArrowTool } from './useArrowTool'
 import { usePenTool } from './usePenTool'
 import { useTextTool } from './useTextTool'
 import { useImageTool } from './useImageTool'
-import type { Point, LeaferElement, ToolType } from './types'
+import type { Point, LeaferElement, ToolType } from '@/types'
 
 export function useCanvasTools(app: App) {
   const store = useCanvasStore()

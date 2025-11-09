@@ -15,7 +15,7 @@ import { useArrowTool } from './useArrowTool'
 import { usePenTool } from './usePenTool'
 import { useTextTool } from './useTextTool'
 import { useImageTool } from './useImageTool'
-import type { Point, LeaferElement } from './types'
+import type { Point, LeaferElement, ToolType } from './types'
 
 export function useCanvasTools(app: App) {
   const store = useCanvasStore()
@@ -50,13 +50,27 @@ export function useCanvasTools(app: App) {
       startPoint.value = null
       currentElement.value = null
       penPathPoints.value = []
-      if (newTool === 'select' || newTool === 'pan') {
-        app.mode = 'normal'
-      } else {
-        app.mode = 'draw'
-      }
+
+      autoSetMode(newTool)
+      autoSetDrag(newTool)
     }
   )
+
+  function autoSetMode(newTool: ToolType) {
+    if (newTool === 'select' || newTool === 'pan') {
+      app.mode = 'normal'
+    } else {
+      app.mode = 'draw'
+    }
+  }
+
+  function autoSetDrag(newTool: ToolType) {
+    if (newTool === 'pan') {
+      app.config.move!.drag = true
+    } else {
+      app.config.move!.drag = false
+    }
+  }
 
   function handleDragStart() {
     if (!tree) return

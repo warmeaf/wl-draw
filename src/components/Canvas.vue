@@ -35,6 +35,9 @@ onMounted(() => {
     wheel: {
       zoomSpeed: 0.1,
     },
+    move: {
+      drag: false,
+    },
   })
   app.tree.fill = themeColors.canvasBackground
 

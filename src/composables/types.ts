@@ -23,6 +23,17 @@ export interface ToolContext {
   isShiftPressed: Ref<boolean>
 }
 
+export type ToolType =
+  | 'select'
+  | 'pan'
+  | 'rect'
+  | 'circle'
+  | 'line'
+  | 'arrow'
+  | 'pen'
+  | 'text'
+  | 'image'
+
 export interface DrawingTool {
   handleMouseDown: (point: Point) => void
   updateDrawing?: (e: DragEvent) => void

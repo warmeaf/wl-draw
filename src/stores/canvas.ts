@@ -53,7 +53,6 @@ export const useCanvasStore = defineStore('canvas', {
     isPanningWithSpace: false,
     appInstance: null as App | null,
     objects: [] as CanvasObject[],
-    selectedObjectId: null as string | null,
     zoom: 1,
     history: [] as HistoryState[],
     historyIndex: -1,
@@ -65,9 +64,12 @@ export const useCanvasStore = defineStore('canvas', {
   }),
 
   getters: {
-    selectedObject: (state) => {
-      if (!state.selectedObjectId) return null
-      return state.objects.find((obj) => obj.id === state.selectedObjectId) || null
+    selectedObjectIds: (state) => {
+      return (
+        state.appInstance?.editor.list.map((item) => {
+          return state.objects.find((obj) => obj.element.innerId === item.innerId)?.id
+        }) || []
+      )
     },
     canUndo: (state) => state.historyIndex > 0,
     canRedo: (state) => state.historyIndex < state.history.length - 1,
@@ -76,10 +78,6 @@ export const useCanvasStore = defineStore('canvas', {
   actions: {
     setTool(tool: ToolType) {
       this.currentTool = tool
-
-      if (tool !== 'select') {
-        this.selectedObjectId = null
-      }
     },
 
     enablePanWithSpace() {
@@ -122,16 +120,16 @@ export const useCanvasStore = defineStore('canvas', {
             this.appInstance.editor.cancel()
           }
           this.objects.splice(index, 1)
-          if (this.selectedObjectId === id) {
-            this.selectedObjectId = null
-          }
           this.saveHistory()
         }
       }
     },
 
-    selectObject(id: string | null) {
-      this.selectedObjectId = id
+    selectObject(id: string) {
+      const obj = this.objects.find((obj) => obj.id === id)
+      if (obj && this.appInstance?.editor) {
+        this.appInstance.editor.select(obj.element)
+      }
     },
 
     updateZoom(delta: number) {
@@ -230,7 +228,6 @@ export const useCanvasStore = defineStore('canvas', {
         // Note: This is a simplified restoration. In production, you'd need to
         // recreate elements from stored properties
         this.objects = []
-        this.selectedObjectId = null
 
         // TODO: Implement proper element restoration from history state
         // This requires recreating Rect, Ellipse, Path, Text, Image elements

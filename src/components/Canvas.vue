@@ -11,7 +11,6 @@ import '@leafer-in/text-editor'
 
 import { useCanvasTools } from '@/composables/useCanvasTools'
 import { useDeleteTool } from '@/composables/useDeleteTool'
-import { useSelectTool } from '@/composables/useSelectTool'
 
 import { useCanvasStore } from '@/stores/canvas'
 
@@ -22,7 +21,6 @@ const store = useCanvasStore()
 
 let app: App | null = null
 let cleanupDeleteTool: (() => void) | null = null
-let cleanupSelectTool: (() => void) | null = null
 
 onMounted(() => {
   if (!canvasContainer.value) return
@@ -43,12 +41,10 @@ onMounted(() => {
   store.setAppInstance(app)
 
   useCanvasTools(app)
-  cleanupSelectTool = useSelectTool(app, store)
   cleanupDeleteTool = useDeleteTool(app, store)
 })
 
 onBeforeUnmount(() => {
-  cleanupSelectTool?.()
   cleanupDeleteTool?.()
 
   if (app) {

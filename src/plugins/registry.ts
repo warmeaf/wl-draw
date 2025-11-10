@@ -2,6 +2,7 @@
  * Plugin registry for managing tool plugins
  */
 
+import { checkShortcutConflict } from './shortcut'
 import type { ToolPlugin } from './types'
 
 class PluginRegistry {
@@ -11,6 +12,27 @@ class PluginRegistry {
     if (this.plugins.has(plugin.id)) {
       console.warn(`Plugin with id "${plugin.id}" is already registered. Overwriting.`)
     }
+
+    if (plugin.shortcut) {
+      const existingShortcuts = Array.from(this.plugins.values())
+        .filter((p) => p.shortcut && p.id !== plugin.id)
+        .map((p) => {
+          if (!p.shortcut) {
+            throw new Error('Unexpected: shortcut is undefined')
+          }
+          return { pluginId: p.id, shortcut: p.shortcut }
+        })
+
+      const conflicts = checkShortcutConflict(plugin.shortcut, existingShortcuts)
+
+      if (conflicts.length > 0) {
+        const conflictList = conflicts.map((c) => `"${c.pluginId}" (${c.shortcut})`).join(', ')
+        console.warn(
+          `Shortcut conflict detected for plugin "${plugin.id}": shortcut "${plugin.shortcut}" conflicts with ${conflictList}`
+        )
+      }
+    }
+
     this.plugins.set(plugin.id, plugin)
   }
 

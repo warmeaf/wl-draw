@@ -14,6 +14,7 @@ export const linePlugin: ToolPlugin = {
     label: '直线工具',
     iconComponent: 'i-lucide-minus',
   },
+  shortcut: 'KeyL',
   createTool: (context) => {
     return useLineTool(
       context.tree,

@@ -14,6 +14,7 @@ export const rectPlugin: ToolPlugin = {
     label: '矩形工具',
     iconComponent: 'i-lucide-square',
   },
+  shortcut: 'KeyR',
   createTool: (context) => {
     return useRectTool(
       context.tree,

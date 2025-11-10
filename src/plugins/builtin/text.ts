@@ -14,6 +14,7 @@ export const textPlugin: ToolPlugin = {
     label: '文本工具',
     iconComponent: 'i-lucide-type',
   },
+  shortcut: 'KeyT',
   createTool: (context) => {
     return useTextTool(context.tree, context.store)
   },

@@ -13,6 +13,7 @@ export const selectPlugin: ToolPlugin = {
     label: '选择工具',
     iconComponent: 'i-lucide-mouse-pointer-2',
   },
+  shortcut: 'KeyV',
   createTool: () => {
     return {}
   },

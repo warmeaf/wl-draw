@@ -14,6 +14,7 @@ export const arrowPlugin: ToolPlugin = {
     label: '箭头工具',
     iconComponent: 'i-lucide-arrow-right',
   },
+  shortcut: 'KeyA',
   createTool: (context) => {
     return useArrowTool(
       context.tree,

@@ -40,6 +40,7 @@ export interface ToolPlugin {
   type: string
   category?: PluginCategory
   ui?: ToolPluginUI
+  shortcut?: string
   createTool: (context: ToolContext) => ToolInstance
 }
 

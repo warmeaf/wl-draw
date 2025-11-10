@@ -14,6 +14,7 @@ export const imagePlugin: ToolPlugin = {
     label: '图片工具',
     iconComponent: 'i-lucide-image',
   },
+  shortcut: 'KeyI',
   createTool: (context) => {
     return useImageTool(context.tree, context.store)
   },

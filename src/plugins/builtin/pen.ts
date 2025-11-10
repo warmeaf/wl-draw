@@ -15,6 +15,7 @@ export const penPlugin: ToolPlugin = {
     iconComponent: 'i-lucide-pen-tool',
     dividerAfter: true,
   },
+  shortcut: 'KeyP',
   createTool: (context) => {
     if (!context.penPathPoints) {
       throw new Error('Pen tool requires penPathPoints in context')

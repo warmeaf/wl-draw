@@ -1,8 +1,9 @@
 /**
  * Image tool composable for adding image elements on canvas
  */
-import { Image } from 'leafer-ui'
+
 import type { PointerEvent } from 'leafer-ui'
+import { Image } from 'leafer-ui'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Tree } from '@/types'
 

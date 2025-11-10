@@ -1,7 +1,7 @@
 /**
- * Composable for handling canvas zoom operations.
- * Provides zoom in, zoom out, and reset zoom functionality.
+ * Composable for handling canvas zoom operations
  */
+
 import { useCanvasStore } from '@/stores/canvas'
 
 export function useZoomTool() {

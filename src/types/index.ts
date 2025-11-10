@@ -1,5 +1,9 @@
+/**
+ * Type definitions for the drawing application
+ */
+
+import type { App, DragEvent, Ellipse, Image, Line, Path, Pen, Rect, Text } from 'leafer-ui'
 import type { Ref } from 'vue'
-import type { DragEvent, App, Rect, Ellipse, Path, Line, Pen, Text, Image } from 'leafer-ui'
 import type { useCanvasStore } from '@/stores/canvas'
 
 export interface Point {

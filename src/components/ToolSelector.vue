@@ -1,9 +1,11 @@
-/** * Tool selector component for choosing drawing tools. * Displays available tools and highlights
-the currently active tool. */
+/**
+ * Tool selector component for choosing drawing tools
+ */
+ 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { type ToolType } from '@/types'
+import type { ToolType } from '@/types'
 
 const store = useCanvasStore()
 

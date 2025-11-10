@@ -1,11 +1,12 @@
 /**
- * Arrow tool composable for drawing arrows on canvas using Line component with endArrow property
+ * Arrow tool composable for drawing arrows on canvas
  */
-import { Line } from 'leafer-ui'
+
 import type { DragEvent } from 'leafer-ui'
+import { Line } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
-import type { Point, Tree, LeaferElement } from '@/types'
+import type { LeaferElement, Point, Tree } from '@/types'
 
 export function useArrowTool(
   tree: Tree,

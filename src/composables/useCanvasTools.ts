@@ -1,21 +1,20 @@
 /**
- * Canvas tools composable
- * Handles drawing tools and mouse interactions for the canvas using Leafer App events
+ * Canvas tools composable for handling drawing tools and mouse interactions
  */
-import { ref, watch, onBeforeUnmount, computed } from 'vue'
-import type { App } from 'leafer-ui'
-import { DragEvent, PointerEvent, KeyEvent, ZoomEvent } from 'leafer-ui'
-import { useCanvasStore } from '@/stores/canvas'
-import { useKeyModifier } from '@vueuse/core'
 
-import { useRectTool } from './useRectTool'
-import { useCircleTool } from './useCircleTool'
-import { useLineTool } from './useLineTool'
+import { useKeyModifier } from '@vueuse/core'
+import type { App } from 'leafer-ui'
+import { DragEvent, KeyEvent, PointerEvent, ZoomEvent } from 'leafer-ui'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useCanvasStore } from '@/stores/canvas'
+import type { LeaferElement, Point, ToolType } from '@/types'
 import { useArrowTool } from './useArrowTool'
-import { usePenTool } from './usePenTool'
-import { useTextTool } from './useTextTool'
+import { useCircleTool } from './useCircleTool'
 import { useImageTool } from './useImageTool'
-import type { Point, LeaferElement, ToolType } from '@/types'
+import { useLineTool } from './useLineTool'
+import { usePenTool } from './usePenTool'
+import { useRectTool } from './useRectTool'
+import { useTextTool } from './useTextTool'
 
 export function useCanvasTools(app: App) {
   const store = useCanvasStore()
@@ -62,10 +61,8 @@ export function useCanvasTools(app: App) {
   }
 
   function autoSetDrag(newTool: ToolType) {
-    if (newTool === 'pan') {
-      app.config.move!.drag = true
-    } else {
-      app.config.move!.drag = false
+    if (app.config.move) {
+      app.config.move.drag = newTool === 'pan'
     }
   }
 

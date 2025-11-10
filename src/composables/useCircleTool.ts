@@ -1,11 +1,12 @@
 /**
- * Circle tool composable for drawing circles/ellipses on canvas
+ * Circle tool composable for drawing circles and ellipses on canvas
  */
-import { Ellipse } from 'leafer-ui'
+
 import type { DragEvent } from 'leafer-ui'
+import { Ellipse } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
-import type { Point, Tree, LeaferElement } from '@/types'
+import type { LeaferElement, Point, Tree } from '@/types'
 
 export function useCircleTool(
   tree: Tree,

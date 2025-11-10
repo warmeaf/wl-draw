@@ -1,11 +1,12 @@
 /**
  * Pen tool composable for freehand drawing on canvas
  */
-import { Pen } from 'leafer-ui'
+
 import type { DragEvent } from 'leafer-ui'
+import { Pen } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
-import type { Point, Tree, LeaferElement } from '@/types'
+import type { LeaferElement, Point, Tree } from '@/types'
 
 export function usePenTool(
   tree: Tree,

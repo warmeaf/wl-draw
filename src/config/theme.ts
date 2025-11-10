@@ -1,7 +1,7 @@
 /**
- * Theme color configuration for the application.
- * Defines color variables used for both UI components and canvas drawing.
+ * Theme color configuration for the application
  */
+
 export const themeColors = {
   primary: '#4FC3F7',
   primaryHover: '#29B6F6',

@@ -1,8 +1,9 @@
 /**
  * Text tool composable for adding text elements on canvas
  */
-import { Text } from 'leafer-ui'
+
 import type { PointerEvent } from 'leafer-ui'
+import { Text } from 'leafer-ui'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Tree } from '@/types'
 

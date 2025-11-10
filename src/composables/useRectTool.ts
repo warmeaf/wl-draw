@@ -1,11 +1,12 @@
 /**
  * Rectangle tool composable for drawing rectangles on canvas
  */
-import { Rect } from 'leafer-ui'
+
 import type { DragEvent } from 'leafer-ui'
+import { Rect } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
-import type { Point, Tree, LeaferElement } from '@/types'
+import type { LeaferElement, Point, Tree } from '@/types'
 
 export function useRectTool(
   tree: Tree,

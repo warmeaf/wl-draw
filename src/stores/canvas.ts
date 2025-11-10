@@ -1,12 +1,10 @@
 /**
- * Canvas store - State management for drawing application
- * Manages tools, objects, selection, zoom
+ * Canvas store for managing drawing state, tools, objects, and history
  */
-import { defineStore } from 'pinia'
-import type { App } from 'leafer-ui'
-import { themeColors } from '@/config/theme'
 
-import type { Rect, Ellipse, Path, Line, Pen, Text, Image } from 'leafer-ui'
+import type { App, Ellipse, Image, Line, Path, Pen, Rect, Text } from 'leafer-ui'
+import { defineStore } from 'pinia'
+import { themeColors } from '@/config/theme'
 import type { ToolType } from '@/types'
 
 export type LeaferElement = Rect | Ellipse | Path | Line | Pen | Text | Image

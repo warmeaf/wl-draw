@@ -1,9 +1,11 @@
-/** * Zoom controls component for canvas zoom operations. * Provides zoom in, zoom out, and reset
-zoom functionality. */
+/**
+ * Zoom controls component for canvas zoom operations
+ */
+ 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useCanvasStore } from '@/stores/canvas'
 import { useZoomTool } from '@/composables/useZoomTool'
+import { useCanvasStore } from '@/stores/canvas'
 
 const size = 'tiny'
 const store = useCanvasStore()

@@ -12,7 +12,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Canvas: typeof import('./src/components/Canvas.vue')['default']
-    HistoryControls: typeof import('./src/components/HistoryControls.vue')['default']
     ILucideArrowRight: typeof import('~icons/lucide/arrow-right')['default']
     ILucideCircle: typeof import('~icons/lucide/circle')['default']
     ILucideHand: typeof import('~icons/lucide/hand')['default']
@@ -20,10 +19,8 @@ declare module 'vue' {
     ILucideMinus: typeof import('~icons/lucide/minus')['default']
     ILucideMousePointer2: typeof import('~icons/lucide/mouse-pointer2')['default']
     ILucidePenTool: typeof import('~icons/lucide/pen-tool')['default']
-    ILucideRedo2: typeof import('~icons/lucide/redo2')['default']
     ILucideSquare: typeof import('~icons/lucide/square')['default']
     ILucideType: typeof import('~icons/lucide/type')['default']
-    ILucideUndo2: typeof import('~icons/lucide/undo2')['default']
     ILucideZoomIn: typeof import('~icons/lucide/zoom-in')['default']
     ILucideZoomOut: typeof import('~icons/lucide/zoom-out')['default']
     NButton: typeof import('naive-ui')['NButton']

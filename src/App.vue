@@ -1,10 +1,10 @@
-/** * Main application component that sets up the drawing canvas interface. * Manages keyboard
-shortcuts for undo/redo and initializes the application layout. */
+/**
+ * Main application component
+ */
+
 <script setup lang="ts">
 import type { GlobalThemeOverrides } from 'naive-ui'
 import { themeColors } from '@/config/theme'
-import Toolbar from '@/components/Toolbar.vue'
-import Canvas from '@/components/Canvas.vue'
 
 const themeOverrides: GlobalThemeOverrides = {
   common: {

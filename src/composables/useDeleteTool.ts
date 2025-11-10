@@ -1,8 +1,8 @@
 /**
  * Delete tool composable for deleting selected elements
- * Handles keyboard events to delete selected objects from the canvas
  */
-import { KeyEvent, type App } from 'leafer-ui'
+
+import { type App, KeyEvent } from 'leafer-ui'
 import type { useCanvasStore } from '@/stores/canvas'
 
 export function useDeleteTool(app: App | null, store: ReturnType<typeof useCanvasStore>) {

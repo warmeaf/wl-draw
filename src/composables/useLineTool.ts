@@ -1,11 +1,12 @@
 /**
  * Line tool composable for drawing straight lines on canvas
  */
-import { Path } from 'leafer-ui'
+
 import type { DragEvent } from 'leafer-ui'
+import { Path } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
-import type { Point, Tree, LeaferElement } from '@/types'
+import type { LeaferElement, Point, Tree } from '@/types'
 
 export function useLineTool(
   tree: Tree,

@@ -2,11 +2,14 @@
  * Image tool composable for adding image elements on canvas
  */
 import { Image } from 'leafer-ui'
+import type { PointerEvent } from 'leafer-ui'
 import type { useCanvasStore } from '@/stores/canvas'
-import type { Point, Tree } from '@/types'
+import type { Tree } from '@/types'
 
 export function useImageTool(tree: Tree, store: ReturnType<typeof useCanvasStore>) {
-  function handleMouseDown(point: Point) {
+  function handleTap(e: PointerEvent) {
+    const point = e.getPagePoint()
+
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
@@ -44,6 +47,6 @@ export function useImageTool(tree: Tree, store: ReturnType<typeof useCanvasStore
   }
 
   return {
-    handleMouseDown,
+    handleTap,
   }
 }

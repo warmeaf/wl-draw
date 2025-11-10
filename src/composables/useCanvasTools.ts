@@ -125,13 +125,10 @@ export function useCanvasTools(app: App) {
     const tool = store.currentTool
 
     if (tool === 'text' || tool === 'image') {
-      const point = e.getPagePoint()
-      if (!point) return
-
       if (tool === 'text') {
-        textTool.handleMouseDown({ x: point.x, y: point.y })
+        textTool.handleTap(e)
       } else if (tool === 'image') {
-        imageTool.handleMouseDown({ x: point.x, y: point.y })
+        imageTool.handleTap(e)
       }
     }
   }

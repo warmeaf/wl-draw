@@ -2,12 +2,14 @@
  * Text tool composable for adding text elements on canvas
  */
 import { Text } from 'leafer-ui'
+import type { PointerEvent } from 'leafer-ui'
 import type { useCanvasStore } from '@/stores/canvas'
-import type { Point, Tree } from '@/types'
+import type { Tree } from '@/types'
 
 export function useTextTool(tree: Tree, store: ReturnType<typeof useCanvasStore>) {
-  function handleMouseDown(point: Point) {
+  function handleTap(e: PointerEvent) {
     if (!tree) return
+    const point = e.getPagePoint()
 
     const text = new Text({
       x: point.x,
@@ -32,6 +34,6 @@ export function useTextTool(tree: Tree, store: ReturnType<typeof useCanvasStore>
   }
 
   return {
-    handleMouseDown,
+    handleTap,
   }
 }

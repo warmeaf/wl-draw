@@ -2,6 +2,7 @@
  * Rectangle tool composable for drawing rectangles on canvas
  */
 import { Rect } from 'leafer-ui'
+import type { DragEvent } from 'leafer-ui'
 import type { Ref } from 'vue'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Point, Tree, LeaferElement } from '@/types'
@@ -9,20 +10,16 @@ import type { Point, Tree, LeaferElement } from '@/types'
 export function useRectTool(
   tree: Tree,
   store: ReturnType<typeof useCanvasStore>,
-  isDrawing: Ref<boolean>,
   startPoint: Ref<Point | null>,
   currentElement: Ref<LeaferElement>,
   isShiftPressed: Ref<boolean>
 ) {
-  function handleMouseDown(point: Point) {
-    if (!tree) return
-
-    isDrawing.value = true
-    startPoint.value = point
+  function handleMouseDown() {
+    if (!tree || !startPoint.value) return
 
     const rect = new Rect({
-      x: point.x,
-      y: point.y,
+      x: startPoint.value.x,
+      y: startPoint.value.y,
       width: 0,
       height: 0,
       fill: store.fillColor,
@@ -34,8 +31,9 @@ export function useRectTool(
     tree.add(rect)
   }
 
-  function updateDrawing(bounds: { x: number; y: number; width: number; height: number }) {
+  function updateDrawing(e: DragEvent) {
     if (!currentElement.value || !startPoint.value) return
+    const bounds = e.getPageBounds()
 
     let width = bounds.width
     let height = bounds.height
@@ -90,8 +88,6 @@ export function useRectTool(
       element: rect,
     })
 
-    rect.draggable = true
-    currentElement.value = null
     store.setTool('select')
     store.selectObject(id)
   }

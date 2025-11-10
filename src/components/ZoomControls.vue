@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useZoomTool } from '@/composables/useZoomTool'
 
+const size = 'tiny'
 const store = useCanvasStore()
 const { zoomIn, zoomOut, resetZoom } = useZoomTool()
 
@@ -25,7 +26,7 @@ function handleZoomOut() {
   >
     <n-tooltip trigger="hover">
       <template #trigger>
-        <n-button quaternary size="medium" circle @click="handleZoomOut">
+        <n-button quaternary :size="size" circle @click="handleZoomOut">
           <template #icon> <i-lucide-zoom-out class="text-xl"></i-lucide-zoom-out> </template>
         </n-button>
       </template>
@@ -33,7 +34,7 @@ function handleZoomOut() {
     </n-tooltip>
     <n-tooltip trigger="hover">
       <template #trigger>
-        <n-button quaternary size="medium" style="width: 60px" @click="resetZoom">
+        <n-button quaternary :size="size" style="width: 60px" @click="resetZoom">
           {{ zoomPercent }}%
         </n-button>
       </template>
@@ -41,7 +42,7 @@ function handleZoomOut() {
     </n-tooltip>
     <n-tooltip trigger="hover">
       <template #trigger>
-        <n-button quaternary size="medium" circle @click="handleZoomIn">
+        <n-button quaternary :size="size" circle @click="handleZoomIn">
           <template #icon> <i-lucide-zoom-in class="text-xl"></i-lucide-zoom-in> </template>
         </n-button>
       </template>

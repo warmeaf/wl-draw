@@ -25,36 +25,33 @@ export function useCanvasTools(app: App) {
   const startPoint = ref<Point | null>(null)
   const currentElement = ref<LeaferElement>(null)
   const penPathPoints = ref<Array<Point>>([])
+
   const isShiftPressedRaw = useKeyModifier('Shift', { events: ['keydown', 'keyup'] })
   const isShiftPressed = computed(() => isShiftPressedRaw.value ?? false)
 
-  const rectTool = useRectTool(tree, store, isDrawing, startPoint, currentElement, isShiftPressed)
-  const circleTool = useCircleTool(
-    tree,
-    store,
-    isDrawing,
-    startPoint,
-    currentElement,
-    isShiftPressed
-  )
-  const lineTool = useLineTool(tree, store, isDrawing, startPoint, currentElement, isShiftPressed)
-  const arrowTool = useArrowTool(tree, store, isDrawing, startPoint, currentElement, isShiftPressed)
-  const penTool = usePenTool(tree, store, isDrawing, startPoint, currentElement, penPathPoints)
+  const rectTool = useRectTool(tree, store, startPoint, currentElement, isShiftPressed)
+  const circleTool = useCircleTool(tree, store, startPoint, currentElement, isShiftPressed)
+  const lineTool = useLineTool(tree, store, startPoint, currentElement, isShiftPressed)
+  const arrowTool = useArrowTool(tree, store, startPoint, currentElement, isShiftPressed)
+  const penTool = usePenTool(tree, store, startPoint, currentElement, penPathPoints)
   const textTool = useTextTool(tree, store)
   const imageTool = useImageTool(tree, store)
 
   watch(
     () => store.currentTool,
     (newTool) => {
-      isDrawing.value = false
-      startPoint.value = null
-      currentElement.value = null
-      penPathPoints.value = []
-
+      resetState()
       autoSetMode(newTool)
       autoSetDrag(newTool)
     }
   )
+
+  function resetState() {
+    isDrawing.value = false
+    startPoint.value = null
+    currentElement.value = null
+    penPathPoints.value = []
+  }
 
   function autoSetMode(newTool: ToolType) {
     if (newTool === 'select' || newTool === 'pan') {
@@ -72,22 +69,6 @@ export function useCanvasTools(app: App) {
     }
   }
 
-  function handleDragStart() {
-    if (!tree) return
-
-    const tool = store.currentTool
-
-    if (tool === 'select' || tool === 'pan') {
-      return
-    }
-
-    if (tool === 'text' || tool === 'image') {
-      return
-    }
-
-    isDrawing.value = true
-  }
-
   function handleDrag(e: DragEvent) {
     if (!tree || !isDrawing.value) return
 
@@ -95,16 +76,11 @@ export function useCanvasTools(app: App) {
 
     switch (tool) {
       case 'rect':
-      case 'circle': {
-        const bounds = e.getPageBounds()
-        if (!bounds) return
-        if (tool === 'rect') {
-          rectTool.updateDrawing(bounds)
-        } else {
-          circleTool.updateDrawing(bounds)
-        }
+        rectTool.updateDrawing(e)
         break
-      }
+      case 'circle':
+        circleTool.updateDrawing(e)
+        break
       case 'line':
         lineTool.updateDrawing(e)
         break
@@ -140,9 +116,7 @@ export function useCanvasTools(app: App) {
         break
     }
 
-    isDrawing.value = false
-    startPoint.value = null
-    penPathPoints.value = []
+    resetState()
   }
 
   function handleTap(e: PointerEvent) {
@@ -163,41 +137,35 @@ export function useCanvasTools(app: App) {
   }
 
   const dragStartId = app.on_(DragEvent.START, (e: DragEvent) => {
+    if (!tree) return
+
     const tool = store.currentTool
-
-    if (tool === 'select') {
-      return
-    }
-
-    if (tool === 'pan') {
-      return
-    }
-
-    if (tool === 'text' || tool === 'image') {
+    if (tool === 'select' || tool === 'pan' || tool === 'text' || tool === 'image') {
       return
     }
 
     const bounds = e.getPageBounds()
     if (!bounds) return
 
-    handleDragStart()
     startPoint.value = { x: bounds.x, y: bounds.y }
+    penPathPoints.value = [{ x: bounds.x, y: bounds.y }]
+    isDrawing.value = true
 
     switch (tool) {
       case 'rect':
-        rectTool.handleMouseDown({ x: bounds.x, y: bounds.y })
+        rectTool.handleMouseDown()
         break
       case 'circle':
-        circleTool.handleMouseDown({ x: bounds.x, y: bounds.y })
+        circleTool.handleMouseDown()
         break
       case 'line':
-        lineTool.handleMouseDown({ x: bounds.x, y: bounds.y })
+        lineTool.handleMouseDown()
         break
       case 'arrow':
-        arrowTool.handleMouseDown({ x: bounds.x, y: bounds.y })
+        arrowTool.handleMouseDown()
         break
       case 'pen':
-        penTool.handleMouseDown({ x: bounds.x, y: bounds.y })
+        penTool.handleMouseDown()
         break
     }
   })

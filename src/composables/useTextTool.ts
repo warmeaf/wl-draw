@@ -27,7 +27,6 @@ export function useTextTool(tree: Tree, store: ReturnType<typeof useCanvasStore>
       element: text,
     })
 
-    text.draggable = true
     store.setTool('select')
     store.selectObject(id)
   }

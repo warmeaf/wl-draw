@@ -35,7 +35,6 @@ export function useImageTool(tree: Tree, store: ReturnType<typeof useCanvasStore
           element: img,
         })
 
-        img.draggable = true
         store.setTool('select')
         store.selectObject(id)
       }

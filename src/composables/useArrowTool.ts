@@ -10,19 +10,15 @@ import type { Point, Tree, LeaferElement } from '@/types'
 export function useArrowTool(
   tree: Tree,
   store: ReturnType<typeof useCanvasStore>,
-  isDrawing: Ref<boolean>,
   startPoint: Ref<Point | null>,
   currentElement: Ref<LeaferElement>,
   isShiftPressed: Ref<boolean>
 ) {
-  function handleMouseDown(point: Point) {
-    if (!tree) return
-
-    isDrawing.value = true
-    startPoint.value = point
+  function handleMouseDown() {
+    if (!tree || !startPoint.value) return
 
     const arrowLine = new Line({
-      points: [point.x, point.y, point.x, point.y],
+      points: [startPoint.value.x, startPoint.value.y, startPoint.value.x, startPoint.value.y],
       stroke: store.strokeColor,
       strokeWidth: store.strokeWidth,
       endArrow: 'arrow',
@@ -80,8 +76,6 @@ export function useArrowTool(
       element: arrow,
     })
 
-    arrow.draggable = true
-    currentElement.value = null
     store.setTool('select')
     store.selectObject(id)
   }

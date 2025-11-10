@@ -10,19 +10,15 @@ import type { Point, Tree, LeaferElement } from '@/types'
 export function useLineTool(
   tree: Tree,
   store: ReturnType<typeof useCanvasStore>,
-  isDrawing: Ref<boolean>,
   startPoint: Ref<Point | null>,
   currentElement: Ref<LeaferElement>,
   isShiftPressed: Ref<boolean>
 ) {
-  function handleMouseDown(point: Point) {
-    if (!tree) return
-
-    isDrawing.value = true
-    startPoint.value = point
+  function handleMouseDown() {
+    if (!tree || !startPoint.value) return
 
     const linePath = new Path({
-      path: `M ${point.x} ${point.y} L ${point.x} ${point.y}`,
+      path: `M ${startPoint.value.x} ${startPoint.value.y} L ${startPoint.value.x} ${startPoint.value.y}`,
       stroke: store.strokeColor,
       strokeWidth: store.strokeWidth,
       editable: true,
@@ -74,8 +70,6 @@ export function useLineTool(
       element: line,
     })
 
-    line.draggable = true
-    currentElement.value = null
     store.setTool('select')
     store.selectObject(id)
   }

@@ -1,28 +1,30 @@
 /**
  * Tool selector component for choosing drawing tools
  */
- 
+
 <script setup lang="ts">
+import '@/plugins/builtin'
 import { computed } from 'vue'
+import { pluginRegistry } from '@/plugins/registry'
 import { useCanvasStore } from '@/stores/canvas'
 import type { ToolType } from '@/types'
 
 const store = useCanvasStore()
 
-const tools: Array<{
-  type: ToolType
-  label: string
-}> = [
-  { type: 'select', label: '选择工具' },
-  { type: 'pan', label: '平移工具' },
-  { type: 'rect', label: '矩形工具' },
-  { type: 'circle', label: '圆形工具' },
-  { type: 'line', label: '直线工具' },
-  { type: 'arrow', label: '箭头工具' },
-  { type: 'pen', label: '画笔工具' },
-  { type: 'text', label: '文本工具' },
-  { type: 'image', label: '图片工具' },
-]
+const tools = computed(() => {
+  return pluginRegistry
+    .getAll()
+    .filter((plugin) => plugin.ui)
+    .map((plugin) => {
+      const ui = plugin.ui as NonNullable<typeof plugin.ui>
+      return {
+        type: plugin.type as ToolType,
+        label: ui.label,
+        iconName: ui.iconComponent,
+        dividerAfter: ui.dividerAfter,
+      }
+    })
+})
 
 const currentTool = computed(() => store.currentTool)
 
@@ -46,21 +48,13 @@ function handleToolClick(toolType: ToolType) {
             @click="handleToolClick(tool.type)"
           >
             <template #icon>
-              <i-lucide-mouse-pointer-2 v-if="tool.type === 'select'" class="text-xl" />
-              <i-lucide-hand v-else-if="tool.type === 'pan'" class="text-xl" />
-              <i-lucide-square v-else-if="tool.type === 'rect'" class="text-xl" />
-              <i-lucide-circle v-else-if="tool.type === 'circle'" class="text-xl" />
-              <i-lucide-minus v-else-if="tool.type === 'line'" class="text-xl" />
-              <i-lucide-arrow-right v-else-if="tool.type === 'arrow'" class="text-xl" />
-              <i-lucide-pen-tool v-else-if="tool.type === 'pen'" class="text-xl" />
-              <i-lucide-type v-else-if="tool.type === 'text'" class="text-xl" />
-              <i-lucide-image v-else-if="tool.type === 'image'" class="text-xl" />
+              <IconRenderer :name="tool.iconName" class="text-xl" />
             </template>
           </n-button>
         </template>
         {{ tool.label }}
       </n-tooltip>
-      <n-divider v-if="tool.type === 'pan' || tool.type === 'pen'" vertical />
+      <n-divider v-if="tool.dividerAfter" vertical />
     </template>
   </div>
 </template>

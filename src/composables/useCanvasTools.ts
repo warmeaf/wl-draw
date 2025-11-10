@@ -2,19 +2,15 @@
  * Canvas tools composable for handling drawing tools and mouse interactions
  */
 
+import '@/plugins/builtin'
 import { useKeyModifier } from '@vueuse/core'
 import type { App } from 'leafer-ui'
 import { DragEvent, KeyEvent, PointerEvent, ZoomEvent } from 'leafer-ui'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { pluginRegistry } from '@/plugins/registry'
+import type { ToolInstance } from '@/plugins/types'
 import { useCanvasStore } from '@/stores/canvas'
 import type { LeaferElement, Point, ToolType } from '@/types'
-import { useArrowTool } from './useArrowTool'
-import { useCircleTool } from './useCircleTool'
-import { useImageTool } from './useImageTool'
-import { useLineTool } from './useLineTool'
-import { usePenTool } from './usePenTool'
-import { useRectTool } from './useRectTool'
-import { useTextTool } from './useTextTool'
 
 export function useCanvasTools(app: App) {
   const store = useCanvasStore()
@@ -28,20 +24,44 @@ export function useCanvasTools(app: App) {
   const isShiftPressedRaw = useKeyModifier('Shift', { events: ['keydown', 'keyup'] })
   const isShiftPressed = computed(() => isShiftPressedRaw.value ?? false)
 
-  const rectTool = useRectTool(tree, store, startPoint, currentElement, isShiftPressed)
-  const circleTool = useCircleTool(tree, store, startPoint, currentElement, isShiftPressed)
-  const lineTool = useLineTool(tree, store, startPoint, currentElement, isShiftPressed)
-  const arrowTool = useArrowTool(tree, store, startPoint, currentElement, isShiftPressed)
-  const penTool = usePenTool(tree, store, startPoint, currentElement, penPathPoints)
-  const textTool = useTextTool(tree, store)
-  const imageTool = useImageTool(tree, store)
+  const toolInstances = new Map<string, ToolInstance>()
+  let previousToolInstance: ToolInstance | null = null
+
+  function getToolInstance(toolType: string): ToolInstance | null {
+    if (!toolInstances.has(toolType)) {
+      const plugin = pluginRegistry.getByType(toolType)
+      if (plugin) {
+        const instance = plugin.createTool({
+          tree,
+          store,
+          isDrawing,
+          startPoint,
+          currentElement,
+          isShiftPressed,
+          penPathPoints,
+        })
+        toolInstances.set(toolType, instance)
+      }
+    }
+    return toolInstances.get(toolType) || null
+  }
 
   watch(
     () => store.currentTool,
-    (newTool) => {
+    (newTool, oldTool) => {
+      if (oldTool && previousToolInstance?.onDeactivate) {
+        previousToolInstance.onDeactivate()
+      }
+
       resetState()
       autoSetMode(newTool)
       autoSetDrag(newTool)
+
+      const newToolInstance = getToolInstance(newTool)
+      if (newToolInstance?.onActivate) {
+        newToolInstance.onActivate()
+      }
+      previousToolInstance = newToolInstance
     }
   )
 
@@ -69,48 +89,18 @@ export function useCanvasTools(app: App) {
   function handleDrag(e: DragEvent) {
     if (!tree || !isDrawing.value) return
 
-    const tool = store.currentTool
-
-    switch (tool) {
-      case 'rect':
-        rectTool.updateDrawing(e)
-        break
-      case 'circle':
-        circleTool.updateDrawing(e)
-        break
-      case 'line':
-        lineTool.updateDrawing(e)
-        break
-      case 'arrow':
-        arrowTool.updateDrawing(e)
-        break
-      case 'pen':
-        penTool.updateDrawing(e)
-        break
+    const toolInstance = getToolInstance(store.currentTool)
+    if (toolInstance?.updateDrawing) {
+      toolInstance.updateDrawing(e)
     }
   }
 
   function handleDragEnd() {
     if (!tree || !isDrawing.value) return
 
-    const tool = store.currentTool
-
-    switch (tool) {
-      case 'rect':
-        rectTool.finishDrawing()
-        break
-      case 'circle':
-        circleTool.finishDrawing()
-        break
-      case 'line':
-        lineTool.finishDrawing()
-        break
-      case 'arrow':
-        arrowTool.finishDrawing()
-        break
-      case 'pen':
-        penTool.finishDrawing()
-        break
+    const toolInstance = getToolInstance(store.currentTool)
+    if (toolInstance?.finishDrawing) {
+      toolInstance.finishDrawing()
     }
 
     resetState()
@@ -119,14 +109,9 @@ export function useCanvasTools(app: App) {
   function handleTap(e: PointerEvent) {
     if (!tree) return
 
-    const tool = store.currentTool
-
-    if (tool === 'text' || tool === 'image') {
-      if (tool === 'text') {
-        textTool.handleTap(e)
-      } else if (tool === 'image') {
-        imageTool.handleTap(e)
-      }
+    const toolInstance = getToolInstance(store.currentTool)
+    if (toolInstance?.handleTap) {
+      toolInstance.handleTap(e)
     }
   }
 
@@ -134,6 +119,9 @@ export function useCanvasTools(app: App) {
     if (!tree) return
 
     const tool = store.currentTool
+    const plugin = pluginRegistry.getByType(tool)
+    if (!plugin) return
+
     if (tool === 'select' || tool === 'pan' || tool === 'text' || tool === 'image') {
       return
     }
@@ -145,22 +133,9 @@ export function useCanvasTools(app: App) {
     penPathPoints.value = [{ x: bounds.x, y: bounds.y }]
     isDrawing.value = true
 
-    switch (tool) {
-      case 'rect':
-        rectTool.handleMouseDown()
-        break
-      case 'circle':
-        circleTool.handleMouseDown()
-        break
-      case 'line':
-        lineTool.handleMouseDown()
-        break
-      case 'arrow':
-        arrowTool.handleMouseDown()
-        break
-      case 'pen':
-        penTool.handleMouseDown()
-        break
+    const toolInstance = getToolInstance(tool)
+    if (toolInstance?.handleMouseDown) {
+      toolInstance.handleMouseDown()
     }
   })
 

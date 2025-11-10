@@ -2,17 +2,15 @@
  * Canvas store for managing drawing state, tools, objects, and history
  */
 
-import type { App, Ellipse, Image, Line, Path, Pen, Rect, Text } from 'leafer-ui'
+import type { App } from 'leafer-ui'
 import { defineStore } from 'pinia'
 import { themeColors } from '@/config/theme'
-import type { ToolType } from '@/types'
-
-export type LeaferElement = Rect | Ellipse | Path | Line | Pen | Text | Image
+import type { LeaferElement, ToolType } from '@/types'
 
 export interface CanvasObject {
   id: string
   type: 'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image'
-  element: LeaferElement
+  element: NonNullable<LeaferElement>
   [key: string]: unknown
 }
 

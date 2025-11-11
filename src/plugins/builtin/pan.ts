@@ -14,6 +14,7 @@ export const panPlugin: ToolPlugin = {
     iconComponent: 'i-lucide-hand',
     dividerAfter: true,
   },
+  shortcut: 'KeySpace',
   createTool: () => {
     return {}
   },

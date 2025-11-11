@@ -14,7 +14,6 @@
       "**/*.vue",
       "**/*.json",
       "**/*.jsonc",
-      "**/*.md",
       "**/*.css",
       "**/*.scss",
       "!!**/node_modules",
@@ -27,7 +26,8 @@
       "!!**/package-lock.json",
       "!!**/yarn.lock",
       "!!auto-imports.d.ts",
-      "!!components.d.ts"
+      "!!components.d.ts",
+      "!!**/*.md"
     ]
   },
   "formatter": {

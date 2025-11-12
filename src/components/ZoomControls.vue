@@ -1,7 +1,7 @@
 /**
  * Zoom controls component for canvas zoom operations
  */
- 
+
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useZoomTool } from '@/composables/useZoomTool'

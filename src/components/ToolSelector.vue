@@ -3,7 +3,6 @@
  */
 
 <script setup lang="ts">
-import '@/plugins/builtin'
 import { computed } from 'vue'
 import { pluginRegistry } from '@/plugins/registry'
 import { useCanvasStore } from '@/stores/canvas'

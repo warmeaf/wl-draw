@@ -9,7 +9,17 @@ export const circlePlugin: ToolPlugin = {
   id: 'circle',
   name: 'Circle Tool',
   type: 'circle',
+  metadata: {
+    version: '1.0.0',
+    description: 'Circle drawing tool',
+  },
   category: 'drawing',
+  capabilities: {
+    requiresDrawMode: true,
+    handlesDragStart: true,
+    handlesDrag: true,
+    handlesDragEnd: true,
+  },
   ui: {
     label: '圆形工具',
     iconComponent: 'i-lucide-circle',

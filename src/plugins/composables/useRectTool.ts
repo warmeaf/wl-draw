@@ -15,7 +15,7 @@ export function useRectTool(
   currentElement: Ref<LeaferElement>,
   isShiftPressed: Ref<boolean>
 ) {
-  function handleMouseDown() {
+  function startDrawing() {
     if (!tree || !startPoint.value) return
 
     const rect = new Rect({
@@ -94,7 +94,7 @@ export function useRectTool(
   }
 
   return {
-    handleMouseDown,
+    startDrawing,
     updateDrawing,
     finishDrawing,
   }

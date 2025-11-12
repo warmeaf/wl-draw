@@ -15,7 +15,7 @@ export function usePenTool(
   currentElement: Ref<LeaferElement>,
   penPathPoints: Ref<Array<Point>>
 ) {
-  function handleMouseDown() {
+  function startDrawing() {
     if (!tree || !startPoint.value) return
 
     const pen = new Pen()
@@ -79,7 +79,7 @@ export function usePenTool(
   }
 
   return {
-    handleMouseDown,
+    startDrawing,
     updateDrawing,
     finishDrawing,
   }

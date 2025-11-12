@@ -9,7 +9,17 @@ export const arrowPlugin: ToolPlugin = {
   id: 'arrow',
   name: 'Arrow Tool',
   type: 'arrow',
+  metadata: {
+    version: '1.0.0',
+    description: 'Arrow drawing tool',
+  },
   category: 'drawing',
+  capabilities: {
+    requiresDrawMode: true,
+    handlesDragStart: true,
+    handlesDrag: true,
+    handlesDragEnd: true,
+  },
   ui: {
     label: '箭头工具',
     iconComponent: 'i-lucide-arrow-right',

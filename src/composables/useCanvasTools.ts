@@ -2,11 +2,11 @@
  * Canvas tools composable for handling drawing tools and mouse interactions
  */
 
-import '@/plugins/builtin'
 import { useKeyModifier } from '@vueuse/core'
 import type { App } from 'leafer-ui'
 import { DragEvent, KeyEvent, PointerEvent, ZoomEvent } from 'leafer-ui'
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
 import { parseShortcut } from '@/plugins/shortcut'
 import type { ToolInstance } from '@/plugins/types'
@@ -40,6 +40,7 @@ export function useCanvasTools(app: App) {
           currentElement,
           isShiftPressed,
           penPathPoints,
+          eventBus: pluginEventBus,
         })
         toolInstances.set(toolType, instance)
       }
@@ -49,9 +50,29 @@ export function useCanvasTools(app: App) {
 
   watch(
     () => store.currentTool,
-    (newTool, oldTool) => {
-      if (oldTool && previousToolInstance?.onDeactivate) {
-        previousToolInstance.onDeactivate()
+    async (newTool, oldTool) => {
+      if (oldTool) {
+        const oldPlugin = pluginRegistry.getByType(oldTool)
+        if (oldPlugin) {
+          pluginRegistry.updatePluginState(oldPlugin.id, 'deactivated')
+          pluginEventBus.emit('plugin:deactivated', {
+            pluginId: oldPlugin.id,
+            toolType: oldTool,
+          })
+        }
+        if (previousToolInstance?.onDeactivate) {
+          previousToolInstance.onDeactivate()
+        }
+      }
+
+      if (oldTool && newTool) {
+        const canSwitch = await pluginRegistry.executeHook('beforeToolSwitch', {
+          from: oldTool,
+          to: newTool,
+        })
+        if (!canSwitch) {
+          return
+        }
       }
 
       resetState()
@@ -59,6 +80,24 @@ export function useCanvasTools(app: App) {
       autoSetDrag(newTool)
 
       const newToolInstance = getToolInstance(newTool)
+      const newPlugin = pluginRegistry.getByType(newTool)
+      if (newPlugin) {
+        pluginRegistry.updatePluginState(newPlugin.id, 'activated')
+        pluginEventBus.emit('plugin:activated', {
+          pluginId: newPlugin.id,
+          toolType: newTool,
+        })
+      }
+      if (oldTool) {
+        pluginEventBus.emit('tool:switched', {
+          from: oldTool,
+          to: newTool,
+        })
+        await pluginRegistry.executeHook('afterToolSwitch', {
+          from: oldTool,
+          to: newTool,
+        })
+      }
       if (newToolInstance?.onActivate) {
         newToolInstance.onActivate()
       }
@@ -74,35 +113,72 @@ export function useCanvasTools(app: App) {
   }
 
   function autoSetMode(newTool: ToolType) {
-    if (newTool === 'select' || newTool === 'pan') {
+    const plugin = pluginRegistry.getByType(newTool)
+    if (!plugin) return
+
+    const capabilities = plugin.capabilities
+    if (capabilities?.requiresNormalMode) {
       app.mode = 'normal'
-    } else {
+    } else if (capabilities?.requiresDrawMode) {
       app.mode = 'draw'
     }
   }
 
   function autoSetDrag(newTool: ToolType) {
-    if (app.config.move) {
-      app.config.move.drag = newTool === 'pan'
-    }
+    const plugin = pluginRegistry.getByType(newTool)
+    if (!plugin || !app.config.move) return
+
+    app.config.move.drag = plugin.capabilities?.enablesDrag === true
   }
 
   function handleDrag(e: DragEvent) {
     if (!tree || !isDrawing.value) return
 
-    const toolInstance = getToolInstance(store.currentTool)
+    const tool = store.currentTool
+    const plugin = pluginRegistry.getByType(tool)
+    if (!plugin || !plugin.capabilities?.handlesDrag) return
+
+    const bounds = e.getPageBounds()
+    if (bounds) {
+      pluginEventBus.emit('drawing:update', {
+        toolType: tool,
+        bounds: {
+          x: bounds.x,
+          y: bounds.y,
+          width: bounds.width,
+          height: bounds.height,
+        },
+      })
+    }
+
+    const toolInstance = getToolInstance(tool)
     if (toolInstance?.updateDrawing) {
       toolInstance.updateDrawing(e)
     }
   }
 
-  function handleDragEnd() {
+  async function handleDragEnd() {
     if (!tree || !isDrawing.value) return
 
-    const toolInstance = getToolInstance(store.currentTool)
+    const tool = store.currentTool
+    const plugin = pluginRegistry.getByType(tool)
+    if (!plugin || !plugin.capabilities?.handlesDragEnd) return
+
+    const canFinish = await pluginRegistry.executeHook('beforeDrawingFinish', {
+      toolType: tool,
+    })
+    if (!canFinish) {
+      return
+    }
+
+    const toolInstance = getToolInstance(tool)
     if (toolInstance?.finishDrawing) {
       toolInstance.finishDrawing()
     }
+
+    await pluginRegistry.executeHook('afterDrawingFinish', {
+      toolType: tool,
+    })
 
     resetState()
   }
@@ -110,53 +186,55 @@ export function useCanvasTools(app: App) {
   function handleTap(e: PointerEvent) {
     if (!tree) return
 
-    const toolInstance = getToolInstance(store.currentTool)
+    const tool = store.currentTool
+    const plugin = pluginRegistry.getByType(tool)
+    if (!plugin || !plugin.capabilities?.handlesTap) return
+
+    const toolInstance = getToolInstance(tool)
     if (toolInstance?.handleTap) {
       toolInstance.handleTap(e)
     }
   }
 
-  const dragStartId = app.on_(DragEvent.START, (e: DragEvent) => {
+  const dragStartId = app.on_(DragEvent.START, async (e: DragEvent) => {
     if (!tree) return
 
     const tool = store.currentTool
     const plugin = pluginRegistry.getByType(tool)
-    if (!plugin) return
-
-    if (tool === 'select' || tool === 'pan' || tool === 'text' || tool === 'image') {
-      return
-    }
+    if (!plugin || !plugin.capabilities?.handlesDragStart) return
 
     const bounds = e.getPageBounds()
     if (!bounds) return
+
+    const drawingStartContext = {
+      toolType: tool,
+      point: { x: bounds.x, y: bounds.y },
+    }
+
+    const canStart = await pluginRegistry.executeHook('beforeDrawingStart', drawingStartContext)
+    if (!canStart) {
+      return
+    }
 
     startPoint.value = { x: bounds.x, y: bounds.y }
     penPathPoints.value = [{ x: bounds.x, y: bounds.y }]
     isDrawing.value = true
 
+    pluginEventBus.emit('drawing:start', drawingStartContext)
+
+    await pluginRegistry.executeHook('afterDrawingStart', drawingStartContext)
+
     const toolInstance = getToolInstance(tool)
-    if (toolInstance?.handleMouseDown) {
-      toolInstance.handleMouseDown()
+    if (toolInstance?.startDrawing) {
+      toolInstance.startDrawing()
     }
   })
 
   const dragId = app.on_(DragEvent.DRAG, (e: DragEvent) => {
-    const tool = store.currentTool
-
-    if (tool === 'pan') {
-      return
-    }
-
     handleDrag(e)
   })
 
   const dragEndId = app.on_(DragEvent.END, () => {
-    const tool = store.currentTool
-
-    if (tool === 'pan') {
-      return
-    }
-
     handleDragEnd()
   })
 
@@ -242,7 +320,9 @@ export function useCanvasTools(app: App) {
   })
 
   const zoomId = app.on_(ZoomEvent.ZOOM, (_e: ZoomEvent) => {
-    store.setZoom(app.tree.scale as number)
+    const zoom = app.tree.scale as number
+    store.setZoom(zoom)
+    pluginEventBus.emit('canvas:zoom', { zoom })
   })
 
   onBeforeUnmount(() => {

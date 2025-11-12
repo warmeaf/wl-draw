@@ -15,7 +15,7 @@ export function useLineTool(
   currentElement: Ref<LeaferElement>,
   isShiftPressed: Ref<boolean>
 ) {
-  function handleMouseDown() {
+  function startDrawing() {
     if (!tree || !startPoint.value) return
 
     const linePath = new Path({
@@ -76,7 +76,7 @@ export function useLineTool(
   }
 
   return {
-    handleMouseDown,
+    startDrawing,
     updateDrawing,
     finishDrawing,
   }

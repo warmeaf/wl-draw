@@ -9,7 +9,15 @@ export const textPlugin: ToolPlugin = {
   id: 'text',
   name: 'Text Tool',
   type: 'text',
+  metadata: {
+    version: '1.0.0',
+    description: 'Text insertion tool',
+  },
   category: 'drawing',
+  capabilities: {
+    requiresDrawMode: true,
+    handlesTap: true,
+  },
   ui: {
     label: '文本工具',
     iconComponent: 'i-lucide-type',

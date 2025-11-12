@@ -15,7 +15,7 @@ export function useArrowTool(
   currentElement: Ref<LeaferElement>,
   isShiftPressed: Ref<boolean>
 ) {
-  function handleMouseDown() {
+  function startDrawing() {
     if (!tree || !startPoint.value) return
 
     const arrowLine = new Line({
@@ -82,7 +82,7 @@ export function useArrowTool(
   }
 
   return {
-    handleMouseDown,
+    startDrawing,
     updateDrawing,
     finishDrawing,
   }

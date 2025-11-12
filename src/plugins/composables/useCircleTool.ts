@@ -15,7 +15,7 @@ export function useCircleTool(
   currentElement: Ref<LeaferElement>,
   isShiftPressed: Ref<boolean>
 ) {
-  function handleMouseDown() {
+  function startDrawing() {
     if (!tree || !startPoint.value) return
 
     const ellipse = new Ellipse({
@@ -94,7 +94,7 @@ export function useCircleTool(
   }
 
   return {
-    handleMouseDown,
+    startDrawing,
     updateDrawing,
     finishDrawing,
   }

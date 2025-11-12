@@ -9,7 +9,17 @@ export const penPlugin: ToolPlugin = {
   id: 'pen',
   name: 'Pen Tool',
   type: 'pen',
+  metadata: {
+    version: '1.0.0',
+    description: 'Freehand pen drawing tool',
+  },
   category: 'drawing',
+  capabilities: {
+    requiresDrawMode: true,
+    handlesDragStart: true,
+    handlesDrag: true,
+    handlesDragEnd: true,
+  },
   ui: {
     label: '画笔工具',
     iconComponent: 'i-lucide-pen-tool',

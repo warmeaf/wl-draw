@@ -1,26 +1,27 @@
 /**
  * Canvas component for main drawing canvas using Leafer App and Editor
  */
- 
+
 <script setup lang="ts">
 import { App } from 'leafer-ui'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import '@leafer-in/editor'
-import '@leafer-in/viewport'
-import '@leafer-in/view'
-import '@leafer-in/arrow'
-import '@leafer-in/text-editor'
 
 import { useCanvasTools } from '@/composables/useCanvasTools'
 import { useDeleteTool } from '@/composables/useDeleteTool'
 import { themeColors } from '@/config/theme'
 import { useCanvasStore } from '@/stores/canvas'
 
+import '@leafer-in/editor'
+import '@leafer-in/viewport'
+import '@leafer-in/view'
+import '@leafer-in/arrow'
+import '@leafer-in/text-editor'
+
 const canvasContainer = ref<HTMLElement | null>(null)
 const store = useCanvasStore()
 
 let app: App | null = null
-let cleanupDeleteTool: (() => void) | null = null
+let deleteToolCleanup: (() => void) | null = null
 
 onMounted(() => {
   if (!canvasContainer.value) return
@@ -44,11 +45,11 @@ onMounted(() => {
   store.setAppInstance(app)
 
   useCanvasTools(app)
-  cleanupDeleteTool = useDeleteTool(app, store)
+  deleteToolCleanup = useDeleteTool(app, store)
 })
 
 onBeforeUnmount(() => {
-  cleanupDeleteTool?.()
+  deleteToolCleanup?.()
 
   if (app) {
     app.destroy()

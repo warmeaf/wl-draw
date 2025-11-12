@@ -2,9 +2,9 @@
 alwaysApply: true
 ---
 
-# Cursor Rules for wl-draw Project
+# Project Comment Style
 
-## Code Style Guidelines for src/ Directory
+## Comment Style Guidelines for src/ Directory
 
 ### 1. File Documentation (Required)
 

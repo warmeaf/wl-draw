@@ -1,0 +1,64 @@
+---
+alwaysApply: true
+---
+
+# Code Writing Standards
+
+## 1. The code organization must be clean and orderly
+
+- Group related functionality together
+- Maintain clear file and directory structure
+- Separate concerns appropriately (UI, logic, data, utilities)
+- Keep files focused on a single responsibility
+
+## 2. Code logic and naming must be intuitive
+
+- Write code that reads like natural language
+- Use descriptive names that clearly express intent
+- Avoid abbreviations unless they are widely understood
+- Prefer explicit over implicit behavior
+- Follow consistent patterns throughout the codebase
+
+### 2.1 Naming Principles
+
+- **Clarity over brevity**: `currentSelectedObjectId` is better than `objId`
+- **Action verbs for functions**: `calculateTotal`, `renderCanvas`, `updateState`
+- **Boolean prefixes**: `isActive`, `hasPermission`, `canEdit`
+- **Descriptive nouns**: `drawingTool`, `canvasElement`, `pluginRegistry`
+
+## 3. Adhere to core principles while avoiding over-engineering, with readability as the top priority
+
+- Keep solutions simple and straightforward
+- Avoid premature optimization or abstraction
+- Prioritize code readability and maintainability
+- Don't add complexity unless it solves a real problem
+- Refactor when patterns emerge naturally, not preemptively
+
+## 4. Naming Consistency
+
+### 4.1 Related Methods Should Use Consistent Naming Patterns
+
+When methods represent different stages of the same process or lifecycle, they should follow a unified naming convention:
+
+**Good Examples:**
+
+- `startDrawing`, `updateDrawing`, `finishDrawing` - Unified verb-based naming for drawing lifecycle
+- `onActivate`, `onDeactivate` - Unified `on` prefix for lifecycle hooks
+- `handleTap`, `handleDrag` - Unified `handle` prefix for event handlers
+
+**Bad Examples:**
+
+- `handleMouseDown`, `updateDrawing`, `finishDrawing` - Mixed prefixes (`handle` vs verb-based)
+- `onActivate`, `handleDeactivate` - Mixed prefixes (`on` vs `handle`)
+
+### 4.2 Lifecycle Methods
+
+Methods that represent lifecycle stages should use consistent naming:
+
+- Use verb-based names for sequential operations: `start`, `update`, `finish`
+- Use `on` prefix for event-driven lifecycle hooks: `onActivate`, `onDeactivate`
+- Use `handle` prefix for event handlers: `handleTap`, `handleDrag`
+
+### 4.3 Avoid Mixing Naming Conventions
+
+Do not mix different naming conventions within the same interface or related functionality. Choose one pattern and stick to it consistently.

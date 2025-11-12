@@ -1,0 +1,42 @@
+---
+alwaysApply: true
+---
+
+# The core principles of a plug-in architecture
+
+In building scalable and maintainable front-end applications, a plug-in architecture is a very powerful and popular pattern. Its core idea is to keep the main application (core system) concise and stable while allowing functionality to be extended through plug-ins, thereby achieving a high degree of flexibility and decoupling.
+
+Here are some fundamental principles to follow in a front-end plug-in architecture:
+
+## 1. **Separation of Core and Plugins**
+
+This is the most core principle of a plug-in architecture. Specifically:
+
+- **Microkernel**: The core system should be as small and stable as possible, containing only the most basic and universal functions of the application. This design is also known as "Microkernel Architecture". The responsibility of the core system is to manage the life cycle of plug-ins and provide the context environment required for plug-ins to run.
+- **Functional Modularity**: Business functions and variable parts should exist in the form of plug-ins, with each plug-in being responsible for an independent function. This way, the application logic is divided into independent plug-in modules and the core system, providing features of scalability, flexibility, and functional isolation.
+
+**Advantages**: The stability of the core layer is guaranteed, and changes to plug-ins will not affect the core system. At the same time, this allows different teams to develop different plug-ins in parallel, improving development efficiency.
+
+## 2. **Clear Contracts and Specifications**
+
+To enable plug-ins to run smoothly in the core system, a set of clear specifications and interfaces must be defined.
+
+- **Unified Plugin Interface**: The core system needs to define interface specifications that plug-ins must comply with, so that operations such as inspection, registration, mounting, and unregistration of plug-ins can be performed.
+- **Metadata**: Each plug-in should contain a metadata file in a unified format, which is used to describe information about the plug-in itself, such as name, version, dependencies, etc.
+- **Connection Specifications**: The core system must clearly define how plug-ins connect to itself, and plug-ins are implemented in accordance with this specification.
+
+## 3. **Unified Plugin Management Mechanism**
+
+The core system needs a mechanism to manage the life cycle of all plug-ins.
+
+- **Plugin Registration and Loading**: There must be a clear mechanism for registering and loading plug-ins. A common implementation is the plug-in registry mechanism, where the core system loads plug-ins by reading registry information. Loading can be done at startup or on demand.
+- **Plugin-Driven vs. System-Driven**:
+  - **Plugin-Driven**: The plug-in actively registers itself with the core system (e.g., `Vue.use()`).
+  - **System-Driven**: The core system actively finds and loads plug-ins (e.g., Webpack loads plug-ins from configuration files).
+
+## 4. **Reliable Communication Mechanism**
+
+An efficient and decoupled communication method is required between the core system and plug-ins, as well as between plug-ins themselves.
+
+- **Event-Driven**: Establishing an event-based communication channel is a common and effective way. Plug-ins can listen to and trigger events of the core system or other plug-ins to interact.
+- **Hooks**: The core system can expose hooks at key nodes in its life cycle, and plug-ins can mount their own logic to these hooks to execute at specific times. For example, Webpack's plug-in mechanism makes extensive use of hooks.

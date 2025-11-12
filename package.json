@@ -18,7 +18,7 @@
     "preinstall": "npx only-allow pnpm"
   },
   "lint-staged": {
-    "*.{js,ts,vue,json,md,css,scss}": [
+    "*.{js,ts,vue,json,css,scss}": [
       "biome check --write"
     ]
   },

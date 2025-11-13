@@ -7,7 +7,7 @@ import { computed } from 'vue'
 import { useZoomTool } from '@/composables/useZoomTool'
 import { useCanvasStore } from '@/stores/canvas'
 
-const size = 'tiny'
+const size = 'medium'
 const store = useCanvasStore()
 const { zoomIn, zoomOut, resetZoom } = useZoomTool()
 
@@ -24,7 +24,7 @@ function handleZoomOut() {
 
 <template>
   <div
-    class="toolbar-module flex items-center gap-2 px-3 py-2 shadow-lg backdrop-blur-md bg-white/70 border border-gray-200/50 rounded-full"
+    class="flex items-center gap-2 px-3 py-2 shadow-sm backdrop-blur-md bg-white/70 border border-gray-200/50 rounded-full"
   >
     <n-tooltip trigger="hover">
       <template #trigger>

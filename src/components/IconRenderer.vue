@@ -19,6 +19,6 @@ defineProps<{
   <i-lucide-pen-tool v-else-if="name === 'i-lucide-pen-tool'" :class="class" />
   <i-lucide-type v-else-if="name === 'i-lucide-type'" :class="class" />
   <i-lucide-image v-else-if="name === 'i-lucide-image'" :class="class" />
-  <i-lucide-download v-else-if="name === 'i-lucide-download'" :class="class" />
+  <i-lucide-image-down v-else-if="name === 'i-lucide-image-down'" :class="class" />
 </template>
 

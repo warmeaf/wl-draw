@@ -19,8 +19,7 @@ export const exportPlugin: ToolPlugin = {
   },
   ui: {
     label: '导出图片',
-    iconComponent: 'i-lucide-download',
-    dividerAfter: false,
+    iconComponent: 'i-lucide-image-down',
   },
   shortcut: 'Shift+KeyE',
   createTool: (context) => {

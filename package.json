@@ -30,6 +30,7 @@
   "dependencies": {
     "@leafer-in/arrow": "^1.9.12",
     "@leafer-in/editor": "^1.9.12",
+    "@leafer-in/export": "1.9.12",
     "@leafer-in/text-editor": "1.9.12",
     "@leafer-in/view": "1.9.12",
     "@leafer-in/viewport": "1.9.12",

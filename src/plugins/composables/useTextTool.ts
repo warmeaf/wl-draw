@@ -15,7 +15,7 @@ export function useTextTool(tree: Tree, store: ReturnType<typeof useCanvasStore>
     const text = new Text({
       x: point.x,
       y: point.y,
-      text: '文本',
+      text: '双击编辑文本',
       fontSize: store.fontSize,
       fill: store.textColor,
       editable: true,

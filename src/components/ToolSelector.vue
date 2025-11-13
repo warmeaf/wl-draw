@@ -34,7 +34,7 @@ function handleToolClick(toolType: ToolType) {
 
 <template>
   <div
-    class="flex items-center gap-2 px-3 py-2 shadow-sm backdrop-blur-md bg-white/70 border border-gray-200/50 rounded-full"
+    class="flex items-center gap-2 p-2 shadow-sm backdrop-blur-md bg-white/70 border border-gray-200/50 rounded-full"
   >
     <template v-for="tool in tools" :key="tool.type">
       <n-tooltip trigger="hover">

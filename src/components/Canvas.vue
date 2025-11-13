@@ -8,6 +8,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useCanvasTools } from '@/composables/useCanvasTools'
 import { useDeleteTool } from '@/composables/useDeleteTool'
+import { canvasConfig } from '@/config/canvas'
 import { themeColors } from '@/config/theme'
 import { useCanvasStore } from '@/stores/canvas'
 
@@ -33,9 +34,9 @@ onMounted(() => {
       stroke: themeColors.selectionBox,
       pointStroke: themeColors.controlPoint,
     },
-    zoom: { min: 0.02, max: 256 },
+    zoom: { min: canvasConfig.zoom.min, max: canvasConfig.zoom.max },
     wheel: {
-      zoomSpeed: 0.1,
+      zoomSpeed: canvasConfig.wheel.zoomSpeed,
     },
     move: {
       drag: false,

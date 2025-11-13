@@ -4,6 +4,7 @@
 
 import type { App } from 'leafer-ui'
 import { defineStore } from 'pinia'
+import { canvasConfig } from '@/config/canvas'
 import { themeColors } from '@/config/theme'
 import type { LeaferElement, ToolType } from '@/types'
 
@@ -24,7 +25,7 @@ export const useCanvasStore = defineStore('canvas', {
     appInstance: null as App | null,
     objects: [] as CanvasObject[],
 
-    zoom: 1,
+    zoom: canvasConfig.zoom.default,
     fillColor: themeColors.fill,
     strokeColor: themeColors.stroke,
     strokeWidth: 2,
@@ -95,13 +96,16 @@ export const useCanvasStore = defineStore('canvas', {
     },
 
     updateZoom(delta: number) {
-      const newZoom = Math.max(0.02, Math.min(256, this.zoom + delta))
+      const newZoom = Math.max(
+        canvasConfig.zoom.min,
+        Math.min(canvasConfig.zoom.max, this.zoom + delta)
+      )
       this.zoom = newZoom
       this.appInstance?.zoom(newZoom)
     },
 
     setZoom(zoom: number) {
-      const newZoom = Math.max(0.02, Math.min(256, zoom))
+      const newZoom = Math.max(canvasConfig.zoom.min, Math.min(canvasConfig.zoom.max, zoom))
       this.zoom = newZoom
       this.appInstance?.zoom(newZoom)
     },

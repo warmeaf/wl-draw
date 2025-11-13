@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useZoomTool } from '@/composables/useZoomTool'
+import { canvasConfig } from '@/config/canvas'
 import { useCanvasStore } from '@/stores/canvas'
 
 const size = 'medium'
@@ -14,11 +15,11 @@ const { zoomIn, zoomOut, resetZoom } = useZoomTool()
 const zoomPercent = computed(() => Math.round(store.zoom * 100))
 
 function handleZoomIn() {
-  zoomIn(0.1)
+  zoomIn(canvasConfig.zoom.step)
 }
 
 function handleZoomOut() {
-  zoomOut(0.1)
+  zoomOut(canvasConfig.zoom.step)
 }
 </script>
 

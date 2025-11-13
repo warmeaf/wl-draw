@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { computed, h } from 'vue'
 import IconRenderer from '@/components/IconRenderer.vue'
+import { exportFormats } from '@/config/export'
 import { useExportTool } from '@/plugins/composables/useExportTool'
 import { pluginRegistry } from '@/plugins/registry'
 import { useCanvasStore } from '@/stores/canvas'
@@ -32,11 +33,11 @@ const dropdownOptions = computed(() => {
       icon: () => h(IconRenderer, { name: ui.iconComponent, class: 'text-sm' }),
       children: [
         {
-          label: 'PNG',
+          label: exportFormats.png,
           key: 'export-png',
         },
         {
-          label: 'JPG',
+          label: exportFormats.jpg,
           key: 'export-jpg',
         },
       ],

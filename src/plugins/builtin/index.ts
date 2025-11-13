@@ -6,6 +6,7 @@ import { pluginRegistry } from '../registry'
 import type { ToolPlugin } from '../types'
 import { arrowPlugin } from './arrow'
 import { circlePlugin } from './circle'
+import { exportPlugin } from './export'
 import { imagePlugin } from './image'
 import { linePlugin } from './line'
 import { panPlugin } from './pan'
@@ -24,6 +25,7 @@ const builtinPlugins: ToolPlugin[] = [
   penPlugin,
   textPlugin,
   imagePlugin,
+  exportPlugin,
 ]
 
 export async function initializeBuiltinPlugins(): Promise<void> {

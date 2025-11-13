@@ -12,6 +12,7 @@ import { themeColors } from '@/config/theme'
 import { useCanvasStore } from '@/stores/canvas'
 
 import '@leafer-in/editor'
+import '@leafer-in/export'
 import '@leafer-in/viewport'
 import '@leafer-in/view'
 import '@leafer-in/arrow'

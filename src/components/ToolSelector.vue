@@ -18,7 +18,8 @@ const tools = computed(() => {
       const ui = plugin.ui as NonNullable<typeof plugin.ui>
       return {
         type: plugin.type as ToolType,
-        label: `${ui.label}【${plugin.shortcut}】`,
+        label: ui.label,
+        shortcut: plugin.shortcut,
         iconName: ui.iconComponent,
         dividerAfter: ui.dividerAfter,
       }
@@ -51,7 +52,12 @@ function handleToolClick(toolType: ToolType) {
             </template>
           </n-button>
         </template>
-        {{ tool.label }}
+        <template #default>
+          <span>{{ tool.label }}</span>
+          <span v-if="tool.shortcut" class="text-gray-400 text-xs ml-2">
+            {{ tool.shortcut }}
+          </span>
+        </template>
       </n-tooltip>
       <n-divider v-if="tool.dividerAfter" vertical />
     </template>

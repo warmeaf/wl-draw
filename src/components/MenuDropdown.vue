@@ -1,8 +1,9 @@
-/**
- * Menu dropdown component for toolbar actions like export
+/** 
+ * Menu dropdown component for toolbar actions like export 
  */
 
 <script setup lang="ts">
+import type { DropdownOption } from 'naive-ui'
 import { computed, h } from 'vue'
 import IconRenderer from '@/components/IconRenderer.vue'
 import { exportFormats } from '@/config/export'
@@ -24,13 +25,13 @@ const dropdownOptions = computed(() => {
 
   const ui = exportPlugin.value.ui
   const shortcut = exportPlugin.value.shortcut
-  const label = shortcut ? `${ui.label}【${shortcut}】` : ui.label
 
   return [
     {
-      label,
+      label: ui.label,
       key: 'export-image',
-      icon: () => h(IconRenderer, { name: ui.iconComponent, class: 'text-sm' }),
+      shortcut,
+      iconComponent: ui.iconComponent,
       children: [
         {
           label: exportFormats.png,
@@ -44,6 +45,43 @@ const dropdownOptions = computed(() => {
     },
   ]
 })
+
+function renderLabel(option: DropdownOption & { shortcut?: string; iconComponent?: string }) {
+  const labelContent =
+    typeof option.label === 'string'
+      ? option.label
+      : typeof option.label === 'function'
+        ? option.label()
+        : ''
+  const iconContent = option.iconComponent
+    ? h(IconRenderer, { name: option.iconComponent, class: 'text-sm' })
+    : null
+
+  return h(
+    'div',
+    {
+      class: 'flex items-center justify-between gap-4',
+    },
+    [
+      h(
+        'div',
+        {
+          class: 'flex items-center gap-2',
+        },
+        [iconContent, h('span', labelContent)]
+      ),
+      option.shortcut
+        ? h(
+            'span',
+            {
+              class: 'text-gray-400 text-xs',
+            },
+            option.shortcut
+          )
+        : null,
+    ]
+  )
+}
 
 async function handleExportImage(format: 'png' | 'jpg') {
   if (exportTool.value) {
@@ -69,6 +107,7 @@ function handleSelect(key: string) {
       placement="bottom-start"
       trigger="click"
       size="medium"
+      :render-label="renderLabel"
       @select="handleSelect"
       :disabled="!exportPlugin"
     >

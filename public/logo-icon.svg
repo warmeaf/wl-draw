@@ -1,0 +1,12 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Minimalist design: Canvas with drawing elements -->
+  <rect x="10" y="10" width="44" height="44" rx="4" fill="#F5F5F5" stroke="#4FC3F7" stroke-width="2"/>
+  
+  <!-- Geometric shapes representing drawing tools -->
+  <rect x="18" y="22" width="10" height="7" rx="1" fill="#4FC3F7" opacity="0.4"/>
+  <circle cx="38" cy="25.5" r="5" fill="#4FC3F7" opacity="0.4"/>
+  <path d="M20 38 L28 38" stroke="#4FC3F7" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M32 38 Q36 35, 40 38" stroke="#4FC3F7" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M20 46 L28 46 L26 44 M28 46 L26 48" stroke="#4FC3F7" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+

@@ -4,22 +4,45 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import IconRenderer from '@/components/IconRenderer.vue'
 import { useZoomTool } from '@/composables/useZoomTool'
 import { canvasConfig } from '@/config/canvas'
+import { pluginRegistry } from '@/plugins/registry'
 import { useCanvasStore } from '@/stores/canvas'
 
-const size = 'medium'
 const store = useCanvasStore()
 const { zoomIn, zoomOut, resetZoom } = useZoomTool()
 
 const zoomPercent = computed(() => Math.round(store.zoom * 100))
 
-function handleZoomIn() {
-  zoomIn(canvasConfig.zoom.step)
-}
+const zoomOutPlugin = computed(() => {
+  const plugin = pluginRegistry.getByType('zoomOut')
+  if (!plugin?.ui) return null
+  return {
+    type: plugin.type,
+    label: plugin.ui.label,
+    shortcut: plugin.shortcut,
+    iconName: plugin.ui.iconComponent,
+  }
+})
 
-function handleZoomOut() {
-  zoomOut(canvasConfig.zoom.step)
+const zoomInPlugin = computed(() => {
+  const plugin = pluginRegistry.getByType('zoomIn')
+  if (!plugin?.ui) return null
+  return {
+    type: plugin.type,
+    label: plugin.ui.label,
+    shortcut: plugin.shortcut,
+    iconName: plugin.ui.iconComponent,
+  }
+})
+
+function handleZoomAction(type: string) {
+  if (type === 'zoomIn') {
+    zoomIn(canvasConfig.zoom.step)
+  } else if (type === 'zoomOut') {
+    zoomOut(canvasConfig.zoom.step)
+  }
 }
 </script>
 
@@ -27,29 +50,55 @@ function handleZoomOut() {
   <div
     class="flex items-center gap-2 p-2 shadow-sm backdrop-blur-md bg-white/70 border border-gray-200/50 rounded-full"
   >
-    <n-tooltip trigger="hover">
+    <n-tooltip v-if="zoomOutPlugin" trigger="hover">
       <template #trigger>
-        <n-button quaternary :size="size" circle @click="handleZoomOut">
-          <template #icon> <i-lucide-zoom-out class="text-xl"></i-lucide-zoom-out> </template>
+        <n-button
+          quaternary
+          size="medium"
+          circle
+          @click="handleZoomAction(zoomOutPlugin.type)"
+        >
+          <template #icon>
+            <IconRenderer :name="zoomOutPlugin.iconName" class="text-xl" />
+          </template>
         </n-button>
       </template>
-      缩小
+      <template #default>
+        <span>{{ zoomOutPlugin.label }}</span>
+        <span v-if="zoomOutPlugin.shortcut" class="text-gray-400 text-xs ml-2">
+          {{ zoomOutPlugin.shortcut }}
+        </span>
+      </template>
     </n-tooltip>
     <n-tooltip trigger="hover">
       <template #trigger>
-        <n-button quaternary :size="size" style="width: 60px" @click="resetZoom">
+        <n-button quaternary size="medium" style="width: 60px" @click="resetZoom">
           {{ zoomPercent }}%
         </n-button>
       </template>
-      点击重置到 100%
+      <template #default>
+        <span>点击重置到 100%</span>
+      </template>
     </n-tooltip>
-    <n-tooltip trigger="hover">
+    <n-tooltip v-if="zoomInPlugin" trigger="hover">
       <template #trigger>
-        <n-button quaternary :size="size" circle @click="handleZoomIn">
-          <template #icon> <i-lucide-zoom-in class="text-xl"></i-lucide-zoom-in> </template>
+        <n-button
+          quaternary
+          size="medium"
+          circle
+          @click="handleZoomAction(zoomInPlugin.type)"
+        >
+          <template #icon>
+            <IconRenderer :name="zoomInPlugin.iconName" class="text-xl" />
+          </template>
         </n-button>
       </template>
-      放大
+      <template #default>
+        <span>{{ zoomInPlugin.label }}</span>
+        <span v-if="zoomInPlugin.shortcut" class="text-gray-400 text-xs ml-2">
+          {{ zoomInPlugin.shortcut }}
+        </span>
+      </template>
     </n-tooltip>
   </div>
 </template>

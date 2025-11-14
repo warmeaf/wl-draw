@@ -20,5 +20,7 @@ defineProps<{
   <i-lucide-type v-else-if="name === 'i-lucide-type'" :class="class" />
   <i-lucide-image v-else-if="name === 'i-lucide-image'" :class="class" />
   <i-lucide-image-down v-else-if="name === 'i-lucide-image-down'" :class="class" />
+  <i-lucide-zoom-in v-else-if="name === 'i-lucide-zoom-in'" :class="class" />
+  <i-lucide-zoom-out v-else-if="name === 'i-lucide-zoom-out'" :class="class" />
 </template>
 

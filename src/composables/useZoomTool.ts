@@ -20,9 +20,37 @@ export function useZoomTool() {
     store.setZoom(canvasConfig.zoom.default)
   }
 
+  function handleZoomKeyboardEvent(e: KeyboardEvent) {
+    const target = e.target as HTMLElement
+    const isInputFocused =
+      target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+
+    if (isInputFocused) {
+      return
+    }
+
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      (e.code === 'Equal' ||
+        e.code === 'Minus' ||
+        e.code === 'NumpadAdd' ||
+        e.code === 'NumpadSubtract')
+    ) {
+      e.preventDefault()
+    }
+  }
+
+  function setupZoomKeyboardPrevention() {
+    document.addEventListener('keydown', handleZoomKeyboardEvent, true)
+    return () => {
+      document.removeEventListener('keydown', handleZoomKeyboardEvent, true)
+    }
+  }
+
   return {
     zoomIn,
     zoomOut,
     resetZoom,
+    setupZoomKeyboardPrevention,
   }
 }

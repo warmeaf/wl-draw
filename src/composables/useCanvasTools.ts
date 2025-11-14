@@ -6,6 +6,7 @@ import { useKeyModifier } from '@vueuse/core'
 import type { App } from 'leafer-ui'
 import { DragEvent, KeyEvent, PointerEvent, ZoomEvent } from 'leafer-ui'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useZoomTool } from '@/composables/useZoomTool'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
 import { parseShortcut } from '@/plugins/shortcut'
@@ -16,6 +17,7 @@ import type { LeaferElement, Point, ToolType } from '@/types'
 export function useCanvasTools(app: App) {
   const store = useCanvasStore()
   const tree = app.tree
+  const { zoomIn, zoomOut } = useZoomTool()
 
   const isDrawing = ref(false)
   const startPoint = ref<Point | null>(null)
@@ -305,6 +307,14 @@ export function useCanvasTools(app: App) {
     for (const [shortcutKey, toolType] of shortcutMap.value.entries()) {
       const parsed = parseShortcut(shortcutKey)
       if (parsed && matchShortcut(e, parsed)) {
+        if (toolType === 'zoomIn') {
+          zoomIn()
+          return
+        }
+        if (toolType === 'zoomOut') {
+          zoomOut()
+          return
+        }
         if (toolType !== 'pan' || !store.isPanningWithSpace) {
           store.setTool(toolType)
         }

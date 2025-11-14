@@ -8,6 +8,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useCanvasTools } from '@/composables/useCanvasTools'
 import { useDeleteTool } from '@/composables/useDeleteTool'
+import { useZoomTool } from '@/composables/useZoomTool'
 import { canvasConfig } from '@/config/canvas'
 import { themeColors } from '@/config/theme'
 import { useCanvasStore } from '@/stores/canvas'
@@ -21,11 +22,15 @@ import '@leafer-in/text-editor'
 
 const canvasContainer = ref<HTMLElement | null>(null)
 const store = useCanvasStore()
+const { setupZoomKeyboardPrevention } = useZoomTool()
 
 let app: App | null = null
 let deleteToolCleanup: (() => void) | null = null
+let zoomKeyboardCleanup: (() => void) | null = null
 
 onMounted(() => {
+  zoomKeyboardCleanup = setupZoomKeyboardPrevention()
+
   if (!canvasContainer.value) return
 
   app = new App({
@@ -51,6 +56,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  zoomKeyboardCleanup?.()
   deleteToolCleanup?.()
 
   if (app) {

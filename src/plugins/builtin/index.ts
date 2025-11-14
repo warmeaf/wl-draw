@@ -14,6 +14,8 @@ import { penPlugin } from './pen'
 import { rectPlugin } from './rect'
 import { selectPlugin } from './select'
 import { textPlugin } from './text'
+import { zoomInPlugin } from './zoomIn'
+import { zoomOutPlugin } from './zoomOut'
 
 const builtinPlugins: ToolPlugin[] = [
   selectPlugin,
@@ -26,6 +28,8 @@ const builtinPlugins: ToolPlugin[] = [
   textPlugin,
   imagePlugin,
   exportPlugin,
+  zoomInPlugin,
+  zoomOutPlugin,
 ]
 
 export async function initializeBuiltinPlugins(): Promise<void> {

@@ -43,12 +43,12 @@ function handleToolClick(toolType: ToolType) {
           <n-button
             :type="currentTool === tool.type ? 'primary' : undefined"
             :quaternary="currentTool !== tool.type"
-            size="medium"
+            size="small"
             circle
             @click="handleToolClick(tool.type)"
           >
             <template #icon>
-              <IconRenderer :name="tool.iconName" class="text-xl" />
+              <IconRenderer :name="tool.iconName" class="text-sm" />
             </template>
           </n-button>
         </template>

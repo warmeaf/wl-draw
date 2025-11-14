@@ -106,14 +106,14 @@ function handleSelect(key: string) {
       :options="dropdownOptions"
       placement="bottom-start"
       trigger="click"
-      size="medium"
+      size="small"
       :render-label="renderLabel"
       @select="handleSelect"
       :disabled="!exportPlugin"
     >
-      <n-button circle quaternary>
+      <n-button size="small" circle quaternary>
         <template #icon>
-          <i-lucide-menu class="text-xl" />
+          <i-lucide-menu class="text-sm" />
         </template>
       </n-button>
     </n-dropdown>

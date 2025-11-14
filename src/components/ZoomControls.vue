@@ -54,12 +54,12 @@ function handleZoomAction(type: string) {
       <template #trigger>
         <n-button
           quaternary
-          size="medium"
+          size="small"
           circle
           @click="handleZoomAction(zoomOutPlugin.type)"
         >
           <template #icon>
-            <IconRenderer :name="zoomOutPlugin.iconName" class="text-xl" />
+            <IconRenderer :name="zoomOutPlugin.iconName" class="text-sm" />
           </template>
         </n-button>
       </template>
@@ -72,7 +72,7 @@ function handleZoomAction(type: string) {
     </n-tooltip>
     <n-tooltip trigger="hover">
       <template #trigger>
-        <n-button quaternary size="medium" style="width: 60px" @click="resetZoom">
+        <n-button quaternary size="small" style="width: 60px" @click="resetZoom">
           {{ zoomPercent }}%
         </n-button>
       </template>
@@ -84,12 +84,12 @@ function handleZoomAction(type: string) {
       <template #trigger>
         <n-button
           quaternary
-          size="medium"
+          size="small"
           circle
           @click="handleZoomAction(zoomInPlugin.type)"
         >
           <template #icon>
-            <IconRenderer :name="zoomInPlugin.iconName" class="text-xl" />
+            <IconRenderer :name="zoomInPlugin.iconName" class="text-sm" />
           </template>
         </n-button>
       </template>

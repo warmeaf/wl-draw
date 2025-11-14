@@ -19,6 +19,7 @@ import '@leafer-in/viewport'
 import '@leafer-in/view'
 import '@leafer-in/arrow'
 import '@leafer-in/text-editor'
+import { Snap } from 'leafer-x-easy-snap'
 
 const canvasContainer = ref<HTMLElement | null>(null)
 const store = useCanvasStore()
@@ -50,6 +51,9 @@ onMounted(() => {
   app.tree.fill = themeColors.canvasBackground
 
   store.setAppInstance(app)
+
+  const snap = new Snap(app)
+  snap.enable(true)
 
   useCanvasTools(app)
   deleteToolCleanup = useDeleteTool(app, store)

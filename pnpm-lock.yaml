@@ -33,8 +33,8 @@ dependencies:
     specifier: ^1.9.12
     version: 1.9.12
   leafer-x-easy-snap:
-    specifier: ^1.10.1
-    version: 1.10.1
+    specifier: ^1.11.0
+    version: 1.11.0
   naive-ui:
     specifier: ^2.43.1
     version: 2.43.1(vue@3.5.23)
@@ -2034,8 +2034,8 @@ packages:
       '@leafer/partner': 1.9.12
     dev: false
 
-  /leafer-x-easy-snap@1.10.1:
-    resolution: {integrity: sha512-CQd+HGKY7TpJdtUbGmP/rXsLb2vKK84DV6mNJAHFzJ0HEgX+EQDkri5Ykc2HcdfIe1P4yfOkIhDbADU8eovw7Q==}
+  /leafer-x-easy-snap@1.11.0:
+    resolution: {integrity: sha512-gR/G+6iVbzCz8MLOf9WjGFF5IEkObDjKMbmBiiHSh4vyQoZsoaukV26ETJcfmtmqKf47Hx4ZOxiyZazSuXMZVw==}
     dev: false
 
   /lightningcss-android-arm64@1.30.2:

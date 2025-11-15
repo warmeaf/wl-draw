@@ -36,7 +36,7 @@
     "@leafer-in/viewport": "1.9.12",
     "@vueuse/core": "^14.0.0",
     "leafer-ui": "^1.9.12",
-    "leafer-x-easy-snap": "^1.10.1",
+    "leafer-x-easy-snap": "^1.11.0",
     "naive-ui": "^2.43.1",
     "pinia": "^3.0.4",
     "vue": "^3.5.22"

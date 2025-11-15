@@ -52,7 +52,9 @@ onMounted(() => {
 
   store.setAppInstance(app)
 
-  const snap = new Snap(app)
+  const snap = new Snap(app, {
+    attachEvents: ['move', 'scale'],
+  })
   snap.enable(true)
 
   useCanvasTools(app)

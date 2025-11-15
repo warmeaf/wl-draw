@@ -54,6 +54,12 @@ onMounted(() => {
 
   const snap = new Snap(app, {
     attachEvents: ['move', 'scale'],
+    lineColor: themeColors.snapLineColor,
+    distanceLabelStyle: {
+      text: {
+        fill: themeColors.snapLineColor,
+      },
+    },
   })
   snap.enable(true)
 
@@ -73,5 +79,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="canvasContainer" class="w-full h-full relative overflow-hidden bg-white"></div>
+  <div
+    ref="canvasContainer"
+    class="w-full h-full relative overflow-hidden bg-white"
+  ></div>
 </template>

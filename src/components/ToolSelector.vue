@@ -11,9 +11,10 @@ import type { ToolType } from '@/types'
 const store = useCanvasStore()
 
 const tools = computed(() => {
+  const excludedTypes = ['export', 'zoomIn', 'zoomOut']
   return pluginRegistry
     .getAll()
-    .filter((plugin) => plugin.ui && plugin.type !== 'export')
+    .filter((plugin) => plugin.ui && !excludedTypes.includes(plugin.type))
     .map((plugin) => {
       const ui = plugin.ui as NonNullable<typeof plugin.ui>
       return {

@@ -43,10 +43,22 @@ const dropdownOptions = computed(() => {
         },
       ],
     },
+    {
+      type: 'divider',
+    },
+    {
+      label: 'GitHub',
+      key: 'github',
+      iconComponent: 'i-lucide-github',
+    },
   ]
 })
 
 function renderLabel(option: DropdownOption & { shortcut?: string; iconComponent?: string }) {
+  if (option.type === 'divider') {
+    return null
+  }
+
   const labelContent =
     typeof option.label === 'string'
       ? option.label
@@ -94,6 +106,8 @@ function handleSelect(key: string) {
     handleExportImage('png')
   } else if (key === 'export-jpg') {
     handleExportImage('jpg')
+  } else if (key === 'github') {
+    window.open('https://github.com/warmeaf/wl-draw/tree/plugin-architecture', '_blank')
   }
 }
 </script>

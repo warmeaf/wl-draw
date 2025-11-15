@@ -23,5 +23,6 @@ defineProps<{
   <i-lucide-zoom-in v-else-if="name === 'i-lucide-zoom-in'" :class="class" />
   <i-lucide-zoom-out v-else-if="name === 'i-lucide-zoom-out'" :class="class" />
   <i-lucide-github v-else-if="name === 'i-lucide-github'" :class="class" />
+  <i-lucide-file-braces-corner v-else-if="name === 'i-lucide-file-braces-corner'" :class="class" />
 </template>
 

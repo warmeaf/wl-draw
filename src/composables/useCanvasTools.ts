@@ -245,7 +245,7 @@ export function useCanvasTools(app: App) {
   })
 
   function buildShortcutMap() {
-    const shortcutMap = new Map<string, ToolType>()
+    const shortcutMap = new Map<string, { pluginId: string; toolType: ToolType }>()
     const plugins = pluginRegistry.getAll()
 
     for (const plugin of plugins) {
@@ -253,7 +253,10 @@ export function useCanvasTools(app: App) {
         const parsed = parseShortcut(plugin.shortcut)
         if (parsed) {
           const shortcutKey = buildShortcutKey(parsed)
-          shortcutMap.set(shortcutKey, plugin.type as ToolType)
+          shortcutMap.set(shortcutKey, {
+            pluginId: plugin.id,
+            toolType: plugin.type as ToolType,
+          })
         }
       }
     }
@@ -304,7 +307,7 @@ export function useCanvasTools(app: App) {
       return
     }
 
-    for (const [shortcutKey, toolType] of shortcutMap.value.entries()) {
+    for (const [shortcutKey, { pluginId, toolType }] of shortcutMap.value.entries()) {
       const parsed = parseShortcut(shortcutKey)
       if (parsed && matchShortcut(e, parsed)) {
         if (toolType === 'zoomIn') {
@@ -315,6 +318,29 @@ export function useCanvasTools(app: App) {
           zoomOut()
           return
         }
+
+        const plugin = pluginRegistry.get(pluginId)
+        if (plugin && (plugin.id === 'export' || plugin.id === 'exportJson')) {
+          let toolInstance = toolInstances.get(pluginId)
+          if (!toolInstance) {
+            toolInstance = plugin.createTool({
+              tree,
+              store,
+              isDrawing,
+              startPoint,
+              currentElement,
+              isShiftPressed,
+              penPathPoints,
+              eventBus: pluginEventBus,
+            })
+            toolInstances.set(pluginId, toolInstance)
+          }
+          if (toolInstance?.onActivate) {
+            toolInstance.onActivate()
+          }
+          return
+        }
+
         if (toolType !== 'pan' || !store.isPanningWithSpace) {
           store.setTool(toolType)
         }

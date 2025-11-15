@@ -7,6 +7,7 @@ import type { ToolPlugin } from '../types'
 import { arrowPlugin } from './arrow'
 import { circlePlugin } from './circle'
 import { exportPlugin } from './export'
+import { exportJsonPlugin } from './exportJson'
 import { imagePlugin } from './image'
 import { linePlugin } from './line'
 import { panPlugin } from './pan'
@@ -28,6 +29,7 @@ const builtinPlugins: ToolPlugin[] = [
   textPlugin,
   imagePlugin,
   exportPlugin,
+  exportJsonPlugin,
   zoomInPlugin,
   zoomOutPlugin,
 ]

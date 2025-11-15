@@ -23,31 +23,12 @@ export const exportPlugin: ToolPlugin = {
   },
   shortcut: 'Shift+KeyE',
   createTool: (context) => {
-    const { tree, store, eventBus } = context
+    const { tree, store } = context
     const { exportCanvas } = useExportTool(tree, store)
-
-    let toolBeforeExport: string | null = null
-
-    const unsubscribe = eventBus.on('tool:switched', (data) => {
-      if (data.to === 'export' && data.from !== 'export') {
-        toolBeforeExport = data.from
-      }
-    })
 
     return {
       onActivate: async () => {
         await exportCanvas('png')
-        const toolToRestore = toolBeforeExport || store.previousTool || 'select'
-        setTimeout(() => {
-          if (toolToRestore !== 'export') {
-            store.setTool(toolToRestore as typeof store.currentTool)
-          } else {
-            store.setTool('select')
-          }
-        }, 100)
-      },
-      onDeactivate: () => {
-        unsubscribe?.()
       },
     }
   },

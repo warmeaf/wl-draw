@@ -15,6 +15,7 @@ const store = useCanvasStore()
 
 const tree = computed(() => store.appInstance?.tree ?? null)
 const exportPlugin = computed(() => pluginRegistry.getByType('export'))
+const exportJsonPlugin = computed(() => pluginRegistry.get('exportJson'))
 const exportTool = computed(() => {
   if (!tree.value) return null
   return useExportTool(tree.value, store)
@@ -25,8 +26,10 @@ const dropdownOptions = computed(() => {
 
   const ui = exportPlugin.value.ui
   const shortcut = exportPlugin.value.shortcut
+  const exportJsonUi = exportJsonPlugin.value?.ui
+  const exportJsonShortcut = exportJsonPlugin.value?.shortcut
 
-  return [
+  const options: Array<DropdownOption & { shortcut?: string; iconComponent?: string }> = [
     {
       label: ui.label,
       key: 'export-image',
@@ -43,6 +46,18 @@ const dropdownOptions = computed(() => {
         },
       ],
     },
+  ]
+
+  if (exportJsonUi) {
+    options.push({
+      label: exportJsonUi.label,
+      key: 'export-json',
+      shortcut: exportJsonShortcut,
+      iconComponent: exportJsonUi.iconComponent,
+    })
+  }
+
+  options.push(
     {
       type: 'divider',
     },
@@ -50,8 +65,10 @@ const dropdownOptions = computed(() => {
       label: 'GitHub',
       key: 'github',
       iconComponent: 'i-lucide-github',
-    },
-  ]
+    }
+  )
+
+  return options
 })
 
 function renderLabel(option: DropdownOption & { shortcut?: string; iconComponent?: string }) {
@@ -101,11 +118,19 @@ async function handleExportImage(format: 'png' | 'jpg') {
   }
 }
 
+function handleExportJSON() {
+  if (exportTool.value) {
+    exportTool.value.exportCanvasAsJSON()
+  }
+}
+
 function handleSelect(key: string) {
   if (key === 'export-png') {
     handleExportImage('png')
   } else if (key === 'export-jpg') {
     handleExportImage('jpg')
+  } else if (key === 'export-json') {
+    handleExportJSON()
   } else if (key === 'github') {
     window.open('https://github.com/warmeaf/wl-draw/tree/plugin-architecture', '_blank')
   }

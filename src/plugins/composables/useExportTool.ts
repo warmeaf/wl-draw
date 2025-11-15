@@ -1,12 +1,84 @@
 /**
- * Export tool composable for exporting canvas content as image
+ * Export tool composable for exporting canvas content as image or JSON
  */
 
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Tree } from '@/types'
 
+interface ExportData {
+  version: string
+  metadata: {
+    exportedAt: string
+    canvasZoom: number
+    canvasStyles: {
+      fillColor: string
+      strokeColor: string
+      strokeWidth: number
+      fontSize: number
+      textColor: string
+    }
+  }
+  objects: Array<{
+    id: string
+    type: string
+    data: unknown
+  }>
+}
+
 export function useExportTool(tree: Tree, store: ReturnType<typeof useCanvasStore>) {
-  async function exportCanvas(format: 'png' | 'jpg' = 'png', quality?: number) {
+  function exportCanvasAsJSON() {
+    if (!tree || !store.appInstance) {
+      console.error('Canvas not initialized')
+      return
+    }
+
+    try {
+      const objects = store.objects.map((obj) => {
+        const elementData = obj.element?.toJSON ? obj.element.toJSON() : null
+        return {
+          id: obj.id,
+          type: obj.type,
+          data: elementData,
+        }
+      })
+
+      const exportData: ExportData = {
+        version: '1.0.0',
+        metadata: {
+          exportedAt: new Date().toISOString(),
+          canvasZoom: store.zoom,
+          canvasStyles: {
+            fillColor: store.fillColor,
+            strokeColor: store.strokeColor,
+            strokeWidth: store.strokeWidth,
+            fontSize: store.fontSize,
+            textColor: store.textColor,
+          },
+        },
+        objects,
+      }
+
+      const jsonString = JSON.stringify(exportData, null, 2)
+      const blob = new Blob([jsonString], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `canvas-export-${Date.now()}.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('JSON export error:', error)
+    }
+  }
+
+  async function exportCanvas(format: 'png' | 'jpg' | 'json' = 'png', quality?: number) {
+    if (format === 'json') {
+      exportCanvasAsJSON()
+      return
+    }
+
     if (!tree || !store.appInstance) {
       console.error('Canvas not initialized')
       return
@@ -62,5 +134,6 @@ export function useExportTool(tree: Tree, store: ReturnType<typeof useCanvasStor
 
   return {
     exportCanvas,
+    exportCanvasAsJSON,
   }
 }

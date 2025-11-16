@@ -13,8 +13,10 @@ import { linePlugin } from './line'
 import { panPlugin } from './pan'
 import { penPlugin } from './pen'
 import { rectPlugin } from './rect'
+import { redoPlugin } from './redo'
 import { selectPlugin } from './select'
 import { textPlugin } from './text'
+import { undoPlugin } from './undo'
 import { zoomInPlugin } from './zoomIn'
 import { zoomOutPlugin } from './zoomOut'
 
@@ -30,6 +32,8 @@ const builtinPlugins: ToolPlugin[] = [
   imagePlugin,
   exportPlugin,
   exportJsonPlugin,
+  undoPlugin,
+  redoPlugin,
   zoomInPlugin,
   zoomOutPlugin,
 ]

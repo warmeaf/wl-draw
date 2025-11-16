@@ -2,14 +2,13 @@
  * Top toolbar container component that combines tool selector and zoom controls
  */
 
-<script setup lang="ts"></script>
-
 <template>
   <div
     class="fixed top-8 left-0 right-0 flex items-center justify-between px-8 z-50"
   >
-    <div class="flex items-center">
+    <div class="flex items-center gap-2">
       <MenuDropdown />
+      <UndoRedoButtons />
     </div>
     <div class="flex items-center">
       <ToolSelector />

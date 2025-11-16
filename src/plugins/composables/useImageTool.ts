@@ -4,10 +4,13 @@
 
 import type { PointerEvent } from 'leafer-ui'
 import { Image } from 'leafer-ui'
+import { useHistory } from '@/composables/useHistory'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Tree } from '@/types'
 
 export function useImageTool(tree: Tree, store: ReturnType<typeof useCanvasStore>) {
+  const { addSnapshot } = useHistory()
+
   function handleTap(e: PointerEvent) {
     const point = e.getPagePoint()
 
@@ -41,6 +44,8 @@ export function useImageTool(tree: Tree, store: ReturnType<typeof useCanvasStore
 
         store.setTool('select')
         store.selectObject(id)
+
+        addSnapshot()
       }
       reader.readAsDataURL(file)
     }

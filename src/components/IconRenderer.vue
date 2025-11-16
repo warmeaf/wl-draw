@@ -24,5 +24,7 @@ defineProps<{
   <i-lucide-zoom-out v-else-if="name === 'i-lucide-zoom-out'" :class="class" />
   <i-lucide-github v-else-if="name === 'i-lucide-github'" :class="class" />
   <i-lucide-file-braces-corner v-else-if="name === 'i-lucide-file-braces-corner'" :class="class" />
+  <i-lucide-undo-2 v-else-if="name === 'i-lucide-undo-2'" :class="class" />
+  <i-lucide-redo-2 v-else-if="name === 'i-lucide-redo-2'" :class="class" />
 </template>
 

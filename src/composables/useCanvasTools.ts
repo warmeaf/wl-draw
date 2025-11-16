@@ -6,6 +6,7 @@ import { useKeyModifier } from '@vueuse/core'
 import type { App } from 'leafer-ui'
 import { DragEvent, KeyEvent, PointerEvent, ZoomEvent } from 'leafer-ui'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useHistory } from '@/composables/useHistory'
 import { useZoomTool } from '@/composables/useZoomTool'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
@@ -18,6 +19,7 @@ export function useCanvasTools(app: App) {
   const store = useCanvasStore()
   const tree = app.tree
   const { zoomIn, zoomOut } = useZoomTool()
+  const { addSnapshot } = useHistory()
 
   const isDrawing = ref(false)
   const startPoint = ref<Point | null>(null)
@@ -173,9 +175,17 @@ export function useCanvasTools(app: App) {
       return
     }
 
+    const objectCountBefore = store.objects.length
+
     const toolInstance = getToolInstance(tool)
     if (toolInstance?.finishDrawing) {
       toolInstance.finishDrawing()
+    }
+
+    const objectCountAfter = store.objects.length
+
+    if (objectCountAfter > objectCountBefore) {
+      addSnapshot()
     }
 
     await pluginRegistry.executeHook('afterDrawingFinish', {
@@ -192,9 +202,18 @@ export function useCanvasTools(app: App) {
     const plugin = pluginRegistry.getByType(tool)
     if (!plugin || !plugin.capabilities?.handlesTap) return
 
+    const objectCountBefore = store.objects.length
+
     const toolInstance = getToolInstance(tool)
     if (toolInstance?.handleTap) {
       toolInstance.handleTap(e)
+    }
+
+    if (tool === 'text') {
+      const objectCountAfter = store.objects.length
+      if (objectCountAfter > objectCountBefore) {
+        addSnapshot()
+      }
     }
   }
 
@@ -320,7 +339,13 @@ export function useCanvasTools(app: App) {
         }
 
         const plugin = pluginRegistry.get(pluginId)
-        if (plugin && (plugin.id === 'export' || plugin.id === 'exportJson')) {
+        if (
+          plugin &&
+          (plugin.id === 'export' ||
+            plugin.id === 'exportJson' ||
+            plugin.id === 'undo' ||
+            plugin.id === 'redo')
+        ) {
           let toolInstance = toolInstances.get(pluginId)
           if (!toolInstance) {
             toolInstance = plugin.createTool({

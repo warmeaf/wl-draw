@@ -35,16 +35,6 @@ export const useCanvasStore = defineStore('canvas', {
     textColor: themeColors.text,
   }),
 
-  getters: {
-    selectedObjectIds: (state) => {
-      return (
-        state.appInstance?.editor.list.map((item) => {
-          return state.objects.find((obj) => obj.element.innerId === item.innerId)?.id
-        }) || []
-      )
-    },
-  },
-
   actions: {
     setTool(tool: ToolType) {
       this.currentTool = tool

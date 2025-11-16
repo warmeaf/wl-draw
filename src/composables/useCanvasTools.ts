@@ -25,6 +25,7 @@ export function useCanvasTools(app: App) {
   const startPoint = ref<Point | null>(null)
   const currentElement = ref<LeaferElement>(null)
   const penPathPoints = ref<Array<Point>>([])
+  const dragStartPositions = ref<Map<string, { x: number; y: number }>>(new Map())
 
   const isShiftPressedRaw = useKeyModifier('Shift', { events: ['keydown', 'keyup'] })
   const isShiftPressed = computed(() => isShiftPressedRaw.value ?? false)
@@ -162,37 +163,63 @@ export function useCanvasTools(app: App) {
   }
 
   async function handleDragEnd() {
-    if (!tree || !isDrawing.value) return
+    if (!tree) return
 
-    const tool = store.currentTool
-    const plugin = pluginRegistry.getByType(tool)
-    if (!plugin || !plugin.capabilities?.handlesDragEnd) return
+    if (isDrawing.value) {
+      const tool = store.currentTool
+      const plugin = pluginRegistry.getByType(tool)
+      if (!plugin || !plugin.capabilities?.handlesDragEnd) return
 
-    const canFinish = await pluginRegistry.executeHook('beforeDrawingFinish', {
-      toolType: tool,
-    })
-    if (!canFinish) {
-      return
+      const canFinish = await pluginRegistry.executeHook('beforeDrawingFinish', {
+        toolType: tool,
+      })
+      if (!canFinish) {
+        return
+      }
+
+      const objectCountBefore = store.objects.length
+
+      const toolInstance = getToolInstance(tool)
+      if (toolInstance?.finishDrawing) {
+        toolInstance.finishDrawing()
+      }
+
+      const objectCountAfter = store.objects.length
+
+      if (objectCountAfter > objectCountBefore) {
+        addSnapshot()
+      }
+
+      await pluginRegistry.executeHook('afterDrawingFinish', {
+        toolType: tool,
+      })
+
+      resetState()
+    } else if (dragStartPositions.value.size > 0) {
+      let hasPositionChanged = false
+      const POSITION_THRESHOLD = 0.5
+
+      for (const [objectId, startPosition] of dragStartPositions.value.entries()) {
+        const obj = store.objects.find((o) => o.id === objectId)
+        if (obj?.element) {
+          const currentX = obj.element.x ?? 0
+          const currentY = obj.element.y ?? 0
+          const deltaX = Math.abs(currentX - startPosition.x)
+          const deltaY = Math.abs(currentY - startPosition.y)
+
+          if (deltaX > POSITION_THRESHOLD || deltaY > POSITION_THRESHOLD) {
+            hasPositionChanged = true
+            break
+          }
+        }
+      }
+
+      if (hasPositionChanged) {
+        addSnapshot()
+      }
+
+      dragStartPositions.value.clear()
     }
-
-    const objectCountBefore = store.objects.length
-
-    const toolInstance = getToolInstance(tool)
-    if (toolInstance?.finishDrawing) {
-      toolInstance.finishDrawing()
-    }
-
-    const objectCountAfter = store.objects.length
-
-    if (objectCountAfter > objectCountBefore) {
-      addSnapshot()
-    }
-
-    await pluginRegistry.executeHook('afterDrawingFinish', {
-      toolType: tool,
-    })
-
-    resetState()
   }
 
   function handleTap(e: PointerEvent) {
@@ -222,6 +249,26 @@ export function useCanvasTools(app: App) {
 
     const tool = store.currentTool
     const plugin = pluginRegistry.getByType(tool)
+
+    if (app.mode === 'normal' && !isDrawing.value) {
+      const selectedObjectIds = app.editor.list.map((item) => {
+        return store.objects.find((obj) => obj.element.innerId === item.innerId)?.id
+      })
+      if (selectedObjectIds.length > 0) {
+        dragStartPositions.value.clear()
+        for (const objectId of selectedObjectIds) {
+          if (!objectId) continue
+          const obj = store.objects.find((o) => o.id === objectId)
+          if (obj?.element) {
+            dragStartPositions.value.set(objectId, {
+              x: obj.element.x ?? 0,
+              y: obj.element.y ?? 0,
+            })
+          }
+        }
+      }
+    }
+
     if (!plugin || !plugin.capabilities?.handlesDragStart) return
 
     const bounds = e.getPageBounds()

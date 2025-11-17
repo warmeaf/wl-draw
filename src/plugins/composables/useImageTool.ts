@@ -4,7 +4,7 @@
 
 import type { PointerEvent } from 'leafer-ui'
 import { Image } from 'leafer-ui'
-import { useHistory } from '@/composables/useHistory'
+import { useHistory } from '@/composables/state/useHistory'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Tree } from '@/types'
 

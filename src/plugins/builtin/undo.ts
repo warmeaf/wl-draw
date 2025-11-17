@@ -2,7 +2,7 @@
  * Undo tool plugin for canvas history operations
  */
 
-import { useHistory } from '@/composables/useHistory'
+import { useHistory } from '@/composables/state/useHistory'
 import type { ToolPlugin } from '../types'
 
 export const undoPlugin: ToolPlugin = {

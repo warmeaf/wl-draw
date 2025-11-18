@@ -4,7 +4,7 @@
 
 import type { App } from 'leafer-ui'
 import { DragEvent, PointerEvent } from 'leafer-ui'
-import { useHistory } from '@/composables/state/useHistory'
+import { useHistory } from '@/plugins/composables/useHistory'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
 import type { ToolInstance } from '@/plugins/types'

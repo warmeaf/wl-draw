@@ -6,10 +6,10 @@
 import { App } from 'leafer-ui'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useDeleteTool } from '@/composables/features/useDeleteTool'
-import { useZoomTool } from '@/composables/features/useZoomTool'
 import { useCanvasTools } from '@/composables/useCanvasTools'
 import { canvasConfig } from '@/config/canvas'
 import { themeColors } from '@/config/theme'
+import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { useCanvasStore } from '@/stores/canvas'
 
 import '@leafer-in/editor'

@@ -5,8 +5,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import IconRenderer from '@/components/IconRenderer.vue'
-import { useZoomTool } from '@/composables/features/useZoomTool'
 import { canvasConfig } from '@/config/canvas'
+import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { pluginRegistry } from '@/plugins/registry'
 import { useCanvasStore } from '@/stores/canvas'
 

@@ -5,7 +5,7 @@
 import type { App } from 'leafer-ui'
 import { KeyEvent, ZoomEvent } from 'leafer-ui'
 import { ref } from 'vue'
-import { useZoomTool } from '@/composables/features/useZoomTool'
+import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
 import { parseShortcut } from '@/plugins/shortcut'

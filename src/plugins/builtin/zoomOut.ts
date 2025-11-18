@@ -2,7 +2,7 @@
  * Zoom out tool plugin for canvas zoom operations
  */
 
-import { useZoomTool } from '@/composables/features/useZoomTool'
+import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import type { ToolPlugin } from '../types'
 
 export const zoomOutPlugin: ToolPlugin = {

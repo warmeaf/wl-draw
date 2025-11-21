@@ -9,6 +9,7 @@ alwaysApply: true
 ### 1. File Documentation (Required)
 
 - Every file in the `src/` directory MUST start with a file-level comment block describing what the file does
+- **Exception**: `.vue` files do NOT require file-level comments
 - The comment should be concise but clear about the file's purpose and main responsibilities
 - Format: Use JSDoc-style comments for TypeScript/JavaScript files, or appropriate comment syntax for the file type
 
@@ -80,7 +81,7 @@ Only add comments when:
 
 ### Summary
 
-- ✅ File-level documentation: REQUIRED
+- ✅ File-level documentation: REQUIRED (except `.vue` files)
 - ✅ Semantic naming: REQUIRED
 - ❌ Redundant inline comments: AVOID
 - ✅ Comments for complex logic: ALLOWED

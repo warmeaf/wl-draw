@@ -1,7 +1,3 @@
-/**
- * Top toolbar container component that combines tool selector and zoom controls
- */
-
 <template>
   <div
     class="fixed top-8 left-0 right-0 flex items-center justify-between px-8 z-50"

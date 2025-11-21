@@ -1,7 +1,3 @@
-/**
- * Icon renderer component for dynamically rendering iconify icons
- */
-
 <script setup lang="ts">
 defineProps<{
   name: string

@@ -14,7 +14,9 @@ import type { DrawingState } from '../tool/useToolInstance'
 export function useCanvasEvents(
   app: App,
   drawingState: DrawingState,
-  getToolInstance: (toolType: string) => ToolInstance | null
+  getToolInstance: (toolType: string) => ToolInstance | null,
+  elementPopover?: ReturnType<typeof import('../state/useElementPopover').useElementPopover>,
+  canvasContainer?: HTMLElement | null
 ) {
   const store = useCanvasStore()
   const tree = app.tree
@@ -110,6 +112,38 @@ export function useCanvasEvents(
     if (!tree) return
 
     const tool = store.currentTool
+
+    if (tool === 'select' && elementPopover && app.editor) {
+      const selectedElements = app.editor.list
+      if (selectedElements.length === 1 && selectedElements[0]) {
+        const firstElement = selectedElements[0]
+        const obj = store.objects.find((o) => o.element.innerId === firstElement.innerId)
+        if (obj?.element && canvasContainer) {
+          const bounds = obj.element.getBounds()
+          if (bounds) {
+            const centerX = bounds.x + bounds.width + 5
+            const topY = bounds.y
+            const containerRect = canvasContainer.getBoundingClientRect()
+            const clientX = containerRect.left + centerX
+            const clientY = containerRect.top + topY
+
+            const fillColor = (obj.element.fill as string) || '#ffffff'
+            const strokeColor = (obj.element.stroke as string) || '#000000'
+            const strokeWidth = (obj.element.strokeWidth ?? 0) as number
+            const dashPattern = (obj.element.dashPattern ?? undefined) as number[] | undefined
+            elementPopover.showPopoverAt(clientX, clientY, obj.type, obj.element, {
+              fillColor,
+              strokeColor,
+              strokeWidth,
+              dashPattern,
+            })
+          }
+        }
+      } else {
+        elementPopover.hidePopover()
+      }
+    }
+
     const plugin = pluginRegistry.getByType(tool)
     if (!plugin || !plugin.capabilities?.handlesTap) return
 

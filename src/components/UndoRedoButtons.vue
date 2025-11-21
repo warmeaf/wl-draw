@@ -4,7 +4,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import IconRenderer from '@/components/IconRenderer.vue'
 import { useHistory } from '@/plugins/composables/useHistory'
 import { pluginRegistry } from '@/plugins/registry'
 

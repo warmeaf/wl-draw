@@ -25,6 +25,8 @@ export function useRectTool(
       height: 0,
       fill: store.fillColor,
       strokeWidth: 0,
+      stroke: '#000000',
+      dashPattern: undefined,
       editable: true,
     })
 

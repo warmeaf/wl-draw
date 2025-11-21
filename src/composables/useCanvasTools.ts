@@ -12,14 +12,24 @@ import { useCanvasMode } from '@/composables/tool/useCanvasMode'
 import { useToolInstance } from '@/composables/tool/useToolInstance'
 import { useToolSwitch } from '@/composables/tool/useToolSwitch'
 
-export function useCanvasTools(app: App) {
+export function useCanvasTools(
+  app: App,
+  elementPopover?: ReturnType<typeof import('./state/useElementPopover').useElementPopover>,
+  canvasContainer?: HTMLElement | null
+) {
   const drawingState = useDrawingState()
   const canvasMode = useCanvasMode(app)
   const toolInstance = useToolInstance(app, drawingState)
 
   useToolSwitch(toolInstance.getToolInstance, canvasMode, drawingState)
 
-  const canvasEvents = useCanvasEvents(app, drawingState, toolInstance.getToolInstance)
+  const canvasEvents = useCanvasEvents(
+    app,
+    drawingState,
+    toolInstance.getToolInstance,
+    elementPopover,
+    canvasContainer
+  )
   const keyboardShortcuts = useKeyboardShortcuts(app, toolInstance.createToolInstanceForPlugin)
 
   onBeforeUnmount(() => {

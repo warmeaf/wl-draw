@@ -1,10 +1,5 @@
-/**
- * Zoom controls component for canvas zoom operations
- */
-
 <script setup lang="ts">
 import { computed } from 'vue'
-import IconRenderer from '@/components/IconRenderer.vue'
 import { canvasConfig } from '@/config/canvas'
 import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { pluginRegistry } from '@/plugins/registry'

@@ -1,11 +1,8 @@
-/**
- * Canvas component for main drawing canvas using Leafer App and Editor
- */
-
 <script setup lang="ts">
 import { App } from 'leafer-ui'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useDeleteTool } from '@/composables/features/useDeleteTool'
+import { useElementPopover } from '@/composables/state/useElementPopover'
 import { useCanvasTools } from '@/composables/useCanvasTools'
 import { canvasConfig } from '@/config/canvas'
 import { themeColors } from '@/config/theme'
@@ -23,10 +20,18 @@ import { Snap } from 'leafer-x-easy-snap'
 const canvasContainer = ref<HTMLElement | null>(null)
 const store = useCanvasStore()
 const { setupZoomKeyboardPrevention } = useZoomTool()
+const elementPopover = useElementPopover()
 
 let app: App | null = null
 let deleteToolCleanup: (() => void) | null = null
 let zoomKeyboardCleanup: (() => void) | null = null
+
+const selectedElementStrokeType = computed(() => {
+  return elementPopover.selectedElementDashPattern.value ? 'dashed' : 'solid'
+})
+const handleStrokeTypeChange = (type: 'solid' | 'dashed') => {
+  elementPopover.updateElementDashPattern(type === 'dashed' ? [5, 5] : undefined)
+}
 
 onMounted(() => {
   zoomKeyboardCleanup = setupZoomKeyboardPrevention()
@@ -62,7 +67,7 @@ onMounted(() => {
   })
   snap.enable(true)
 
-  useCanvasTools(app)
+  useCanvasTools(app, elementPopover, canvasContainer.value)
   deleteToolCleanup = useDeleteTool(app, store)
 })
 
@@ -81,5 +86,51 @@ onBeforeUnmount(() => {
   <div
     ref="canvasContainer"
     class="w-full h-full relative overflow-hidden bg-white"
-  ></div>
+  >
+    <n-popover
+      :show="elementPopover.showPopover.value"
+      :x="elementPopover.popoverX.value"
+      :y="elementPopover.popoverY.value"
+      :show-arrow="false"
+      :content-style="{ display: 'flex' }"
+      placement="right-start"
+      trigger="manual"
+    >
+      <template
+        v-if="
+          elementPopover.selectedElementType.value === 'rect' ||
+          elementPopover.selectedElementType.value === 'circle'
+        "
+      >
+        <ColorPicker
+          size="small"
+          :value="elementPopover.selectedElementFillColor.value"
+          @update:value="elementPopover.updateElementFillColor"
+        />
+        <n-popover :show-arrow="false" placement="bottom-start" trigger="click">
+          <template #trigger>
+            <n-button quaternary size="small" circle>
+              <template #icon>
+                <div
+                  class="flex w-[18px] h-[18px] rounded-full items-center justify-center before:content-[''] before:w-2.5 before:h-2.5 before:rounded-full before:bg-white"
+                  :style="{
+                    backgroundColor:
+                      elementPopover.selectedElementStrokeColor.value,
+                  }"
+                />
+              </template>
+            </n-button>
+          </template>
+          <stroke-config
+            :stroke-width="elementPopover.selectedElementStrokeWidth.value"
+            :stroke-color="elementPopover.selectedElementStrokeColor.value"
+            :stroke-type="selectedElementStrokeType"
+            @update:stroke-width="elementPopover.updateElementStrokeWidth"
+            @update:stroke-color="elementPopover.updateElementStrokeColor"
+            @update:stroke-type="handleStrokeTypeChange"
+          />
+        </n-popover>
+      </template>
+    </n-popover>
+  </div>
 </template>

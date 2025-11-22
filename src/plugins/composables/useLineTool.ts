@@ -22,6 +22,7 @@ export function useLineTool(
       path: `M ${startPoint.value.x} ${startPoint.value.y} L ${startPoint.value.x} ${startPoint.value.y}`,
       stroke: store.strokeColor,
       strokeWidth: store.strokeWidth,
+      dashPattern: undefined,
       editable: true,
     })
 

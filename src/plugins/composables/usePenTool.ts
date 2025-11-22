@@ -22,6 +22,7 @@ export function usePenTool(
     pen.setStyle({
       stroke: store.strokeColor,
       strokeWidth: store.strokeWidth,
+      dashPattern: undefined,
       strokeCap: 'round',
       strokeJoin: 'round',
     })

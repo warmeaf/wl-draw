@@ -2,8 +2,68 @@
  * Composable for managing element popover display state and position
  */
 
+import { Pen } from 'leafer-ui'
 import { ref } from 'vue'
 import type { LeaferElement } from '@/types'
+
+type ElementType = 'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image' | null
+
+interface ElementProps {
+  fillColor?: string
+  strokeColor?: string
+  strokeWidth?: number
+  dashPattern?: number[] | undefined
+}
+
+interface ElementPropertySetter {
+  setProperties(
+    props: ElementProps | undefined,
+    fillColorRef: { value: string },
+    strokeColorRef: { value: string },
+    strokeWidthRef: { value: number },
+    dashPatternRef: { value: number[] | undefined }
+  ): void
+}
+
+class FillableElementPropertySetter implements ElementPropertySetter {
+  setProperties(
+    props: ElementProps | undefined,
+    fillColorRef: { value: string },
+    strokeColorRef: { value: string },
+    strokeWidthRef: { value: number },
+    dashPatternRef: { value: number[] | undefined }
+  ): void {
+    fillColorRef.value = props?.fillColor ?? '#ffffff'
+    strokeColorRef.value = props?.strokeColor ?? '#000000'
+    strokeWidthRef.value = props?.strokeWidth ?? 0
+    dashPatternRef.value = props?.dashPattern ?? undefined
+  }
+}
+
+class StrokeOnlyElementPropertySetter implements ElementPropertySetter {
+  setProperties(
+    props: ElementProps | undefined,
+    _fillColorRef: { value: string },
+    strokeColorRef: { value: string },
+    strokeWidthRef: { value: number },
+    dashPatternRef: { value: number[] | undefined }
+  ): void {
+    strokeColorRef.value = props?.strokeColor ?? '#000000'
+    strokeWidthRef.value = props?.strokeWidth ?? 0
+    dashPatternRef.value = props?.dashPattern ?? undefined
+  }
+}
+
+const fillableElementPropertySetter = new FillableElementPropertySetter()
+const strokeOnlyElementPropertySetter = new StrokeOnlyElementPropertySetter()
+
+const elementPropertySetterMap: Record<string, ElementPropertySetter> = {
+  rect: fillableElementPropertySetter,
+  circle: fillableElementPropertySetter,
+  line: strokeOnlyElementPropertySetter,
+  pen: strokeOnlyElementPropertySetter,
+  arrow: strokeOnlyElementPropertySetter,
+}
 
 export function useElementPopover() {
   const showPopover = ref(false)
@@ -11,9 +71,7 @@ export function useElementPopover() {
   const popoverX = ref(0)
   const popoverY = ref(0)
 
-  const selectedElementType = ref<
-    'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image' | null
-  >(null)
+  const selectedElementType = ref<ElementType>(null)
   const selectedElement = ref<LeaferElement>(null)
 
   const selectedElementFillColor = ref<string>('#ffffff')
@@ -24,14 +82,9 @@ export function useElementPopover() {
   function showPopoverAt(
     x: number,
     y: number,
-    elementType?: 'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image' | null,
+    elementType?: ElementType,
     element?: LeaferElement | null,
-    props?: {
-      fillColor?: string
-      strokeColor?: string
-      strokeWidth?: number
-      dashPattern?: number[] | undefined
-    }
+    props?: ElementProps
   ) {
     popoverX.value = x
     popoverY.value = y
@@ -39,10 +92,18 @@ export function useElementPopover() {
     selectedElementType.value = elementType ?? null
     selectedElement.value = element ?? null
 
-    selectedElementFillColor.value = props?.fillColor ?? '#ffffff'
-    selectedElementStrokeColor.value = props?.strokeColor ?? '#000000'
-    selectedElementStrokeWidth.value = props?.strokeWidth ?? 0
-    selectedElementDashPattern.value = props?.dashPattern ?? undefined
+    if (elementType) {
+      const propertySetter = elementPropertySetterMap[elementType]
+      if (propertySetter) {
+        propertySetter.setProperties(
+          props,
+          selectedElementFillColor,
+          selectedElementStrokeColor,
+          selectedElementStrokeWidth,
+          selectedElementDashPattern
+        )
+      }
+    }
 
     showPopover.value = true
   }
@@ -60,21 +121,30 @@ export function useElementPopover() {
   }
 
   function updateElementStrokeColor(color: string) {
-    if (selectedElement.value) {
+    if (selectedElement.value && selectedElement.value instanceof Pen) {
+      selectedElement.value.pathElement.stroke = color
+      selectedElementStrokeColor.value = color
+    } else if (selectedElement.value) {
       selectedElement.value.stroke = color
       selectedElementStrokeColor.value = color
     }
   }
 
   function updateElementStrokeWidth(width: number) {
-    if (selectedElement.value) {
+    if (selectedElement.value && selectedElement.value instanceof Pen) {
+      selectedElement.value.pathElement.strokeWidth = width
+      selectedElementStrokeWidth.value = width
+    } else if (selectedElement.value) {
       selectedElement.value.strokeWidth = width
       selectedElementStrokeWidth.value = width
     }
   }
 
   function updateElementDashPattern(pattern: number[] | undefined) {
-    if (selectedElement.value) {
+    if (selectedElement.value && selectedElement.value instanceof Pen) {
+      selectedElement.value.pathElement.dashPattern = pattern
+      selectedElementDashPattern.value = pattern
+    } else if (selectedElement.value) {
       selectedElement.value.dashPattern = pattern
       selectedElementDashPattern.value = pattern
     }

@@ -22,6 +22,8 @@ export function useArrowTool(
       points: [startPoint.value.x, startPoint.value.y, startPoint.value.x, startPoint.value.y],
       stroke: store.strokeColor,
       strokeWidth: store.strokeWidth,
+      dashPattern: undefined,
+      startArrow: 'none',
       endArrow: 'arrow',
       editable: true,
     })

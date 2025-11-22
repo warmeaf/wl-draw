@@ -3,12 +3,12 @@
  */
 
 import type { App } from 'leafer-ui'
-import { DragEvent, PointerEvent } from 'leafer-ui'
+import { DragEvent, type Pen, PointerEvent } from 'leafer-ui'
 import { useHistory } from '@/plugins/composables/useHistory'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
 import type { ToolInstance } from '@/plugins/types'
-import { useCanvasStore } from '@/stores/canvas'
+import { type CanvasObject, useCanvasStore } from '@/stores/canvas'
 import type { DrawingState } from '../tool/useToolInstance'
 
 export function useCanvasEvents(
@@ -127,10 +127,7 @@ export function useCanvasEvents(
             const clientX = containerRect.left + centerX
             const clientY = containerRect.top + topY
 
-            const fillColor = (obj.element.fill as string) || '#ffffff'
-            const strokeColor = (obj.element.stroke as string) || '#000000'
-            const strokeWidth = (obj.element.strokeWidth ?? 0) as number
-            const dashPattern = (obj.element.dashPattern ?? undefined) as number[] | undefined
+            const { fillColor, strokeColor, strokeWidth, dashPattern } = getElementProps(obj)
             elementPopover.showPopoverAt(clientX, clientY, obj.type, obj.element, {
               fillColor,
               strokeColor,
@@ -159,6 +156,30 @@ export function useCanvasEvents(
       if (objectCountAfter > objectCountBefore) {
         addSnapshot()
       }
+    }
+  }
+
+  function getElementProps(obj: CanvasObject) {
+    const fillColor = (obj.element.fill as string) || '#ffffff'
+    let strokeColor = ''
+    let strokeWidth = 0
+    let dashPattern: number[] | undefined
+
+    if (obj.type === 'pen') {
+      strokeColor = (obj.element as Pen).pathElement.stroke as string
+      strokeWidth = (obj.element as Pen).pathElement.strokeWidth as number
+      dashPattern = (obj.element as Pen).pathElement.dashPattern as number[] | undefined
+    } else {
+      strokeColor = (obj.element.stroke as string) || '#000000'
+      strokeWidth = (obj.element.strokeWidth ?? 0) as number
+      dashPattern = (obj.element.dashPattern ?? undefined) as number[] | undefined
+    }
+
+    return {
+      fillColor,
+      strokeColor,
+      strokeWidth,
+      dashPattern,
     }
   }
 

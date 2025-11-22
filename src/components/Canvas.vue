@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { App } from 'leafer-ui'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useDeleteTool } from '@/composables/features/useDeleteTool'
 import { useElementPopover } from '@/composables/state/useElementPopover'
 import { useCanvasTools } from '@/composables/useCanvasTools'
@@ -26,11 +26,20 @@ let app: App | null = null
 let deleteToolCleanup: (() => void) | null = null
 let zoomKeyboardCleanup: (() => void) | null = null
 
-const selectedElementStrokeType = computed(() => {
-  return elementPopover.selectedElementDashPattern.value ? 'dashed' : 'solid'
-})
 const handleStrokeTypeChange = (type: 'solid' | 'dashed') => {
   elementPopover.updateElementDashPattern(type === 'dashed' ? [5, 5] : undefined)
+}
+
+const handleFillColorUpdate = (color: string) => {
+  elementPopover.updateElementFillColor(color)
+}
+
+const handleStrokeColorUpdate = (color: string) => {
+  elementPopover.updateElementStrokeColor(color)
+}
+
+const handleStrokeWidthUpdate = (width: number) => {
+  elementPopover.updateElementStrokeWidth(width)
 }
 
 onMounted(() => {
@@ -96,41 +105,17 @@ onBeforeUnmount(() => {
       placement="right-start"
       trigger="manual"
     >
-      <template
-        v-if="
-          elementPopover.selectedElementType.value === 'rect' ||
-          elementPopover.selectedElementType.value === 'circle'
-        "
-      >
-        <ColorPicker
-          size="small"
-          :value="elementPopover.selectedElementFillColor.value"
-          @update:value="elementPopover.updateElementFillColor"
-        />
-        <n-popover :show-arrow="false" placement="bottom-start" trigger="click">
-          <template #trigger>
-            <n-button quaternary size="small" circle>
-              <template #icon>
-                <div
-                  class="flex w-[18px] h-[18px] rounded-full items-center justify-center before:content-[''] before:w-2.5 before:h-2.5 before:rounded-full before:bg-white"
-                  :style="{
-                    backgroundColor:
-                      elementPopover.selectedElementStrokeColor.value,
-                  }"
-                />
-              </template>
-            </n-button>
-          </template>
-          <stroke-config
-            :stroke-width="elementPopover.selectedElementStrokeWidth.value"
-            :stroke-color="elementPopover.selectedElementStrokeColor.value"
-            :stroke-type="selectedElementStrokeType"
-            @update:stroke-width="elementPopover.updateElementStrokeWidth"
-            @update:stroke-color="elementPopover.updateElementStrokeColor"
-            @update:stroke-type="handleStrokeTypeChange"
-          />
-        </n-popover>
-      </template>
+      <ElementStyleConfig
+        :element-type="elementPopover.selectedElementType.value"
+        :fill-color="elementPopover.selectedElementFillColor.value"
+        :stroke-color="elementPopover.selectedElementStrokeColor.value"
+        :stroke-width="elementPopover.selectedElementStrokeWidth.value"
+        :dash-pattern="elementPopover.selectedElementDashPattern.value"
+        @update:fill-color="handleFillColorUpdate"
+        @update:stroke-color="handleStrokeColorUpdate"
+        @update:stroke-width="handleStrokeWidthUpdate"
+        @update:stroke-type="handleStrokeTypeChange"
+      />
     </n-popover>
   </div>
 </template>

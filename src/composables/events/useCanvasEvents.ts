@@ -4,6 +4,7 @@
 
 import type { App } from 'leafer-ui'
 import { DragEvent, Line, type Pen, PointerEvent, Text } from 'leafer-ui'
+import { ref } from 'vue'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { useHistory } from '@/plugins/composables/useHistory'
 import { pluginEventBus } from '@/plugins/events'
@@ -22,6 +23,48 @@ export function useCanvasEvents(
   const store = useCanvasStore()
   const tree = app.tree
   const { addSnapshot } = useHistory()
+  const wasPopoverVisible = ref(false)
+
+  function showPopoverForSelectedElement() {
+    if (!elementPopover || !app.editor || !canvasContainer) return
+
+    const selectedElements = app.editor.list
+    if (selectedElements.length === 1 && selectedElements[0]) {
+      const firstElement = selectedElements[0]
+      const obj = store.objects.find((o) => o.element.innerId === firstElement.innerId)
+      if (obj?.element && obj.type !== 'image') {
+        const bounds = obj.element.getBounds()
+        if (bounds) {
+          const centerX = bounds.x + bounds.width + 5
+          const topY = bounds.y
+          const containerRect = canvasContainer.getBoundingClientRect()
+          const clientX = containerRect.left + centerX
+          const clientY = containerRect.top + topY
+
+          const {
+            fillColor,
+            strokeColor,
+            strokeWidth,
+            dashPattern,
+            startArrow,
+            endArrow,
+            textColor,
+            fontSize,
+          } = getElementProps(obj)
+          elementPopover.showPopoverAt(clientX, clientY, obj.type, obj.element, {
+            fillColor,
+            strokeColor,
+            strokeWidth,
+            dashPattern,
+            startArrow,
+            endArrow,
+            textColor,
+            fontSize,
+          })
+        }
+      }
+    }
+  }
 
   function handleDrag(e: DragEvent) {
     if (!tree || !drawingState.isDrawing.value) return
@@ -105,6 +148,11 @@ export function useCanvasEvents(
         addSnapshot()
       }
 
+      if (wasPopoverVisible.value) {
+        showPopoverForSelectedElement()
+      }
+
+      wasPopoverVisible.value = false
       drawingState.dragStartPositions.value.clear()
     }
   }
@@ -116,40 +164,8 @@ export function useCanvasEvents(
 
     if (tool === 'select' && elementPopover && app.editor) {
       const selectedElements = app.editor.list
-      if (selectedElements.length === 1 && selectedElements[0]) {
-        const firstElement = selectedElements[0]
-        const obj = store.objects.find((o) => o.element.innerId === firstElement.innerId)
-        if (obj?.element && canvasContainer && obj.type !== 'image') {
-          const bounds = obj.element.getBounds()
-          if (bounds) {
-            const centerX = bounds.x + bounds.width + 5
-            const topY = bounds.y
-            const containerRect = canvasContainer.getBoundingClientRect()
-            const clientX = containerRect.left + centerX
-            const clientY = containerRect.top + topY
-
-            const {
-              fillColor,
-              strokeColor,
-              strokeWidth,
-              dashPattern,
-              startArrow,
-              endArrow,
-              textColor,
-              fontSize,
-            } = getElementProps(obj)
-            elementPopover.showPopoverAt(clientX, clientY, obj.type, obj.element, {
-              fillColor,
-              strokeColor,
-              strokeWidth,
-              dashPattern,
-              startArrow,
-              endArrow,
-              textColor,
-              fontSize,
-            })
-          }
-        }
+      if (selectedElements.length === 1) {
+        showPopoverForSelectedElement()
       } else {
         elementPopover.hidePopover()
       }
@@ -234,6 +250,13 @@ export function useCanvasEvents(
               y: obj.element.y ?? 0,
             })
           }
+        }
+
+        if (elementPopover?.showPopover.value) {
+          wasPopoverVisible.value = true
+          elementPopover.hidePopover()
+        } else {
+          wasPopoverVisible.value = false
         }
       }
     }

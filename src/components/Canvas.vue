@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { App } from 'leafer-ui'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { inject, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { useDeleteTool } from '@/composables/features/useDeleteTool'
 import { useElementPopover } from '@/composables/state/useElementPopover'
@@ -21,7 +21,10 @@ import { Snap } from 'leafer-x-easy-snap'
 const canvasContainer = ref<HTMLElement | null>(null)
 const store = useCanvasStore()
 const { setupZoomKeyboardPrevention } = useZoomTool()
-const elementPopover = useElementPopover()
+const elementPopover = inject<ReturnType<typeof useElementPopover>>(
+  'elementPopover',
+  useElementPopover()
+)
 
 let app: App | null = null
 let deleteToolCleanup: (() => void) | null = null

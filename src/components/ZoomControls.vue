@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
+import { useElementPopover } from '@/composables/state/useElementPopover'
 import { canvasConfig } from '@/config/canvas'
 import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { pluginRegistry } from '@/plugins/registry'
 import { useCanvasStore } from '@/stores/canvas'
 
+const elementPopover = inject<ReturnType<typeof useElementPopover>>(
+  'elementPopover',
+  useElementPopover()
+)
+
 const store = useCanvasStore()
-const { zoomIn, zoomOut, resetZoom } = useZoomTool()
+const { zoomIn, zoomOut, resetZoom } = useZoomTool(elementPopover)
 
 const zoomPercent = computed(() => Math.round(store.zoom * 100))
 

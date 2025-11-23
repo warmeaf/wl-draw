@@ -5,19 +5,32 @@
 import { canvasConfig } from '@/config/canvas'
 import { useCanvasStore } from '@/stores/canvas'
 
-export function useZoomTool() {
+export function useZoomTool(
+  elementPopover?: ReturnType<
+    typeof import('@/composables/state/useElementPopover').useElementPopover
+  >
+) {
   const store = useCanvasStore()
 
   function zoomIn(step = canvasConfig.zoom.step) {
     store.updateZoom(step)
+    if (elementPopover?.showPopover.value) {
+      elementPopover.hidePopover()
+    }
   }
 
   function zoomOut(step = canvasConfig.zoom.step) {
     store.updateZoom(-step)
+    if (elementPopover?.showPopover.value) {
+      elementPopover.hidePopover()
+    }
   }
 
   function resetZoom() {
     store.setZoom(canvasConfig.zoom.default)
+    if (elementPopover?.showPopover.value) {
+      elementPopover.hidePopover()
+    }
   }
 
   function handleZoomKeyboardEvent(e: KeyboardEvent) {

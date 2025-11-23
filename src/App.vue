@@ -4,6 +4,8 @@
 
 <script setup lang="ts">
 import type { GlobalThemeOverrides } from 'naive-ui'
+import { provide } from 'vue'
+import { useElementPopover } from '@/composables/state/useElementPopover'
 import { themeColors } from '@/config/theme'
 
 const themeOverrides: GlobalThemeOverrides = {
@@ -14,6 +16,9 @@ const themeOverrides: GlobalThemeOverrides = {
     primaryColorSuppl: themeColors.primarySuppl,
   },
 }
+
+const elementPopover = useElementPopover()
+provide('elementPopover', elementPopover)
 </script>
 
 <template>

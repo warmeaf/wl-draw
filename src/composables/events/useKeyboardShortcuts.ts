@@ -15,10 +15,11 @@ import type { ToolType } from '@/types'
 
 export function useKeyboardShortcuts(
   app: App,
-  createToolInstanceForPlugin: (pluginId: string) => ToolInstance | null
+  createToolInstanceForPlugin: (pluginId: string) => ToolInstance | null,
+  elementPopover?: ReturnType<typeof import('../state/useElementPopover').useElementPopover>
 ) {
   const store = useCanvasStore()
-  const { zoomIn, zoomOut } = useZoomTool()
+  const { zoomIn, zoomOut } = useZoomTool(elementPopover)
 
   function buildShortcutMap() {
     const shortcutMap = new Map<string, { pluginId: string; toolType: ToolType }>()
@@ -128,6 +129,9 @@ export function useKeyboardShortcuts(
     const zoom = app.tree.scale as number
     store.setZoom(zoom)
     pluginEventBus.emit('canvas:zoom', { zoom })
+    if (elementPopover?.showPopover.value) {
+      elementPopover.hidePopover()
+    }
   }
 
   const keyDownId = app.on_(KeyEvent.DOWN, handleKeyDown)

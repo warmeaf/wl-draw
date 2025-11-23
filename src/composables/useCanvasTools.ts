@@ -30,7 +30,11 @@ export function useCanvasTools(
     elementPopover,
     canvasContainer
   )
-  const keyboardShortcuts = useKeyboardShortcuts(app, toolInstance.createToolInstanceForPlugin)
+  const keyboardShortcuts = useKeyboardShortcuts(
+    app,
+    toolInstance.createToolInstanceForPlugin,
+    elementPopover
+  )
 
   onBeforeUnmount(() => {
     canvasEvents.cleanup()

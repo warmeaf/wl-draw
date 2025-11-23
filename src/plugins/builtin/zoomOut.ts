@@ -22,18 +22,12 @@ export const zoomOutPlugin: ToolPlugin = {
     iconComponent: 'i-lucide-zoom-out',
   },
   shortcut: 'Ctrl+Minus',
-  createTool: (context) => {
-    const { store } = context
+  createTool: () => {
     const { zoomOut } = useZoomTool()
 
     return {
       onActivate: () => {
-        const previousTool =
-          store.currentTool === 'zoomOut' ? store.previousTool : store.currentTool
         zoomOut()
-        if (previousTool && previousTool !== 'zoomOut') {
-          store.setTool(previousTool as typeof store.currentTool)
-        }
       },
     }
   },

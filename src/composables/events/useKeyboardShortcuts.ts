@@ -12,6 +12,7 @@ import { parseShortcut } from '@/plugins/shortcut'
 import type { ToolInstance } from '@/plugins/types'
 import { useCanvasStore } from '@/stores/canvas'
 import type { ToolType } from '@/types'
+import { isValidToolType } from '@/types'
 
 export function useKeyboardShortcuts(
   app: App,
@@ -22,7 +23,10 @@ export function useKeyboardShortcuts(
   const { zoomIn, zoomOut } = useZoomTool(elementPopover)
 
   function buildShortcutMap() {
-    const shortcutMap = new Map<string, { pluginId: string; toolType: ToolType }>()
+    const shortcutMap = new Map<
+      string,
+      { pluginId: string; toolType: ToolType | 'zoomIn' | 'zoomOut' }
+    >()
     const plugins = pluginRegistry.getAll()
 
     for (const plugin of plugins) {
@@ -30,10 +34,17 @@ export function useKeyboardShortcuts(
         const parsed = parseShortcut(plugin.shortcut)
         if (parsed) {
           const shortcutKey = buildShortcutKey(parsed)
-          shortcutMap.set(shortcutKey, {
-            pluginId: plugin.id,
-            toolType: plugin.type as ToolType,
-          })
+          if (plugin.type === 'zoomIn' || plugin.type === 'zoomOut') {
+            shortcutMap.set(shortcutKey, {
+              pluginId: plugin.id,
+              toolType: plugin.type as 'zoomIn' | 'zoomOut',
+            })
+          } else if (isValidToolType(plugin.type)) {
+            shortcutMap.set(shortcutKey, {
+              pluginId: plugin.id,
+              toolType: plugin.type,
+            })
+          }
         }
       }
     }
@@ -111,7 +122,7 @@ export function useKeyboardShortcuts(
           return
         }
 
-        if (toolType !== 'pan' || !store.isPanningWithSpace) {
+        if (isValidToolType(toolType) && (toolType !== 'pan' || !store.isPanningWithSpace)) {
           store.setTool(toolType)
         }
         break

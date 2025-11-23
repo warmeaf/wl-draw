@@ -4,6 +4,9 @@
  */
 
 import { useEventBus } from '@vueuse/core'
+import type { LeaferElement } from '@/types'
+
+type CanvasObjectType = 'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image'
 
 export interface PluginEventMap {
   /**
@@ -55,7 +58,7 @@ export interface PluginEventMap {
    * Emitted when a drawing object is created.
    *
    * Triggered: When a new drawing object (rect, circle, line, etc.) is created on the canvas
-   * Payload: { id: string; type: string; element: unknown }
+   * Payload: { id: string; type: CanvasObject['type']; element: LeaferElement }
    *
    * @example
    * ```typescript
@@ -64,7 +67,7 @@ export interface PluginEventMap {
    * })
    * ```
    */
-  'object:created': { id: string; type: string; element: unknown }
+  'object:created': { id: string; type: CanvasObjectType; element: LeaferElement }
 
   /**
    * Emitted when a drawing object is deleted.
@@ -79,7 +82,7 @@ export interface PluginEventMap {
    * })
    * ```
    */
-  'object:deleted': { id: string; type: string }
+  'object:deleted': { id: string; type: CanvasObjectType }
 
   /**
    * Emitted when a drawing object is selected.
@@ -94,13 +97,13 @@ export interface PluginEventMap {
    * })
    * ```
    */
-  'object:selected': { id: string; type: string }
+  'object:selected': { id: string; type: CanvasObjectType }
 
   /**
    * Emitted when a drawing object is modified.
    *
    * Triggered: When properties of a drawing object are changed (position, size, style, etc.)
-   * Payload: { id: string; type: string; changes: Record<string, unknown> }
+   * Payload: { id: string; type: CanvasObject['type']; changes: Record<string, unknown> }
    *
    * @example
    * ```typescript
@@ -109,7 +112,7 @@ export interface PluginEventMap {
    * })
    * ```
    */
-  'object:modified': { id: string; type: string; changes: Record<string, unknown> }
+  'object:modified': { id: string; type: CanvasObjectType; changes: Record<string, unknown> }
 
   /**
    * Emitted when the canvas zoom level changes.

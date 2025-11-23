@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import { pluginRegistry } from '@/plugins/registry'
 import { useCanvasStore } from '@/stores/canvas'
 import type { ToolType } from '@/types'
+import { isValidToolType } from '@/types'
 
 const store = useCanvasStore()
 
@@ -14,11 +15,17 @@ const tools = computed(() => {
   const excludedTypes = ['export', 'zoomIn', 'zoomOut', 'redo', 'undo']
   return pluginRegistry
     .getAll()
-    .filter((plugin) => plugin.ui && !excludedTypes.includes(plugin.type))
+    .filter(
+      (plugin) => plugin.ui && !excludedTypes.includes(plugin.type) && isValidToolType(plugin.type)
+    )
     .map((plugin) => {
       const ui = plugin.ui as NonNullable<typeof plugin.ui>
+      const toolType = plugin.type
+      if (!isValidToolType(toolType)) {
+        throw new Error(`Invalid tool type: ${toolType}`)
+      }
       return {
-        type: plugin.type as ToolType,
+        type: toolType,
         label: ui.label,
         shortcut: plugin.shortcut,
         iconName: ui.iconComponent,

@@ -25,6 +25,24 @@ interface ExportData {
   }>
 }
 
+function isExportResultWithBlob(result: unknown): result is { blob: Blob } {
+  return (
+    result !== null &&
+    typeof result === 'object' &&
+    'blob' in result &&
+    (result as { blob: unknown }).blob instanceof Blob
+  )
+}
+
+function isExportResultWithData(result: unknown): result is { data: string | Blob } {
+  if (result === null || typeof result !== 'object' || !('data' in result)) {
+    return false
+  }
+
+  const data = (result as { data: unknown }).data
+  return typeof data === 'string' || data instanceof Blob
+}
+
 export function useExportTool(tree: Tree, store: ReturnType<typeof useCanvasStore>) {
   function exportCanvasAsJSON() {
     if (!tree || !store.appInstance) {
@@ -110,10 +128,10 @@ export function useExportTool(tree: Tree, store: ReturnType<typeof useCanvasStor
       } else if (typeof result === 'string') {
         const response = await fetch(result)
         blob = await response.blob()
-      } else if (result && typeof result === 'object' && 'blob' in result) {
-        blob = (result as { blob: Blob }).blob
-      } else if (result && typeof result === 'object' && 'data' in result) {
-        const data = (result as { data: string | Blob }).data
+      } else if (isExportResultWithBlob(result)) {
+        blob = result.blob
+      } else if (isExportResultWithData(result)) {
+        const data = result.data
         blob = data instanceof Blob ? data : await (await fetch(data)).blob()
       } else {
         console.error('Export failed: unexpected result type')

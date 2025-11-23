@@ -22,17 +22,12 @@ export const zoomInPlugin: ToolPlugin = {
     iconComponent: 'i-lucide-zoom-in',
   },
   shortcut: 'Ctrl+Equal',
-  createTool: (context) => {
-    const { store } = context
+  createTool: () => {
     const { zoomIn } = useZoomTool()
 
     return {
       onActivate: () => {
-        const previousTool = store.currentTool === 'zoomIn' ? store.previousTool : store.currentTool
         zoomIn()
-        if (previousTool && previousTool !== 'zoomIn') {
-          store.setTool(previousTool as typeof store.currentTool)
-        }
       },
     }
   },

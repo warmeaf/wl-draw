@@ -174,7 +174,7 @@ export const useCanvasStore = defineStore('canvas', {
         if (!objData.data || typeof objData.data !== 'object') return
 
         const data = objData.data as Record<string, unknown>
-        const tag = data.tag as string
+        const tag = typeof data.tag === 'string' ? data.tag : null
 
         if (!tag) return
 
@@ -209,12 +209,25 @@ export const useCanvasStore = defineStore('canvas', {
           }
 
           if (element) {
-            tree.add(element)
-            this.objects.push({
-              id: objData.id,
-              type: objData.type as CanvasObject['type'],
-              element,
-            })
+            const objectType = objData.type
+            if (
+              objectType === 'rect' ||
+              objectType === 'circle' ||
+              objectType === 'line' ||
+              objectType === 'arrow' ||
+              objectType === 'pen' ||
+              objectType === 'text' ||
+              objectType === 'image'
+            ) {
+              tree.add(element)
+              this.objects.push({
+                id: objData.id,
+                type: objectType,
+                element,
+              })
+            } else {
+              console.warn(`Unknown object type: ${objectType}`)
+            }
           }
         } catch (error) {
           console.error(`Error creating element from snapshot:`, error)

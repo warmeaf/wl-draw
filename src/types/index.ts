@@ -23,4 +23,19 @@ export type ToolType =
   | 'pen'
   | 'text'
   | 'image'
-  | string
+
+const VALID_TOOL_TYPES: readonly ToolType[] = [
+  'select',
+  'pan',
+  'rect',
+  'circle',
+  'line',
+  'arrow',
+  'pen',
+  'text',
+  'image',
+] as const
+
+export function isValidToolType(type: string): type is ToolType {
+  return VALID_TOOL_TYPES.includes(type as ToolType)
+}

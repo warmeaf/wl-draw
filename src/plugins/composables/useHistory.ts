@@ -2,7 +2,7 @@
  * History composable for managing canvas state snapshots and undo/redo operations
  */
 
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useHistoryStore } from '@/stores/history'
 import type { HistorySnapshot } from '@/types/history'
@@ -10,6 +10,10 @@ import type { HistorySnapshot } from '@/types/history'
 export function useHistory() {
   const canvasStore = useCanvasStore()
   const historyStore = useHistoryStore()
+  const elementPopover = inject<
+    | ReturnType<typeof import('../../composables/state/useElementPopover').useElementPopover>
+    | undefined
+  >('elementPopover')
 
   const canUndo = computed(() => historyStore.canUndo)
   const canRedo = computed(() => historyStore.canRedo)
@@ -26,6 +30,9 @@ export function useHistory() {
     const snapshot = historyStore.undo()
     if (snapshot) {
       applySnapshot(snapshot)
+      if (elementPopover?.showPopover.value) {
+        elementPopover.hidePopover()
+      }
     }
   }
 
@@ -33,6 +40,9 @@ export function useHistory() {
     const snapshot = historyStore.redo()
     if (snapshot) {
       applySnapshot(snapshot)
+      if (elementPopover?.showPopover.value) {
+        elementPopover.hidePopover()
+      }
     }
   }
 

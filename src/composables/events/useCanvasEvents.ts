@@ -3,7 +3,7 @@
  */
 
 import type { App } from 'leafer-ui'
-import { DragEvent, Line, type Pen, PointerEvent } from 'leafer-ui'
+import { DragEvent, Line, type Pen, PointerEvent, Text } from 'leafer-ui'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { useHistory } from '@/plugins/composables/useHistory'
 import { pluginEventBus } from '@/plugins/events'
@@ -128,8 +128,16 @@ export function useCanvasEvents(
             const clientX = containerRect.left + centerX
             const clientY = containerRect.top + topY
 
-            const { fillColor, strokeColor, strokeWidth, dashPattern, startArrow, endArrow } =
-              getElementProps(obj)
+            const {
+              fillColor,
+              strokeColor,
+              strokeWidth,
+              dashPattern,
+              startArrow,
+              endArrow,
+              textColor,
+              fontSize,
+            } = getElementProps(obj)
             elementPopover.showPopoverAt(clientX, clientY, obj.type, obj.element, {
               fillColor,
               strokeColor,
@@ -137,6 +145,8 @@ export function useCanvasEvents(
               dashPattern,
               startArrow,
               endArrow,
+              textColor,
+              fontSize,
             })
           }
         }
@@ -170,11 +180,16 @@ export function useCanvasEvents(
     let dashPattern: number[] | undefined
     let startArrow: ArrowType = 'none'
     let endArrow: ArrowType = 'arrow'
+    let textColor: string | undefined
+    let fontSize: number | undefined
 
     if (obj.type === 'pen') {
       strokeColor = (obj.element as Pen).pathElement.stroke as string
       strokeWidth = (obj.element as Pen).pathElement.strokeWidth as number
       dashPattern = (obj.element as Pen).pathElement.dashPattern as number[] | undefined
+    } else if (obj.type === 'text' && obj.element instanceof Text) {
+      textColor = (obj.element.fill as string) || '#000000'
+      fontSize = obj.element.fontSize ?? 16
     } else {
       strokeColor = (obj.element.stroke as string) || '#000000'
       strokeWidth = (obj.element.strokeWidth ?? 0) as number
@@ -193,6 +208,8 @@ export function useCanvasEvents(
       dashPattern,
       startArrow,
       endArrow,
+      textColor,
+      fontSize,
     }
   }
 

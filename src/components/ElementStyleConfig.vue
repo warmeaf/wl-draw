@@ -13,6 +13,8 @@ interface Props {
   dashPattern?: number[] | undefined
   startArrow?: ArrowType
   endArrow?: ArrowType
+  textColor?: string
+  fontSize?: number
 }
 
 interface Emits {
@@ -22,6 +24,8 @@ interface Emits {
   (e: 'update:strokeType', value: StrokeType): void
   (e: 'update:startArrow', value: ArrowType): void
   (e: 'update:endArrow', value: ArrowType): void
+  (e: 'update:textColor', value: string): void
+  (e: 'update:fontSize', value: number): void
 }
 
 const props = defineProps<Props>()
@@ -57,6 +61,20 @@ const handleStartArrowUpdate = (arrowType: ArrowType) => {
 
 const handleEndArrowUpdate = (arrowType: ArrowType) => {
   emit('update:endArrow', arrowType)
+}
+
+const handleTextColorUpdate = (color: string) => {
+  emit('update:textColor', color)
+}
+
+const handleFontSizeUpdate = (size: number) => {
+  emit('update:fontSize', size)
+}
+
+const handleFontSizeChange = (value: number | null) => {
+  if (value === null) return
+  const clampedValue = Math.max(8, Math.min(200, value))
+  handleFontSizeUpdate(clampedValue)
 }
 </script>
 
@@ -174,6 +192,36 @@ const handleEndArrowUpdate = (arrowType: ArrowType) => {
         :other-arrow="startArrow ?? 'none'"
         @update:value="handleEndArrowUpdate"
       />
+    </n-popover>
+  </template>
+  <template v-else-if="elementType === 'text'">
+    <ColorPicker
+      size="small"
+      :value="textColor ?? '#000000'"
+      @update:value="handleTextColorUpdate"
+    />
+    <n-popover :show-arrow="false" placement="bottom-start" trigger="click">
+      <template #trigger>
+        <n-button quaternary size="small" circle>
+          <template #icon>
+            <div class="flex items-center justify-center w-[18px] h-[18px] text-xs font-semibold">
+              {{ fontSize ?? 16 }}
+            </div>
+          </template>
+        </n-button>
+      </template>
+      <div class="flex flex-col bg-white p-2">
+        <n-input-number
+          :value="fontSize ?? 16"
+          :min="8"
+          :max="200"
+          :step="1"
+          size="small"
+          class="w-[90px]"
+          placeholder=""
+          @update:value="handleFontSizeChange"
+        />
+      </div>
     </n-popover>
   </template>
 </template>

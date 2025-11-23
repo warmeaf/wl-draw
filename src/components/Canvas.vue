@@ -51,6 +51,14 @@ const handleEndArrowUpdate = (arrowType: ArrowType) => {
   elementPopover.updateElementEndArrow(arrowType)
 }
 
+const handleTextColorUpdate = (color: string) => {
+  elementPopover.updateElementTextColor(color)
+}
+
+const handleFontSizeUpdate = (size: number) => {
+  elementPopover.updateElementFontSize(size)
+}
+
 onMounted(() => {
   zoomKeyboardCleanup = setupZoomKeyboardPrevention()
 
@@ -122,12 +130,16 @@ onBeforeUnmount(() => {
         :dash-pattern="elementPopover.selectedElementDashPattern.value"
         :start-arrow="elementPopover.selectedElementStartArrow.value"
         :end-arrow="elementPopover.selectedElementEndArrow.value"
+        :text-color="elementPopover.selectedElementTextColor.value"
+        :font-size="elementPopover.selectedElementFontSize.value"
         @update:fill-color="handleFillColorUpdate"
         @update:stroke-color="handleStrokeColorUpdate"
         @update:stroke-width="handleStrokeWidthUpdate"
         @update:stroke-type="handleStrokeTypeChange"
         @update:start-arrow="handleStartArrowUpdate"
         @update:end-arrow="handleEndArrowUpdate"
+        @update:text-color="handleTextColorUpdate"
+        @update:font-size="handleFontSizeUpdate"
       />
     </n-popover>
   </div>

@@ -3,7 +3,7 @@
  */
 
 import type { App } from 'leafer-ui'
-import { DragEvent, Line, type Pen, PointerEvent, Text } from 'leafer-ui'
+import { DragEvent, Line, MoveEvent, type Pen, PointerEvent, Text } from 'leafer-ui'
 import { ref } from 'vue'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { useHistory } from '@/plugins/composables/useHistory'
@@ -290,16 +290,24 @@ export function useCanvasEvents(
     }
   }
 
+  function handleMove(_e: MoveEvent) {
+    if (elementPopover?.showPopover.value) {
+      elementPopover.hidePopover()
+    }
+  }
+
   const dragStartId = app.on_(DragEvent.START, handleDragStart)
   const dragId = app.on_(DragEvent.DRAG, handleDrag)
   const dragEndId = app.on_(DragEvent.END, handleDragEnd)
   const tapId = app.on_(PointerEvent.TAP, handleTap)
+  const moveId = app.tree.on_(MoveEvent.MOVE, handleMove)
 
   function cleanup() {
     app.off_(dragStartId)
     app.off_(dragId)
     app.off_(dragEndId)
     app.off_(tapId)
+    app.tree.off_(moveId)
   }
 
   return {

@@ -2,8 +2,9 @@
  * Composable for managing element popover display state and position
  */
 
-import { Pen } from 'leafer-ui'
+import { Line, Pen } from 'leafer-ui'
 import { ref } from 'vue'
+import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import type { LeaferElement } from '@/types'
 
 type ElementType = 'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image' | null
@@ -13,6 +14,8 @@ interface ElementProps {
   strokeColor?: string
   strokeWidth?: number
   dashPattern?: number[] | undefined
+  startArrow?: ArrowType
+  endArrow?: ArrowType
 }
 
 interface ElementPropertySetter {
@@ -21,7 +24,9 @@ interface ElementPropertySetter {
     fillColorRef: { value: string },
     strokeColorRef: { value: string },
     strokeWidthRef: { value: number },
-    dashPatternRef: { value: number[] | undefined }
+    dashPatternRef: { value: number[] | undefined },
+    startArrowRef?: { value: ArrowType },
+    endArrowRef?: { value: ArrowType }
   ): void
 }
 
@@ -31,7 +36,9 @@ class FillableElementPropertySetter implements ElementPropertySetter {
     fillColorRef: { value: string },
     strokeColorRef: { value: string },
     strokeWidthRef: { value: number },
-    dashPatternRef: { value: number[] | undefined }
+    dashPatternRef: { value: number[] | undefined },
+    _startArrowRef?: { value: ArrowType },
+    _endArrowRef?: { value: ArrowType }
   ): void {
     fillColorRef.value = props?.fillColor ?? '#ffffff'
     strokeColorRef.value = props?.strokeColor ?? '#000000'
@@ -46,7 +53,9 @@ class StrokeOnlyElementPropertySetter implements ElementPropertySetter {
     _fillColorRef: { value: string },
     strokeColorRef: { value: string },
     strokeWidthRef: { value: number },
-    dashPatternRef: { value: number[] | undefined }
+    dashPatternRef: { value: number[] | undefined },
+    _startArrowRef?: { value: ArrowType },
+    _endArrowRef?: { value: ArrowType }
   ): void {
     strokeColorRef.value = props?.strokeColor ?? '#000000'
     strokeWidthRef.value = props?.strokeWidth ?? 0
@@ -54,15 +63,34 @@ class StrokeOnlyElementPropertySetter implements ElementPropertySetter {
   }
 }
 
+class ArrowElementPropertySetter implements ElementPropertySetter {
+  setProperties(
+    props: ElementProps | undefined,
+    _fillColorRef: { value: string },
+    strokeColorRef: { value: string },
+    strokeWidthRef: { value: number },
+    dashPatternRef: { value: number[] | undefined },
+    startArrowRef: { value: ArrowType },
+    endArrowRef: { value: ArrowType }
+  ): void {
+    strokeColorRef.value = props?.strokeColor ?? '#000000'
+    strokeWidthRef.value = props?.strokeWidth ?? 0
+    dashPatternRef.value = props?.dashPattern ?? undefined
+    startArrowRef.value = props?.startArrow ?? 'none'
+    endArrowRef.value = props?.endArrow ?? 'arrow'
+  }
+}
+
 const fillableElementPropertySetter = new FillableElementPropertySetter()
 const strokeOnlyElementPropertySetter = new StrokeOnlyElementPropertySetter()
+const arrowElementPropertySetter = new ArrowElementPropertySetter()
 
 const elementPropertySetterMap: Record<string, ElementPropertySetter> = {
   rect: fillableElementPropertySetter,
   circle: fillableElementPropertySetter,
   line: strokeOnlyElementPropertySetter,
   pen: strokeOnlyElementPropertySetter,
-  arrow: strokeOnlyElementPropertySetter,
+  arrow: arrowElementPropertySetter,
 }
 
 export function useElementPopover() {
@@ -78,6 +106,8 @@ export function useElementPopover() {
   const selectedElementStrokeColor = ref<string>('#000000')
   const selectedElementStrokeWidth = ref<number>(0)
   const selectedElementDashPattern = ref<number[] | undefined>(undefined)
+  const selectedElementStartArrow = ref<ArrowType>('none')
+  const selectedElementEndArrow = ref<ArrowType>('arrow')
 
   function showPopoverAt(
     x: number,
@@ -100,7 +130,9 @@ export function useElementPopover() {
           selectedElementFillColor,
           selectedElementStrokeColor,
           selectedElementStrokeWidth,
-          selectedElementDashPattern
+          selectedElementDashPattern,
+          selectedElementStartArrow,
+          selectedElementEndArrow
         )
       }
     }
@@ -150,6 +182,28 @@ export function useElementPopover() {
     }
   }
 
+  function updateElementStartArrow(arrowType: ArrowType) {
+    if (
+      selectedElement.value &&
+      selectedElement.value instanceof Line &&
+      selectedElementType.value === 'arrow'
+    ) {
+      selectedElement.value.startArrow = arrowType
+      selectedElementStartArrow.value = arrowType
+    }
+  }
+
+  function updateElementEndArrow(arrowType: ArrowType) {
+    if (
+      selectedElement.value &&
+      selectedElement.value instanceof Line &&
+      selectedElementType.value === 'arrow'
+    ) {
+      selectedElement.value.endArrow = arrowType
+      selectedElementEndArrow.value = arrowType
+    }
+  }
+
   return {
     showPopover,
     popoverX,
@@ -161,6 +215,8 @@ export function useElementPopover() {
     selectedElementStrokeColor,
     selectedElementStrokeWidth,
     selectedElementDashPattern,
+    selectedElementStartArrow,
+    selectedElementEndArrow,
 
     showPopoverAt,
     hidePopover,
@@ -169,5 +225,7 @@ export function useElementPopover() {
     updateElementStrokeColor,
     updateElementStrokeWidth,
     updateElementDashPattern,
+    updateElementStartArrow,
+    updateElementEndArrow,
   }
 }

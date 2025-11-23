@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { App } from 'leafer-ui'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { useDeleteTool } from '@/composables/features/useDeleteTool'
 import { useElementPopover } from '@/composables/state/useElementPopover'
 import { useCanvasTools } from '@/composables/useCanvasTools'
@@ -40,6 +41,14 @@ const handleStrokeColorUpdate = (color: string) => {
 
 const handleStrokeWidthUpdate = (width: number) => {
   elementPopover.updateElementStrokeWidth(width)
+}
+
+const handleStartArrowUpdate = (arrowType: ArrowType) => {
+  elementPopover.updateElementStartArrow(arrowType)
+}
+
+const handleEndArrowUpdate = (arrowType: ArrowType) => {
+  elementPopover.updateElementEndArrow(arrowType)
 }
 
 onMounted(() => {
@@ -111,10 +120,14 @@ onBeforeUnmount(() => {
         :stroke-color="elementPopover.selectedElementStrokeColor.value"
         :stroke-width="elementPopover.selectedElementStrokeWidth.value"
         :dash-pattern="elementPopover.selectedElementDashPattern.value"
+        :start-arrow="elementPopover.selectedElementStartArrow.value"
+        :end-arrow="elementPopover.selectedElementEndArrow.value"
         @update:fill-color="handleFillColorUpdate"
         @update:stroke-color="handleStrokeColorUpdate"
         @update:stroke-width="handleStrokeWidthUpdate"
         @update:stroke-type="handleStrokeTypeChange"
+        @update:start-arrow="handleStartArrowUpdate"
+        @update:end-arrow="handleEndArrowUpdate"
       />
     </n-popover>
   </div>

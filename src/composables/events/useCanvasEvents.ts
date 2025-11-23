@@ -3,7 +3,8 @@
  */
 
 import type { App } from 'leafer-ui'
-import { DragEvent, type Pen, PointerEvent } from 'leafer-ui'
+import { DragEvent, Line, type Pen, PointerEvent } from 'leafer-ui'
+import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { useHistory } from '@/plugins/composables/useHistory'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
@@ -127,12 +128,15 @@ export function useCanvasEvents(
             const clientX = containerRect.left + centerX
             const clientY = containerRect.top + topY
 
-            const { fillColor, strokeColor, strokeWidth, dashPattern } = getElementProps(obj)
+            const { fillColor, strokeColor, strokeWidth, dashPattern, startArrow, endArrow } =
+              getElementProps(obj)
             elementPopover.showPopoverAt(clientX, clientY, obj.type, obj.element, {
               fillColor,
               strokeColor,
               strokeWidth,
               dashPattern,
+              startArrow,
+              endArrow,
             })
           }
         }
@@ -164,6 +168,8 @@ export function useCanvasEvents(
     let strokeColor = ''
     let strokeWidth = 0
     let dashPattern: number[] | undefined
+    let startArrow: ArrowType = 'none'
+    let endArrow: ArrowType = 'arrow'
 
     if (obj.type === 'pen') {
       strokeColor = (obj.element as Pen).pathElement.stroke as string
@@ -173,6 +179,11 @@ export function useCanvasEvents(
       strokeColor = (obj.element.stroke as string) || '#000000'
       strokeWidth = (obj.element.strokeWidth ?? 0) as number
       dashPattern = (obj.element.dashPattern ?? undefined) as number[] | undefined
+
+      if (obj.type === 'arrow' && obj.element instanceof Line) {
+        startArrow = obj.element.startArrow as ArrowType
+        endArrow = obj.element.endArrow as ArrowType
+      }
     }
 
     return {
@@ -180,6 +191,8 @@ export function useCanvasEvents(
       strokeColor,
       strokeWidth,
       dashPattern,
+      startArrow,
+      endArrow,
     }
   }
 

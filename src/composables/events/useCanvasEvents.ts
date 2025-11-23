@@ -119,7 +119,7 @@ export function useCanvasEvents(
       if (selectedElements.length === 1 && selectedElements[0]) {
         const firstElement = selectedElements[0]
         const obj = store.objects.find((o) => o.element.innerId === firstElement.innerId)
-        if (obj?.element && canvasContainer) {
+        if (obj?.element && canvasContainer && obj.type !== 'image') {
           const bounds = obj.element.getBounds()
           if (bounds) {
             const centerX = bounds.x + bounds.width + 5

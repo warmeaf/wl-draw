@@ -3,6 +3,7 @@
  */
 
 import { watch } from 'vue'
+import { TOOL_TYPES } from '@/constants'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
 import type { ToolInstance } from '@/plugins/types'
@@ -74,7 +75,7 @@ export function useToolSwitch(
       }
       previousToolInstance = newToolInstance
 
-      if (newTool === 'pan' && elementPopover?.showPopover.value) {
+      if (newTool === TOOL_TYPES.PAN && elementPopover?.showPopover.value) {
         elementPopover.hidePopover()
       }
     }

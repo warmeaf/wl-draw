@@ -4,6 +4,7 @@
 
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Tree } from '@/types'
+import { errorHandler } from '@/utils/errorHandler'
 
 interface ExportData {
   version: string
@@ -46,7 +47,7 @@ function isExportResultWithData(result: unknown): result is { data: string | Blo
 export function useExportTool(tree: Tree, store: ReturnType<typeof useCanvasStore>) {
   function exportCanvasAsJSON() {
     if (!tree || !store.appInstance) {
-      console.error('Canvas not initialized')
+      errorHandler.handleExportError('Canvas not initialized')
       return
     }
 
@@ -87,7 +88,10 @@ export function useExportTool(tree: Tree, store: ReturnType<typeof useCanvasStor
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('JSON export error:', error)
+      errorHandler.handleExportError(
+        'JSON export error',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
@@ -98,7 +102,7 @@ export function useExportTool(tree: Tree, store: ReturnType<typeof useCanvasStor
     }
 
     if (!tree || !store.appInstance) {
-      console.error('Canvas not initialized')
+      errorHandler.handleExportError('Canvas not initialized')
       return
     }
 
@@ -118,7 +122,7 @@ export function useExportTool(tree: Tree, store: ReturnType<typeof useCanvasStor
       const result = await tree.export(exportType, options)
 
       if (!result) {
-        console.error('Export failed: result is null')
+        errorHandler.handleExportError('Export failed: result is null')
         return
       }
 
@@ -134,7 +138,9 @@ export function useExportTool(tree: Tree, store: ReturnType<typeof useCanvasStor
         const data = result.data
         blob = data instanceof Blob ? data : await (await fetch(data)).blob()
       } else {
-        console.error('Export failed: unexpected result type')
+        errorHandler.handleExportError('Export failed: unexpected result type', undefined, {
+          resultType: typeof result,
+        })
         return
       }
       const url = URL.createObjectURL(blob)
@@ -146,7 +152,7 @@ export function useExportTool(tree: Tree, store: ReturnType<typeof useCanvasStor
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Export error:', error)
+      errorHandler.handleExportError('Export error', error instanceof Error ? error : undefined)
     }
   }
 

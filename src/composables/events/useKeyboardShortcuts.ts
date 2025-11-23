@@ -5,6 +5,7 @@
 import type { App } from 'leafer-ui'
 import { KeyEvent, ZoomEvent } from 'leafer-ui'
 import { ref } from 'vue'
+import { TOOL_TYPES } from '@/constants'
 import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
@@ -122,7 +123,10 @@ export function useKeyboardShortcuts(
           return
         }
 
-        if (isValidToolType(toolType) && (toolType !== 'pan' || !store.isPanningWithSpace)) {
+        if (
+          isValidToolType(toolType) &&
+          (toolType !== TOOL_TYPES.PAN || !store.isPanningWithSpace)
+        ) {
           store.setTool(toolType)
         }
         break

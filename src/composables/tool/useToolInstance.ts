@@ -23,51 +23,46 @@ export interface DrawingState {
 export function useToolInstance(app: App, drawingState: DrawingState) {
   const store = useCanvasStore()
   const tree = app.tree
-  const toolInstances = new Map<string, ToolInstance>()
+  const toolInstanceCache = new Map<string, ToolInstance>()
+
+  function createToolContext() {
+    return {
+      tree,
+      store,
+      isDrawing: drawingState.isDrawing,
+      startPoint: drawingState.startPoint,
+      currentElement: drawingState.currentElement,
+      isShiftPressed: drawingState.isShiftPressed,
+      penPathPoints: drawingState.penPathPoints,
+      eventBus: pluginEventBus,
+    }
+  }
 
   function getToolInstance(toolType: string): ToolInstance | null {
-    if (!toolInstances.has(toolType)) {
+    if (!toolInstanceCache.has(toolType)) {
       const plugin = pluginRegistry.getByType(toolType)
       if (plugin) {
-        const instance = plugin.createTool({
-          tree,
-          store,
-          isDrawing: drawingState.isDrawing,
-          startPoint: drawingState.startPoint,
-          currentElement: drawingState.currentElement,
-          isShiftPressed: drawingState.isShiftPressed,
-          penPathPoints: drawingState.penPathPoints,
-          eventBus: pluginEventBus,
-        })
-        toolInstances.set(toolType, instance)
+        const instance = plugin.createTool(createToolContext())
+        toolInstanceCache.set(toolType, instance)
       }
     }
-    return toolInstances.get(toolType) || null
+    return toolInstanceCache.get(toolType) || null
   }
 
   function createToolInstanceForPlugin(pluginId: string): ToolInstance | null {
     const plugin = pluginRegistry.get(pluginId)
     if (!plugin) return null
 
-    if (!toolInstances.has(pluginId)) {
-      const instance = plugin.createTool({
-        tree,
-        store,
-        isDrawing: drawingState.isDrawing,
-        startPoint: drawingState.startPoint,
-        currentElement: drawingState.currentElement,
-        isShiftPressed: drawingState.isShiftPressed,
-        penPathPoints: drawingState.penPathPoints,
-        eventBus: pluginEventBus,
-      })
-      toolInstances.set(pluginId, instance)
+    if (!toolInstanceCache.has(pluginId)) {
+      const instance = plugin.createTool(createToolContext())
+      toolInstanceCache.set(pluginId, instance)
     }
-    return toolInstances.get(pluginId) || null
+    return toolInstanceCache.get(pluginId) || null
   }
 
   return {
     getToolInstance,
     createToolInstanceForPlugin,
-    toolInstances,
+    toolInstances: toolInstanceCache,
   }
 }

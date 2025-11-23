@@ -7,19 +7,22 @@ import { Ellipse, Image, Line, Path, Pen, Rect, Text } from 'leafer-ui'
 import { defineStore } from 'pinia'
 import { canvasConfig } from '@/config/canvas'
 import { themeColors } from '@/config/theme'
+import { ELEMENT_TYPES, TOOL_TYPES } from '@/constants'
 import type { LeaferElement, ToolType } from '@/types'
+import type { ElementType } from '@/types/elementTypes'
 import type { HistorySnapshot } from '@/types/history'
+import { errorHandler } from '@/utils/errorHandler'
 
 export interface CanvasObject {
   id: string
-  type: 'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image'
+  type: ElementType
   element: NonNullable<LeaferElement>
   [key: string]: unknown
 }
 
 export const useCanvasStore = defineStore('canvas', {
   state: () => ({
-    currentTool: 'select' as ToolType,
+    currentTool: TOOL_TYPES.SELECT as ToolType,
     previousTool: null as ToolType | null,
 
     isPanningWithSpace: false,
@@ -42,18 +45,18 @@ export const useCanvasStore = defineStore('canvas', {
 
     enablePanWithSpace() {
       if (this.isPanningWithSpace) return
-      if (this.currentTool === 'pan') return
+      if (this.currentTool === TOOL_TYPES.PAN) return
 
       this.isPanningWithSpace = true
       this.previousTool = this.currentTool
-      this.setTool('pan')
+      this.setTool(TOOL_TYPES.PAN)
     },
 
     disablePanWithSpace() {
       if (!this.isPanningWithSpace) return
 
       this.isPanningWithSpace = false
-      const toolToRestore = this.previousTool || 'select'
+      const toolToRestore = this.previousTool || TOOL_TYPES.SELECT
       this.previousTool = null
       this.setTool(toolToRestore)
     },
@@ -150,10 +153,10 @@ export const useCanvasStore = defineStore('canvas', {
       }
     },
 
-    fromSnapshot(snapshot: HistorySnapshot) {
+    clearCanvas() {
       if (!this.appInstance?.tree) {
-        console.error('Canvas not initialized')
-        return
+        errorHandler.handleCanvasError('Canvas not initialized')
+        return false
       }
 
       const tree = this.appInstance.tree
@@ -169,6 +172,60 @@ export const useCanvasStore = defineStore('canvas', {
       })
 
       this.objects = []
+      return true
+    },
+
+    createElementFromData(tag: string, data: Record<string, unknown>): LeaferElement | null {
+      try {
+        switch (tag) {
+          case 'Rect':
+            return new Rect(data as ConstructorParameters<typeof Rect>[0])
+          case 'Ellipse':
+            return new Ellipse(data as ConstructorParameters<typeof Ellipse>[0])
+          case 'Path':
+            return new Path(data as ConstructorParameters<typeof Path>[0])
+          case 'Line':
+            return new Line(data as ConstructorParameters<typeof Line>[0])
+          case 'Pen':
+            return new Pen(data as ConstructorParameters<typeof Pen>[0])
+          case 'Text':
+            return new Text(data as ConstructorParameters<typeof Text>[0])
+          case 'Image':
+            return new Image(data as ConstructorParameters<typeof Image>[0])
+          default:
+            errorHandler.warn(`Unknown element tag: ${tag}`)
+            return null
+        }
+      } catch (error) {
+        errorHandler.handleRuntimeError(
+          `Error creating element from snapshot`,
+          error instanceof Error ? error : undefined,
+          { tag }
+        )
+        return null
+      }
+    },
+
+    /**
+     * Type guard to validate element types during snapshot restoration.
+     * Prevents invalid types from being restored, maintaining data integrity.
+     */
+    isValidObjectType(type: string): type is CanvasObject['type'] {
+      return (
+        type === ELEMENT_TYPES.RECT ||
+        type === ELEMENT_TYPES.CIRCLE ||
+        type === ELEMENT_TYPES.LINE ||
+        type === ELEMENT_TYPES.ARROW ||
+        type === ELEMENT_TYPES.PEN ||
+        type === ELEMENT_TYPES.TEXT ||
+        type === ELEMENT_TYPES.IMAGE
+      )
+    },
+
+    restoreObjectsFromSnapshot(snapshot: HistorySnapshot) {
+      if (!this.appInstance?.tree) return
+
+      const tree = this.appInstance.tree
 
       snapshot.objects.forEach((objData) => {
         if (!objData.data || typeof objData.data !== 'object') return
@@ -178,69 +235,37 @@ export const useCanvasStore = defineStore('canvas', {
 
         if (!tag) return
 
-        let element: LeaferElement = null
+        const element = this.createElementFromData(tag, data)
 
-        try {
-          switch (tag) {
-            case 'Rect':
-              element = new Rect(data as ConstructorParameters<typeof Rect>[0])
-              break
-            case 'Ellipse':
-              element = new Ellipse(data as ConstructorParameters<typeof Ellipse>[0])
-              break
-            case 'Path':
-              element = new Path(data as ConstructorParameters<typeof Path>[0])
-              break
-            case 'Line':
-              element = new Line(data as ConstructorParameters<typeof Line>[0])
-              break
-            case 'Pen':
-              element = new Pen(data as ConstructorParameters<typeof Pen>[0])
-              break
-            case 'Text':
-              element = new Text(data as ConstructorParameters<typeof Text>[0])
-              break
-            case 'Image':
-              element = new Image(data as ConstructorParameters<typeof Image>[0])
-              break
-            default:
-              console.warn(`Unknown element tag: ${tag}`)
-              return
-          }
-
-          if (element) {
-            const objectType = objData.type
-            if (
-              objectType === 'rect' ||
-              objectType === 'circle' ||
-              objectType === 'line' ||
-              objectType === 'arrow' ||
-              objectType === 'pen' ||
-              objectType === 'text' ||
-              objectType === 'image'
-            ) {
-              tree.add(element)
-              this.objects.push({
-                id: objData.id,
-                type: objectType,
-                element,
-              })
-            } else {
-              console.warn(`Unknown object type: ${objectType}`)
-            }
-          }
-        } catch (error) {
-          console.error(`Error creating element from snapshot:`, error)
+        if (element && this.isValidObjectType(objData.type)) {
+          tree.add(element)
+          this.objects.push({
+            id: objData.id,
+            type: objData.type,
+            element,
+          })
+        } else if (element) {
+          errorHandler.warn(`Unknown object type: ${objData.type}`)
         }
       })
+    },
+
+    restoreCanvasStyles(styles: HistorySnapshot['metadata']['canvasStyles']) {
+      this.setFillColor(styles.fillColor)
+      this.setStrokeColor(styles.strokeColor)
+      this.setStrokeWidth(styles.strokeWidth)
+      this.setFontSize(styles.fontSize)
+      this.setTextColor(styles.textColor)
+    },
+
+    fromSnapshot(snapshot: HistorySnapshot) {
+      if (!this.clearCanvas()) return
+
+      this.restoreObjectsFromSnapshot(snapshot)
 
       if (snapshot.metadata) {
         this.setZoom(snapshot.metadata.canvasZoom)
-        this.setFillColor(snapshot.metadata.canvasStyles.fillColor)
-        this.setStrokeColor(snapshot.metadata.canvasStyles.strokeColor)
-        this.setStrokeWidth(snapshot.metadata.canvasStyles.strokeWidth)
-        this.setFontSize(snapshot.metadata.canvasStyles.fontSize)
-        this.setTextColor(snapshot.metadata.canvasStyles.textColor)
+        this.restoreCanvasStyles(snapshot.metadata.canvasStyles)
       }
     },
   },

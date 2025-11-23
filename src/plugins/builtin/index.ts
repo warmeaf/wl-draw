@@ -2,6 +2,7 @@
  * Builtin plugins initialization and registration
  */
 
+import { errorHandler } from '@/utils/errorHandler'
 import { pluginRegistry } from '../registry'
 import type { ToolPlugin } from '../types'
 import { arrowPlugin } from './arrow'
@@ -51,12 +52,12 @@ export async function initializeBuiltinPlugins(): Promise<void> {
     if (plugin) {
       await pluginRegistry.register(plugin)
     } else {
-      console.warn(`Plugin "${pluginId}" not found in builtin plugins`)
+      errorHandler.warn(`Plugin "${pluginId}" not found in builtin plugins`)
     }
   }
 
   if (dependencyOrder.length !== builtinPlugins.length) {
-    console.warn(
+    errorHandler.warn(
       `Plugin dependency order mismatch: expected ${builtinPlugins.length} plugins, got ${dependencyOrder.length}`
     )
   }

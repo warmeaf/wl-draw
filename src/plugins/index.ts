@@ -3,13 +3,14 @@
  * Provides unified entry point for plugin system initialization
  */
 
+import { errorHandler } from '@/utils/errorHandler'
 import { initializeBuiltinPlugins } from './builtin'
 
 let initialized = false
 
 export async function initializePlugins(): Promise<void> {
   if (initialized) {
-    console.warn('Plugin system has already been initialized')
+    errorHandler.warn('Plugin system has already been initialized')
     return
   }
 

@@ -5,6 +5,7 @@
 import type { DragEvent } from 'leafer-ui'
 import { Path } from 'leafer-ui'
 import type { Ref } from 'vue'
+import { TOOL_TYPES } from '@/constants'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { LeaferElement, Point, Tree } from '@/types'
 
@@ -72,7 +73,7 @@ export function useLineTool(
       element: line,
     })
 
-    store.setTool('select')
+    store.setTool(TOOL_TYPES.SELECT)
     store.selectObject(id)
   }
 

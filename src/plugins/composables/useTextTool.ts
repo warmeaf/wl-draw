@@ -4,6 +4,7 @@
 
 import type { PointerEvent } from 'leafer-ui'
 import { Text } from 'leafer-ui'
+import { TOOL_TYPES } from '@/constants'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Tree } from '@/types'
 
@@ -30,7 +31,7 @@ export function useTextTool(tree: Tree, store: ReturnType<typeof useCanvasStore>
       element: text,
     })
 
-    store.setTool('select')
+    store.setTool(TOOL_TYPES.SELECT)
     store.selectObject(id)
   }
 

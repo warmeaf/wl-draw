@@ -4,6 +4,7 @@
 
 import type { PointerEvent } from 'leafer-ui'
 import { Image } from 'leafer-ui'
+import { TOOL_TYPES } from '@/constants'
 import { useHistory } from '@/plugins/composables/useHistory'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Tree } from '@/types'
@@ -42,7 +43,7 @@ export function useImageTool(tree: Tree, store: ReturnType<typeof useCanvasStore
           element: img,
         })
 
-        store.setTool('select')
+        store.setTool(TOOL_TYPES.SELECT)
         store.selectObject(id)
 
         addSnapshot()

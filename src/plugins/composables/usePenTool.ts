@@ -5,6 +5,7 @@
 import type { DragEvent } from 'leafer-ui'
 import { Pen } from 'leafer-ui'
 import type { Ref } from 'vue'
+import { THRESHOLDS, TOOL_TYPES } from '@/constants'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { LeaferElement, Point, Tree } from '@/types'
 
@@ -45,11 +46,13 @@ export function usePenTool(
     const points = penPathPoints.value
     const lastPoint = points[points.length - 1]
 
+    // Filter out points that are too close together to reduce noise and improve performance
+    // This prevents creating too many path segments for small movements
     if (lastPoint) {
       const dx = currentPoint.x - lastPoint.x
       const dy = currentPoint.y - lastPoint.y
       const distance = Math.sqrt(dx * dx + dy * dy)
-      if (distance < 0.5) return
+      if (distance < THRESHOLDS.PEN_POINT_MIN_DISTANCE) return
     }
 
     penPathPoints.value.push(currentPoint)
@@ -75,7 +78,7 @@ export function usePenTool(
       element: pen,
     })
 
-    store.setTool('select')
+    store.setTool(TOOL_TYPES.SELECT)
     store.selectObject(id)
   }
 

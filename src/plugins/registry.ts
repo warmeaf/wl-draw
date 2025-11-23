@@ -2,6 +2,7 @@
  * Plugin registry for managing tool plugins
  */
 
+import { errorHandler } from '@/utils/errorHandler'
 import { checkShortcutConflict } from './shortcut'
 import type {
   DrawingFinishContext,
@@ -32,48 +33,75 @@ class PluginRegistry {
   >()
   private pluginStates = new Map<string, PluginState>()
 
-  validatePlugin(plugin: ToolPlugin): { valid: boolean; errors: string[] } {
-    const errors: string[] = []
-
+  private validatePluginId(plugin: ToolPlugin, errors: string[]): void {
     if (!plugin.id || plugin.id.trim() === '') {
       errors.push('Plugin id is required')
     }
+  }
 
+  private validatePluginName(plugin: ToolPlugin, errors: string[]): void {
     if (!plugin.name || plugin.name.trim() === '') {
       errors.push('Plugin name is required')
     }
+  }
 
+  private validatePluginType(plugin: ToolPlugin, errors: string[]): void {
     if (!plugin.type || plugin.type.trim() === '') {
       errors.push('Plugin type is required')
     }
+  }
 
-    if (!plugin.metadata) {
-      errors.push('Plugin metadata is required')
-    } else {
-      if (!plugin.metadata.version || plugin.metadata.version.trim() === '') {
-        errors.push('Plugin metadata.version is required')
+  private validatePluginVersion(metadata: ToolPlugin['metadata'], errors: string[]): void {
+    if (!metadata.version || metadata.version.trim() === '') {
+      errors.push('Plugin metadata.version is required')
+    }
+  }
+
+  private validatePluginCoreVersion(metadata: ToolPlugin['metadata'], errors: string[]): void {
+    if (metadata.minCoreVersion) {
+      if (compareVersions(metadata.minCoreVersion, CORE_VERSION) > 0) {
+        errors.push(
+          `Plugin requires core version ${metadata.minCoreVersion} or higher, but current version is ${CORE_VERSION}`
+        )
       }
+    }
+  }
 
-      if (plugin.metadata.minCoreVersion) {
-        if (compareVersions(plugin.metadata.minCoreVersion, CORE_VERSION) > 0) {
-          errors.push(
-            `Plugin requires core version ${plugin.metadata.minCoreVersion} or higher, but current version is ${CORE_VERSION}`
-          )
-        }
-      }
-
-      if (plugin.metadata.dependencies && plugin.metadata.dependencies.length > 0) {
-        for (const depId of plugin.metadata.dependencies) {
-          if (!this.plugins.has(depId)) {
-            errors.push(`Plugin dependency "${depId}" is not registered`)
-          }
+  private validatePluginDependencies(metadata: ToolPlugin['metadata'], errors: string[]): void {
+    if (metadata.dependencies && metadata.dependencies.length > 0) {
+      for (const depId of metadata.dependencies) {
+        if (!this.plugins.has(depId)) {
+          errors.push(`Plugin dependency "${depId}" is not registered`)
         }
       }
     }
+  }
 
+  private validatePluginMetadata(plugin: ToolPlugin, errors: string[]): void {
+    if (!plugin.metadata) {
+      errors.push('Plugin metadata is required')
+      return
+    }
+
+    this.validatePluginVersion(plugin.metadata, errors)
+    this.validatePluginCoreVersion(plugin.metadata, errors)
+    this.validatePluginDependencies(plugin.metadata, errors)
+  }
+
+  private validatePluginCreateTool(plugin: ToolPlugin, errors: string[]): void {
     if (!plugin.createTool || typeof plugin.createTool !== 'function') {
       errors.push('Plugin createTool function is required')
     }
+  }
+
+  validatePlugin(plugin: ToolPlugin): { valid: boolean; errors: string[] } {
+    const errors: string[] = []
+
+    this.validatePluginId(plugin, errors)
+    this.validatePluginName(plugin, errors)
+    this.validatePluginType(plugin, errors)
+    this.validatePluginMetadata(plugin, errors)
+    this.validatePluginCreateTool(plugin, errors)
 
     return {
       valid: errors.length === 0,
@@ -90,7 +118,7 @@ class PluginRegistry {
     }
 
     if (this.plugins.has(plugin.id)) {
-      console.warn(`Plugin with id "${plugin.id}" is already registered. Overwriting.`)
+      errorHandler.warn(`Plugin with id "${plugin.id}" is already registered. Overwriting.`)
       this.unregisterHooks(plugin.id)
     }
 
@@ -108,7 +136,7 @@ class PluginRegistry {
 
       if (conflicts.length > 0) {
         const conflictList = conflicts.map((c) => `"${c.pluginId}" (${c.shortcut})`).join(', ')
-        console.warn(
+        errorHandler.warn(
           `Shortcut conflict detected for plugin "${plugin.id}": shortcut "${plugin.shortcut}" conflicts with ${conflictList}`
         )
       }
@@ -274,6 +302,11 @@ class PluginRegistry {
     return true
   }
 
+  /**
+   * Calculates topological sort order for plugin dependencies using DFS.
+   * Ensures plugins are initialized in correct order: dependencies before dependents.
+   * Uses 'visiting' set to detect circular dependencies during traversal.
+   */
   getDependencyOrder(): string[] {
     const visited = new Set<string>()
     const visiting = new Set<string>()

@@ -21,7 +21,7 @@ export function useCanvasTools(
   const canvasMode = useCanvasMode(app)
   const toolInstance = useToolInstance(app, drawingState)
 
-  useToolSwitch(toolInstance.getToolInstance, canvasMode, drawingState)
+  useToolSwitch(toolInstance.getToolInstance, canvasMode, drawingState, elementPopover)
 
   const canvasEvents = useCanvasEvents(
     app,

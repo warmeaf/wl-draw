@@ -13,7 +13,8 @@ import type { DrawingState } from './useToolInstance'
 export function useToolSwitch(
   getToolInstance: (toolType: string) => ToolInstance | null,
   canvasMode: ReturnType<typeof useCanvasMode>,
-  drawingState: DrawingState
+  drawingState: DrawingState,
+  elementPopover?: ReturnType<typeof import('../state/useElementPopover').useElementPopover>
 ) {
   const store = useCanvasStore()
   let previousToolInstance: ToolInstance | null = null
@@ -72,6 +73,10 @@ export function useToolSwitch(
         newToolInstance.onActivate()
       }
       previousToolInstance = newToolInstance
+
+      if (newTool === 'pan' && elementPopover?.showPopover.value) {
+        elementPopover.hidePopover()
+      }
     }
   )
 }

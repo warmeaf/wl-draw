@@ -226,13 +226,37 @@ const lazyPluginLoaders: Map<string, LazyPluginLoader> = new Map([
 
 export async function initializeBuiltinPlugins(): Promise<void> {
   for (const plugin of corePlugins) {
-    await pluginRegistry.register(plugin)
+    try {
+      await pluginRegistry.register(plugin)
+    } catch (error) {
+      errorHandler.handlePluginError(
+        plugin.id,
+        `Failed to register core plugin: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error : undefined,
+        {
+          pluginName: plugin.name,
+          operation: 'register',
+        }
+      )
+    }
   }
 
   for (const metadata of lazyPluginMetadata) {
     const loader = lazyPluginLoaders.get(metadata.id)
     if (loader) {
-      await pluginRegistry.register(loader, metadata)
+      try {
+        await pluginRegistry.register(loader, metadata)
+      } catch (error) {
+        errorHandler.handlePluginError(
+          metadata.id,
+          `Failed to register lazy plugin: ${error instanceof Error ? error.message : String(error)}`,
+          error instanceof Error ? error : undefined,
+          {
+            pluginName: metadata.name,
+            operation: 'register',
+          }
+        )
+      }
     } else {
       errorHandler.warn(`Lazy loader not found for plugin "${metadata.id}"`)
     }

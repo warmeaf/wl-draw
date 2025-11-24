@@ -2,7 +2,7 @@
  * Plugin registry for managing tool plugins
  */
 
-import { errorHandler } from '@/utils/errorHandler'
+import { ErrorSeverity, errorHandler } from '@/utils/errorHandler'
 import { checkShortcutConflict } from './shortcut'
 import type {
   DrawingFinishContext,
@@ -41,25 +41,33 @@ class PluginRegistry {
 
   private validatePluginId(plugin: ToolPlugin, errors: string[]): void {
     if (!plugin.id || plugin.id.trim() === '') {
-      errors.push('Plugin id is required')
+      errors.push(
+        'Plugin id is required. The id must be a non-empty string that uniquely identifies the plugin.'
+      )
     }
   }
 
   private validatePluginName(plugin: ToolPlugin, errors: string[]): void {
     if (!plugin.name || plugin.name.trim() === '') {
-      errors.push('Plugin name is required')
+      errors.push(
+        'Plugin name is required. The name should be a human-readable string describing the plugin.'
+      )
     }
   }
 
   private validatePluginType(plugin: ToolPlugin, errors: string[]): void {
     if (!plugin.type || plugin.type.trim() === '') {
-      errors.push('Plugin type is required')
+      errors.push(
+        'Plugin type is required. The type should match the tool type used in the application.'
+      )
     }
   }
 
   private validatePluginVersion(metadata: ToolPlugin['metadata'], errors: string[]): void {
     if (!metadata.version || metadata.version.trim() === '') {
-      errors.push('Plugin metadata.version is required')
+      errors.push(
+        'Plugin metadata.version is required. Use semantic versioning format (e.g., "1.0.0").'
+      )
     }
   }
 
@@ -67,7 +75,7 @@ class PluginRegistry {
     if (metadata.minCoreVersion) {
       if (compareVersions(metadata.minCoreVersion, CORE_VERSION) > 0) {
         errors.push(
-          `Plugin requires core version ${metadata.minCoreVersion} or higher, but current version is ${CORE_VERSION}`
+          `Plugin requires core version ${metadata.minCoreVersion} or higher, but current version is ${CORE_VERSION}. Please update the application or use a compatible plugin version.`
         )
       }
     }
@@ -77,7 +85,9 @@ class PluginRegistry {
     if (metadata.dependencies && metadata.dependencies.length > 0) {
       for (const depId of metadata.dependencies) {
         if (!this.plugins.has(depId) && !this.lazyPlugins.has(depId)) {
-          errors.push(`Plugin dependency "${depId}" is not registered`)
+          errors.push(
+            `Plugin dependency "${depId}" is not registered. Ensure the dependency plugin is registered before this plugin.`
+          )
         }
       }
     }
@@ -85,7 +95,9 @@ class PluginRegistry {
 
   private validatePluginMetadata(plugin: ToolPlugin, errors: string[]): void {
     if (!plugin.metadata) {
-      errors.push('Plugin metadata is required')
+      errors.push(
+        'Plugin metadata is required. The metadata object must contain at least a version field.'
+      )
       return
     }
 
@@ -96,7 +108,9 @@ class PluginRegistry {
 
   private validatePluginCreateTool(plugin: ToolPlugin, errors: string[]): void {
     if (!plugin.createTool || typeof plugin.createTool !== 'function') {
-      errors.push('Plugin createTool function is required')
+      errors.push(
+        'Plugin createTool function is required. This function should create and return a ToolInstance.'
+      )
     }
   }
 
@@ -122,6 +136,14 @@ class PluginRegistry {
     if (typeof plugin === 'function') {
       const loader = plugin
       if (!metadata) {
+        errorHandler.handleValidationError(
+          'Metadata is required when registering a lazy plugin',
+          { loader: 'LazyPluginLoader' },
+          {
+            operation: 'register',
+          },
+          ErrorSeverity.HIGH
+        )
         throw new Error('Metadata is required when registering a lazy plugin')
       }
 
@@ -144,6 +166,17 @@ class PluginRegistry {
 
     const validation = this.validatePlugin(plugin)
     if (!validation.valid) {
+      const errorMessage = `Plugin validation failed: ${validation.errors.join('; ')}`
+      errorHandler.handleValidationError(
+        errorMessage,
+        { errors: validation.errors },
+        {
+          pluginId: plugin.id,
+          pluginName: plugin.name,
+          operation: 'register',
+        },
+        ErrorSeverity.HIGH
+      )
       throw new Error(
         `Plugin validation failed for "${plugin.id}": ${validation.errors.join(', ')}`
       )
@@ -164,10 +197,17 @@ class PluginRegistry {
         .filter((p) => p.shortcut && p.id !== plugin.id)
         .map((p) => {
           if (!p.shortcut) {
-            throw new Error('Unexpected: shortcut is undefined')
+            errorHandler.handleRuntimeError(
+              'Unexpected: shortcut is undefined during conflict check',
+              undefined,
+              { pluginId: p.id },
+              ErrorSeverity.MEDIUM
+            )
+            return null
           }
           return { pluginId: p.id, shortcut: p.shortcut }
         })
+        .filter((s): s is { pluginId: string; shortcut: string } => s !== null)
 
       const conflicts = checkShortcutConflict(plugin.shortcut, existingShortcuts)
 
@@ -196,10 +236,17 @@ class PluginRegistry {
       try {
         await plugin.onInstall()
       } catch (error) {
-        this.updatePluginState(
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        this.updatePluginState(plugin.id, 'error', errorMessage)
+        errorHandler.handlePluginError(
           plugin.id,
-          'error',
-          error instanceof Error ? error.message : String(error)
+          `onInstall hook failed: ${errorMessage}`,
+          error instanceof Error ? error : undefined,
+          {
+            pluginName: plugin.name,
+            operation: 'onInstall',
+          },
+          ErrorSeverity.HIGH
         )
         throw error
       }
@@ -298,7 +345,18 @@ class PluginRegistry {
       try {
         await plugin.onUninstall()
       } catch (error) {
-        this.updatePluginState(id, 'error', error instanceof Error ? error.message : String(error))
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        this.updatePluginState(id, 'error', errorMessage)
+        errorHandler.handlePluginError(
+          id,
+          `onUninstall hook failed: ${errorMessage}`,
+          error instanceof Error ? error : undefined,
+          {
+            pluginName: plugin.name,
+            operation: 'onUninstall',
+          },
+          ErrorSeverity.MEDIUM
+        )
       }
     }
 
@@ -402,15 +460,39 @@ class PluginRegistry {
     }
 
     if (hookName.startsWith('before')) {
-      for (const { handler } of handlers) {
-        const result = await (handler as HookInterceptor)(context)
-        if (result === false) {
-          return false
+      for (const { pluginId, handler } of handlers) {
+        try {
+          const result = await (handler as HookInterceptor)(context)
+          if (result === false) {
+            return false
+          }
+        } catch (error) {
+          errorHandler.handlePluginError(
+            pluginId,
+            `Hook "${hookName}" execution failed`,
+            error instanceof Error ? error : undefined,
+            {
+              operation: hookName,
+            },
+            ErrorSeverity.MEDIUM
+          )
         }
       }
     } else {
-      for (const { handler } of handlers) {
-        await (handler as HookHandler)(context)
+      for (const { pluginId, handler } of handlers) {
+        try {
+          await (handler as HookHandler)(context)
+        } catch (error) {
+          errorHandler.handlePluginError(
+            pluginId,
+            `Hook "${hookName}" execution failed`,
+            error instanceof Error ? error : undefined,
+            {
+              operation: hookName,
+            },
+            ErrorSeverity.MEDIUM
+          )
+        }
       }
     }
 
@@ -446,6 +528,15 @@ class PluginRegistry {
 
     const loader = this.lazyPlugins.get(id)
     if (!loader) {
+      errorHandler.handlePluginError(
+        id,
+        'Plugin is not registered as a lazy plugin',
+        undefined,
+        {
+          operation: 'loadPlugin',
+        },
+        ErrorSeverity.HIGH
+      )
       throw new Error(`Plugin "${id}" is not registered as a lazy plugin`)
     }
 
@@ -454,6 +545,18 @@ class PluginRegistry {
         const plugin = await loader()
 
         if (plugin.id !== id) {
+          const errorMessage = `Plugin loader returned a plugin with different id "${plugin.id}"`
+          errorHandler.handlePluginError(
+            id,
+            errorMessage,
+            undefined,
+            {
+              expectedId: id,
+              actualId: plugin.id,
+              operation: 'loadPlugin',
+            },
+            ErrorSeverity.HIGH
+          )
           throw new Error(
             `Plugin loader for "${id}" returned a plugin with different id "${plugin.id}"`
           )
@@ -461,6 +564,17 @@ class PluginRegistry {
 
         const validation = this.validatePlugin(plugin)
         if (!validation.valid) {
+          const errorMessage = `Plugin validation failed: ${validation.errors.join('; ')}`
+          errorHandler.handleValidationError(
+            errorMessage,
+            { errors: validation.errors },
+            {
+              pluginId: plugin.id,
+              pluginName: plugin.name,
+              operation: 'loadPlugin',
+            },
+            ErrorSeverity.HIGH
+          )
           throw new Error(`Plugin validation failed for "${id}": ${validation.errors.join(', ')}`)
         }
 
@@ -469,10 +583,17 @@ class PluginRegistry {
             .filter((p) => p.shortcut && p.id !== plugin.id)
             .map((p) => {
               if (!p.shortcut) {
-                throw new Error('Unexpected: shortcut is undefined')
+                errorHandler.handleRuntimeError(
+                  'Unexpected: shortcut is undefined during conflict check',
+                  undefined,
+                  { pluginId: p.id },
+                  ErrorSeverity.MEDIUM
+                )
+                return null
               }
               return { pluginId: p.id, shortcut: p.shortcut }
             })
+            .filter((s): s is { pluginId: string; shortcut: string } => s !== null)
 
           const conflicts = checkShortcutConflict(plugin.shortcut, existingShortcuts)
 
@@ -510,10 +631,17 @@ class PluginRegistry {
           try {
             await plugin.onInstall()
           } catch (error) {
-            this.updatePluginState(
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            this.updatePluginState(plugin.id, 'error', errorMessage)
+            errorHandler.handlePluginError(
               plugin.id,
-              'error',
-              error instanceof Error ? error.message : String(error)
+              `onInstall hook failed: ${errorMessage}`,
+              error instanceof Error ? error : undefined,
+              {
+                pluginName: plugin.name,
+                operation: 'onInstall',
+              },
+              ErrorSeverity.HIGH
             )
             throw error
           }
@@ -521,7 +649,17 @@ class PluginRegistry {
 
         return plugin
       } catch (error) {
-        this.updatePluginState(id, 'error', error instanceof Error ? error.message : String(error))
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        this.updatePluginState(id, 'error', errorMessage)
+        errorHandler.handlePluginError(
+          id,
+          `Failed to load plugin: ${errorMessage}`,
+          error instanceof Error ? error : undefined,
+          {
+            operation: 'loadPlugin',
+          },
+          ErrorSeverity.HIGH
+        )
         throw error
       } finally {
         this.loadingPromises.delete(id)

@@ -9,6 +9,7 @@ import { pluginRegistry } from '@/plugins/registry'
 import type { ToolInstance } from '@/plugins/types'
 import { useCanvasStore } from '@/stores/canvas'
 import type { LeaferElement, Point } from '@/types'
+import { errorHandler } from '@/utils/errorHandler'
 
 export interface DrawingState {
   isDrawing: Ref<boolean>
@@ -40,31 +41,84 @@ export function useToolInstance(app: App, drawingState: DrawingState) {
 
   async function getToolInstance(toolType: string): Promise<ToolInstance | null> {
     if (!toolInstanceCache.has(toolType)) {
-      const plugin = await pluginRegistry.getByType(toolType)
-      if (plugin) {
-        const instance = plugin.createTool(createToolContext())
-        toolInstanceCache.set(toolType, instance)
+      try {
+        const plugin = await pluginRegistry.getByType(toolType)
+        if (plugin) {
+          try {
+            const instance = plugin.createTool(createToolContext())
+            toolInstanceCache.set(toolType, instance)
+          } catch (error) {
+            errorHandler.handlePluginError(
+              plugin.id,
+              `createTool failed for tool type "${toolType}"`,
+              error instanceof Error ? error : undefined,
+              {
+                pluginName: plugin.name,
+                toolType,
+                operation: 'createTool',
+              }
+            )
+            return null
+          }
+        }
+      } catch (error) {
+        errorHandler.handleRuntimeError(
+          `Failed to get plugin for tool type "${toolType}"`,
+          error instanceof Error ? error : undefined,
+          { toolType, operation: 'getByType' }
+        )
+        return null
       }
     }
     return toolInstanceCache.get(toolType) || null
   }
 
   async function createToolInstanceForPlugin(pluginId: string): Promise<ToolInstance | null> {
-    const plugin = await pluginRegistry.get(pluginId)
-    if (!plugin) return null
+    try {
+      const plugin = await pluginRegistry.get(pluginId)
+      if (!plugin) return null
 
-    if (!toolInstanceCache.has(pluginId)) {
-      const instance = plugin.createTool(createToolContext())
-      toolInstanceCache.set(pluginId, instance)
+      if (!toolInstanceCache.has(pluginId)) {
+        try {
+          const instance = plugin.createTool(createToolContext())
+          toolInstanceCache.set(pluginId, instance)
+        } catch (error) {
+          errorHandler.handlePluginError(
+            pluginId,
+            `createTool failed for plugin "${pluginId}"`,
+            error instanceof Error ? error : undefined,
+            {
+              pluginName: plugin.name,
+              operation: 'createTool',
+            }
+          )
+          return null
+        }
+      }
+      return toolInstanceCache.get(pluginId) || null
+    } catch (error) {
+      errorHandler.handleRuntimeError(
+        `Failed to get plugin "${pluginId}"`,
+        error instanceof Error ? error : undefined,
+        { pluginId, operation: 'get' }
+      )
+      return null
     }
-    return toolInstanceCache.get(pluginId) || null
   }
 
   function destroyToolInstance(key: string): boolean {
     const instance = toolInstanceCache.get(key)
     if (instance) {
-      if (instance.onDestroy) {
-        instance.onDestroy()
+      try {
+        if (instance.onDestroy) {
+          instance.onDestroy()
+        }
+      } catch (error) {
+        errorHandler.handleRuntimeError(
+          `onDestroy failed for tool instance "${key}"`,
+          error instanceof Error ? error : undefined,
+          { key, operation: 'onDestroy' }
+        )
       }
       toolInstanceCache.delete(key)
       return true
@@ -73,9 +127,17 @@ export function useToolInstance(app: App, drawingState: DrawingState) {
   }
 
   function destroyAllToolInstances(): void {
-    for (const [_key, instance] of toolInstanceCache.entries()) {
-      if (instance.onDestroy) {
-        instance.onDestroy()
+    for (const [key, instance] of toolInstanceCache.entries()) {
+      try {
+        if (instance.onDestroy) {
+          instance.onDestroy()
+        }
+      } catch (error) {
+        errorHandler.handleRuntimeError(
+          `onDestroy failed for tool instance "${key}"`,
+          error instanceof Error ? error : undefined,
+          { key, operation: 'onDestroy' }
+        )
       }
     }
     toolInstanceCache.clear()

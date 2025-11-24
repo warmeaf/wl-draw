@@ -13,6 +13,7 @@ import type {
   ToolPlugin,
   ToolSwitchContext,
 } from './types'
+import { getDependencyOrder } from './utils'
 
 const CORE_VERSION = '1.0.0'
 
@@ -308,43 +309,7 @@ class PluginRegistry {
    * Uses 'visiting' set to detect circular dependencies during traversal.
    */
   getDependencyOrder(): string[] {
-    const visited = new Set<string>()
-    const visiting = new Set<string>()
-    const order: string[] = []
-
-    const visit = (pluginId: string): void => {
-      if (visiting.has(pluginId)) {
-        throw new Error(`Circular dependency detected involving plugin "${pluginId}"`)
-      }
-      if (visited.has(pluginId)) {
-        return
-      }
-
-      const plugin = this.plugins.get(pluginId)
-      if (!plugin) {
-        return
-      }
-
-      visiting.add(pluginId)
-
-      if (plugin.metadata.dependencies) {
-        for (const depId of plugin.metadata.dependencies) {
-          visit(depId)
-        }
-      }
-
-      visiting.delete(pluginId)
-      visited.add(pluginId)
-      order.push(pluginId)
-    }
-
-    for (const pluginId of this.plugins.keys()) {
-      if (!visited.has(pluginId)) {
-        visit(pluginId)
-      }
-    }
-
-    return order
+    return getDependencyOrder(Array.from(this.plugins.values()))
   }
 }
 

@@ -5,6 +5,7 @@
 import { errorHandler } from '@/utils/errorHandler'
 import { pluginRegistry } from '../registry'
 import type { ToolPlugin } from '../types'
+import { getDependencyOrder } from '../utils'
 import { arrowPlugin } from './arrow'
 import { circlePlugin } from './circle'
 import { exportPlugin } from './export'
@@ -61,51 +62,6 @@ export async function initializeBuiltinPlugins(): Promise<void> {
       `Plugin dependency order mismatch: expected ${builtinPlugins.length} plugins, got ${dependencyOrder.length}`
     )
   }
-}
-
-function getDependencyOrder(plugins: ToolPlugin[]): string[] {
-  const visited = new Set<string>()
-  const visiting = new Set<string>()
-  const order: string[] = []
-  const pluginMap = new Map<string, ToolPlugin>()
-
-  for (const plugin of plugins) {
-    pluginMap.set(plugin.id, plugin)
-  }
-
-  const visit = (pluginId: string): void => {
-    if (visiting.has(pluginId)) {
-      throw new Error(`Circular dependency detected involving plugin "${pluginId}"`)
-    }
-    if (visited.has(pluginId)) {
-      return
-    }
-
-    const plugin = pluginMap.get(pluginId)
-    if (!plugin) {
-      return
-    }
-
-    visiting.add(pluginId)
-
-    if (plugin.metadata.dependencies) {
-      for (const depId of plugin.metadata.dependencies) {
-        visit(depId)
-      }
-    }
-
-    visiting.delete(pluginId)
-    visited.add(pluginId)
-    order.push(pluginId)
-  }
-
-  for (const plugin of plugins) {
-    if (!visited.has(plugin.id)) {
-      visit(plugin.id)
-    }
-  }
-
-  return order
 }
 
 export { builtinPlugins }

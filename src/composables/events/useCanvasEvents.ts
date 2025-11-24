@@ -2,6 +2,7 @@
  * Composable for handling canvas interaction events (drag, tap)
  */
 
+import { useThrottleFn } from '@vueuse/core'
 import type { App } from 'leafer-ui'
 import { DragEvent, Line, MoveEvent, type Pen, PointerEvent, Text } from 'leafer-ui'
 import { ref } from 'vue'
@@ -32,6 +33,16 @@ export function useCanvasEvents(
   const tree = app.tree
   const { addSnapshot } = useHistory()
   const wasPopoverVisibleBeforeDrag = ref(false)
+
+  const throttledEmitDrawingUpdate = useThrottleFn(
+    (payload: {
+      toolType: string
+      bounds: { x: number; y: number; width: number; height: number }
+    }) => {
+      pluginEventBus.emit('drawing:update', payload)
+    },
+    16
+  )
 
   function showPopoverForSelectedElement() {
     if (!elementPopover || !app.editor || !canvasContainer) return
@@ -83,7 +94,7 @@ export function useCanvasEvents(
 
     const bounds = e.getPageBounds()
     if (bounds) {
-      pluginEventBus.emit('drawing:update', {
+      throttledEmitDrawingUpdate({
         toolType: tool,
         bounds: {
           x: bounds.x,

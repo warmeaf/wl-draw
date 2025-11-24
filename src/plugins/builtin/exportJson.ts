@@ -8,7 +8,7 @@ import type { ToolPlugin } from '../types'
 export const exportJsonPlugin: ToolPlugin = {
   id: 'exportJson',
   name: 'Export JSON Tool',
-  type: 'export',
+  type: 'exportJson',
   metadata: {
     version: '1.0.0',
     description: 'Export canvas content as JSON',

@@ -2,6 +2,7 @@
  * Composable for handling keyboard shortcuts and keyboard events
  */
 
+import { useThrottleFn } from '@vueuse/core'
 import type { App } from 'leafer-ui'
 import { KeyEvent, ZoomEvent } from 'leafer-ui'
 import { ref } from 'vue'
@@ -22,6 +23,10 @@ export function useKeyboardShortcuts(
 ) {
   const store = useCanvasStore()
   const { zoomIn, zoomOut } = useZoomTool(elementPopover)
+
+  const throttledEmitCanvasZoom = useThrottleFn((payload: { zoom: number }) => {
+    pluginEventBus.emit('canvas:zoom', payload)
+  }, 16)
 
   function buildShortcutMap() {
     const shortcutMap = new Map<
@@ -143,7 +148,7 @@ export function useKeyboardShortcuts(
   function handleZoom(_e: ZoomEvent) {
     const zoom = app.tree.scale as number
     store.setZoom(zoom)
-    pluginEventBus.emit('canvas:zoom', { zoom })
+    throttledEmitCanvasZoom({ zoom })
     if (elementPopover?.showPopover.value) {
       elementPopover.hidePopover()
     }

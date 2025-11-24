@@ -38,6 +38,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build project
+        run: pnpm build
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

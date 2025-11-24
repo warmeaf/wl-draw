@@ -219,37 +219,69 @@ class PluginRegistry {
       }
     }
 
-    this.plugins.set(plugin.id, plugin)
-    this.metadataCache.set(plugin.id, {
-      id: plugin.id,
-      name: plugin.name,
-      type: plugin.type,
-      metadata: plugin.metadata,
-      category: plugin.category,
-      ui: plugin.ui,
-      shortcut: plugin.shortcut,
-    })
-    this.registerHooks(plugin)
-    this.updatePluginState(plugin.id, 'registered')
+    const rollbackStack: (() => void)[] = []
 
-    if (plugin.onInstall) {
-      try {
-        await plugin.onInstall()
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error)
-        this.updatePluginState(plugin.id, 'error', errorMessage)
-        errorHandler.handlePluginError(
-          plugin.id,
-          `onInstall hook failed: ${errorMessage}`,
-          error instanceof Error ? error : undefined,
-          {
-            pluginName: plugin.name,
-            operation: 'onInstall',
-          },
-          ErrorSeverity.HIGH
-        )
-        throw error
+    try {
+      this.plugins.set(plugin.id, plugin)
+      rollbackStack.push(() => {
+        this.plugins.delete(plugin.id)
+      })
+
+      const metadata: PluginMetadataInfo = {
+        id: plugin.id,
+        name: plugin.name,
+        type: plugin.type,
+        metadata: plugin.metadata,
+        category: plugin.category,
+        ui: plugin.ui,
+        shortcut: plugin.shortcut,
       }
+      this.metadataCache.set(plugin.id, metadata)
+      rollbackStack.push(() => {
+        this.metadataCache.delete(plugin.id)
+      })
+
+      this.registerHooks(plugin)
+      rollbackStack.push(() => {
+        this.unregisterHooks(plugin.id)
+      })
+
+      this.updatePluginState(plugin.id, 'registered')
+      rollbackStack.push(() => {
+        this.pluginStates.delete(plugin.id)
+      })
+
+      if (plugin.onInstall) {
+        try {
+          await plugin.onInstall()
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          this.updatePluginState(plugin.id, 'error', errorMessage)
+          errorHandler.handlePluginError(
+            plugin.id,
+            `onInstall hook failed: ${errorMessage}`,
+            error instanceof Error ? error : undefined,
+            {
+              pluginName: plugin.name,
+              operation: 'onInstall',
+            },
+            ErrorSeverity.HIGH
+          )
+
+          for (const rollback of rollbackStack.reverse()) {
+            rollback()
+          }
+
+          throw error
+        }
+      }
+    } catch (error) {
+      if (rollbackStack.length > 0) {
+        for (const rollback of rollbackStack.reverse()) {
+          rollback()
+        }
+      }
+      throw error
     }
   }
 
@@ -503,16 +535,44 @@ class PluginRegistry {
    * Calculates topological sort order for plugin dependencies using DFS.
    * Ensures plugins are initialized in correct order: dependencies before dependents.
    * Uses 'visiting' set to detect circular dependencies during traversal.
+   *
+   * @returns Array of plugin IDs in dependency order
+   * @throws Error if circular dependency is detected
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   const order = pluginRegistry.getDependencyOrder()
+   *   // Use order to initialize plugins
+   * } catch (error) {
+   *   errorHandler.handleValidationError(
+   *     `Circular dependency detected: ${error.message}`,
+   *     error,
+   *     { operation: 'getDependencyOrder' },
+   *     ErrorSeverity.HIGH
+   *   )
+   * }
+   * ```
    */
   getDependencyOrder(): string[] {
-    const allPlugins = [
-      ...Array.from(this.plugins.values()),
-      ...Array.from(this.metadataCache.values()).map((metadata) => ({
-        id: metadata.id,
-        metadata: metadata.metadata,
-      })),
-    ]
-    return getDependencyOrder(allPlugins as ToolPlugin[])
+    try {
+      const allPlugins = [
+        ...Array.from(this.plugins.values()),
+        ...Array.from(this.metadataCache.values()).map((metadata) => ({
+          id: metadata.id,
+          metadata: metadata.metadata,
+        })),
+      ]
+      return getDependencyOrder(allPlugins as ToolPlugin[])
+    } catch (error) {
+      errorHandler.handleValidationError(
+        `Circular dependency detected: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error : undefined,
+        { operation: 'getDependencyOrder' },
+        ErrorSeverity.HIGH
+      )
+      throw error
+    }
   }
 
   private async loadPlugin(id: string): Promise<ToolPlugin> {
@@ -613,38 +673,71 @@ class PluginRegistry {
           }
         }
 
-        this.plugins.set(plugin.id, plugin)
-        this.lazyPlugins.delete(plugin.id)
-        this.metadataCache.set(plugin.id, {
-          id: plugin.id,
-          name: plugin.name,
-          type: plugin.type,
-          metadata: plugin.metadata,
-          category: plugin.category,
-          ui: plugin.ui,
-          shortcut: plugin.shortcut,
-        })
-        this.registerHooks(plugin)
-        this.updatePluginState(plugin.id, 'registered')
+        const rollbackStack: (() => void)[] = []
 
-        if (plugin.onInstall) {
-          try {
-            await plugin.onInstall()
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error)
-            this.updatePluginState(plugin.id, 'error', errorMessage)
-            errorHandler.handlePluginError(
-              plugin.id,
-              `onInstall hook failed: ${errorMessage}`,
-              error instanceof Error ? error : undefined,
-              {
-                pluginName: plugin.name,
-                operation: 'onInstall',
-              },
-              ErrorSeverity.HIGH
-            )
-            throw error
+        try {
+          this.plugins.set(plugin.id, plugin)
+          rollbackStack.push(() => {
+            this.plugins.delete(plugin.id)
+          })
+
+          this.lazyPlugins.delete(plugin.id)
+
+          const metadata: PluginMetadataInfo = {
+            id: plugin.id,
+            name: plugin.name,
+            type: plugin.type,
+            metadata: plugin.metadata,
+            category: plugin.category,
+            ui: plugin.ui,
+            shortcut: plugin.shortcut,
           }
+          this.metadataCache.set(plugin.id, metadata)
+          rollbackStack.push(() => {
+            this.metadataCache.delete(plugin.id)
+          })
+
+          this.registerHooks(plugin)
+          rollbackStack.push(() => {
+            this.unregisterHooks(plugin.id)
+          })
+
+          this.updatePluginState(plugin.id, 'registered')
+          rollbackStack.push(() => {
+            this.pluginStates.delete(plugin.id)
+          })
+
+          if (plugin.onInstall) {
+            try {
+              await plugin.onInstall()
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error)
+              this.updatePluginState(plugin.id, 'error', errorMessage)
+              errorHandler.handlePluginError(
+                plugin.id,
+                `onInstall hook failed: ${errorMessage}`,
+                error instanceof Error ? error : undefined,
+                {
+                  pluginName: plugin.name,
+                  operation: 'onInstall',
+                },
+                ErrorSeverity.HIGH
+              )
+
+              for (const rollback of rollbackStack.reverse()) {
+                rollback()
+              }
+
+              throw error
+            }
+          }
+        } catch (error) {
+          if (rollbackStack.length > 0) {
+            for (const rollback of rollbackStack.reverse()) {
+              rollback()
+            }
+          }
+          throw error
         }
 
         return plugin

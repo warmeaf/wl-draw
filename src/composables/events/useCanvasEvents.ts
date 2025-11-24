@@ -13,6 +13,7 @@ import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
 import type { ToolInstance } from '@/plugins/types'
 import { type CanvasObject, useCanvasStore } from '@/stores/canvas'
+import { errorHandler } from '@/utils/errorHandler'
 import {
   getLineArrowType,
   getPenDashPattern,
@@ -89,59 +90,76 @@ export function useCanvasEvents(
     if (!tree || !drawingState.isDrawing.value) return
 
     const tool = store.currentTool
-    const plugin = await pluginRegistry.getByType(tool)
-    if (!plugin || !plugin.capabilities?.handlesDrag) return
+    try {
+      const plugin = await pluginRegistry.getByType(tool)
+      if (!plugin || !plugin.capabilities?.handlesDrag) return
 
-    const bounds = e.getPageBounds()
-    if (bounds) {
-      throttledEmitDrawingUpdate({
-        toolType: tool,
-        bounds: {
-          x: bounds.x,
-          y: bounds.y,
-          width: bounds.width,
-          height: bounds.height,
-        },
-      })
-    }
+      const bounds = e.getPageBounds()
+      if (bounds) {
+        throttledEmitDrawingUpdate({
+          toolType: tool,
+          bounds: {
+            x: bounds.x,
+            y: bounds.y,
+            width: bounds.width,
+            height: bounds.height,
+          },
+        })
+      }
 
-    const toolInstance = await getToolInstance(tool)
-    if (toolInstance?.updateDrawing) {
-      toolInstance.updateDrawing(e)
+      const toolInstance = await getToolInstance(tool)
+      if (toolInstance?.updateDrawing) {
+        toolInstance.updateDrawing(e)
+      }
+    } catch (error) {
+      errorHandler.handleRuntimeError(
+        `Failed to handle drag event`,
+        error instanceof Error ? error : undefined,
+        { toolType: tool, operation: 'handleDrag' }
+      )
     }
   }
 
   async function finishDrawing() {
     const tool = store.currentTool
-    const plugin = await pluginRegistry.getByType(tool)
-    if (!plugin || !plugin.capabilities?.handlesDragEnd) return false
+    try {
+      const plugin = await pluginRegistry.getByType(tool)
+      if (!plugin || !plugin.capabilities?.handlesDragEnd) return false
 
-    const canFinish = await pluginRegistry.executeHook('beforeDrawingFinish', {
-      toolType: tool,
-    })
-    if (!canFinish) {
+      const canFinish = await pluginRegistry.executeHook('beforeDrawingFinish', {
+        toolType: tool,
+      })
+      if (!canFinish) {
+        return false
+      }
+
+      const objectCountBefore = store.objects.length
+
+      const toolInstance = await getToolInstance(tool)
+      if (toolInstance?.finishDrawing) {
+        toolInstance.finishDrawing()
+      }
+
+      const objectCountAfter = store.objects.length
+
+      if (objectCountAfter > objectCountBefore) {
+        addSnapshot()
+      }
+
+      await pluginRegistry.executeHook('afterDrawingFinish', {
+        toolType: tool,
+      })
+
+      drawingState.resetState()
+      return true
+    } catch (error) {
+      errorHandler.handleRuntimeError(
+        `Failed to finish drawing`,
+        error instanceof Error ? error : undefined,
+        { toolType: tool, operation: 'finishDrawing' }
+      )
       return false
     }
-
-    const objectCountBefore = store.objects.length
-
-    const toolInstance = await getToolInstance(tool)
-    if (toolInstance?.finishDrawing) {
-      toolInstance.finishDrawing()
-    }
-
-    const objectCountAfter = store.objects.length
-
-    if (objectCountAfter > objectCountBefore) {
-      addSnapshot()
-    }
-
-    await pluginRegistry.executeHook('afterDrawingFinish', {
-      toolType: tool,
-    })
-
-    drawingState.resetState()
-    return true
   }
 
   /**
@@ -205,21 +223,29 @@ export function useCanvasEvents(
       }
     }
 
-    const plugin = await pluginRegistry.getByType(tool)
-    if (!plugin || !plugin.capabilities?.handlesTap) return
+    try {
+      const plugin = await pluginRegistry.getByType(tool)
+      if (!plugin || !plugin.capabilities?.handlesTap) return
 
-    const objectCountBefore = store.objects.length
+      const objectCountBefore = store.objects.length
 
-    const toolInstance = await getToolInstance(tool)
-    if (toolInstance?.handleTap) {
-      toolInstance.handleTap(e)
-    }
-
-    if (tool === TOOL_TYPES.TEXT) {
-      const objectCountAfter = store.objects.length
-      if (objectCountAfter > objectCountBefore) {
-        addSnapshot()
+      const toolInstance = await getToolInstance(tool)
+      if (toolInstance?.handleTap) {
+        toolInstance.handleTap(e)
       }
+
+      if (tool === TOOL_TYPES.TEXT) {
+        const objectCountAfter = store.objects.length
+        if (objectCountAfter > objectCountBefore) {
+          addSnapshot()
+        }
+      }
+    } catch (error) {
+      errorHandler.handleRuntimeError(
+        `Failed to handle tap event`,
+        error instanceof Error ? error : undefined,
+        { toolType: tool, operation: 'handleTap' }
+      )
     }
   }
 
@@ -364,30 +390,38 @@ export function useCanvasEvents(
     if (!tree) return
 
     const tool = store.currentTool
-    const plugin = await pluginRegistry.getByType(tool)
+    try {
+      const plugin = await pluginRegistry.getByType(tool)
 
-    saveDragStartPositions()
+      saveDragStartPositions()
 
-    if (!plugin || !plugin.capabilities?.handlesDragStart) return
+      if (!plugin || !plugin.capabilities?.handlesDragStart) return
 
-    const bounds = e.getPageBounds()
-    if (!bounds) return
+      const bounds = e.getPageBounds()
+      if (!bounds) return
 
-    const point = { x: bounds.x, y: bounds.y }
-    const drawingStartContext = {
-      toolType: tool,
-      point,
+      const point = { x: bounds.x, y: bounds.y }
+      const drawingStartContext = {
+        toolType: tool,
+        point,
+      }
+
+      const canStart = await pluginRegistry.executeHook('beforeDrawingStart', drawingStartContext)
+      if (!canStart) {
+        return
+      }
+
+      initializeDrawingState(point)
+
+      const toolInstance = await getToolInstance(tool)
+      await notifyDrawingStart(tool, point, toolInstance)
+    } catch (error) {
+      errorHandler.handleRuntimeError(
+        `Failed to handle drag start event`,
+        error instanceof Error ? error : undefined,
+        { toolType: tool, operation: 'handleDragStart' }
+      )
     }
-
-    const canStart = await pluginRegistry.executeHook('beforeDrawingStart', drawingStartContext)
-    if (!canStart) {
-      return
-    }
-
-    initializeDrawingState(point)
-
-    const toolInstance = await getToolInstance(tool)
-    await notifyDrawingStart(tool, point, toolInstance)
   }
 
   function handleMove(_e: MoveEvent) {

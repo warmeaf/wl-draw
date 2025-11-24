@@ -15,6 +15,7 @@ import type { ToolInstance } from '@/plugins/types'
 import { useCanvasStore } from '@/stores/canvas'
 import type { ToolType } from '@/types'
 import { isValidToolType } from '@/types'
+import { errorHandler } from '@/utils/errorHandler'
 
 export function useKeyboardShortcuts(
   app: App,
@@ -101,41 +102,57 @@ export function useKeyboardShortcuts(
       return
     }
 
-    for (const [shortcutKey, { pluginId, toolType }] of shortcutMap.value.entries()) {
-      const parsed = parseShortcut(shortcutKey)
-      if (parsed && matchShortcut(e, parsed)) {
-        if (toolType === 'zoomIn') {
-          zoomIn()
-          return
-        }
-        if (toolType === 'zoomOut') {
-          zoomOut()
-          return
-        }
-
-        const plugin = await pluginRegistry.get(pluginId)
-        if (
-          plugin &&
-          (plugin.id === 'export' ||
-            plugin.id === 'exportJson' ||
-            plugin.id === 'undo' ||
-            plugin.id === 'redo')
-        ) {
-          const toolInstance = await createToolInstanceForPlugin(pluginId)
-          if (toolInstance?.onActivate) {
-            toolInstance.onActivate()
+    try {
+      for (const [shortcutKey, { pluginId, toolType }] of shortcutMap.value.entries()) {
+        const parsed = parseShortcut(shortcutKey)
+        if (parsed && matchShortcut(e, parsed)) {
+          if (toolType === 'zoomIn') {
+            zoomIn()
+            return
           }
-          return
-        }
+          if (toolType === 'zoomOut') {
+            zoomOut()
+            return
+          }
 
-        if (
-          isValidToolType(toolType) &&
-          (toolType !== TOOL_TYPES.PAN || !store.isPanningWithSpace)
-        ) {
-          store.setTool(toolType)
+          try {
+            const plugin = await pluginRegistry.get(pluginId)
+            if (
+              plugin &&
+              (plugin.id === 'export' ||
+                plugin.id === 'exportJson' ||
+                plugin.id === 'undo' ||
+                plugin.id === 'redo')
+            ) {
+              const toolInstance = await createToolInstanceForPlugin(pluginId)
+              if (toolInstance?.onActivate) {
+                toolInstance.onActivate()
+              }
+              return
+            }
+
+            if (
+              isValidToolType(toolType) &&
+              (toolType !== TOOL_TYPES.PAN || !store.isPanningWithSpace)
+            ) {
+              store.setTool(toolType)
+            }
+          } catch (error) {
+            errorHandler.handleRuntimeError(
+              `Failed to handle keyboard shortcut`,
+              error instanceof Error ? error : undefined,
+              { shortcut: shortcutKey, pluginId, toolType, operation: 'handleKeyDown' }
+            )
+          }
+          break
         }
-        break
       }
+    } catch (error) {
+      errorHandler.handleRuntimeError(
+        `Failed to process keyboard shortcut`,
+        error instanceof Error ? error : undefined,
+        { operation: 'handleKeyDown' }
+      )
     }
   }
 

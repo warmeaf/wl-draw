@@ -5,6 +5,7 @@
 
 import { useEventBus } from '@vueuse/core'
 import type { LeaferElement } from '@/types'
+import { errorHandler } from '@/utils/errorHandler'
 
 type CanvasObjectType = 'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image'
 
@@ -246,8 +247,19 @@ const busMap: Record<EventKey, ReturnType<typeof useEventBus<any>>> = {
 export class PluginEventBus {
   on<T extends EventKey>(event: T, handler: EventHandler<T>): () => void {
     const bus = busMap[event]
+    const wrappedHandler = (payload: PluginEventMap[T]) => {
+      try {
+        handler(payload)
+      } catch (error) {
+        errorHandler.handleRuntimeError(
+          `Event handler failed for "${event}"`,
+          error instanceof Error ? error : undefined,
+          { event, operation: 'emit' }
+        )
+      }
+    }
     // biome-ignore lint/suspicious/noExplicitAny: Type-safe wrapper around useEventBus
-    return bus.on(handler as any)
+    return bus.on(wrappedHandler as any)
   }
 
   off<T extends EventKey>(event: T, handler: EventHandler<T>): void {
@@ -266,8 +278,17 @@ export class PluginEventBus {
     const bus = busMap[event]
     // biome-ignore lint/suspicious/noExplicitAny: Type-safe wrapper around useEventBus
     const unsubscribe = bus.on((payload: any) => {
-      handler(payload)
-      unsubscribe()
+      try {
+        handler(payload)
+      } catch (error) {
+        errorHandler.handleRuntimeError(
+          `Event handler failed for "${event}"`,
+          error instanceof Error ? error : undefined,
+          { event, operation: 'emit' }
+        )
+      } finally {
+        unsubscribe()
+      }
     })
     return unsubscribe
   }

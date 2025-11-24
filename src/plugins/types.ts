@@ -95,3 +95,17 @@ export interface ToolPlugin {
   onUninstall?: () => void | Promise<void>
   createTool: (context: ToolContext) => ToolInstance
 }
+
+export type LazyPluginLoader = () => Promise<ToolPlugin>
+
+export type PluginDefinition = ToolPlugin | LazyPluginLoader
+
+export interface PluginMetadataInfo {
+  id: string
+  name: string
+  type: string
+  metadata: PluginMetadata
+  category?: PluginCategory
+  ui?: ToolPluginUI
+  shortcut?: string
+}

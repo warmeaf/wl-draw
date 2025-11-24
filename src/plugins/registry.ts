@@ -9,7 +9,9 @@ import type {
   DrawingStartContext,
   HookHandler,
   HookInterceptor,
+  LazyPluginLoader,
   PluginHooks,
+  PluginMetadataInfo,
   ToolPlugin,
   ToolSwitchContext,
 } from './types'
@@ -28,6 +30,9 @@ export interface PluginState {
 
 class PluginRegistry {
   private plugins = new Map<string, ToolPlugin>()
+  private lazyPlugins = new Map<string, LazyPluginLoader>()
+  private metadataCache = new Map<string, PluginMetadataInfo>()
+  private loadingPromises = new Map<string, Promise<ToolPlugin>>()
   private hooks = new Map<
     keyof PluginHooks,
     Array<{ pluginId: string; handler: HookHandler | HookInterceptor }>
@@ -71,7 +76,7 @@ class PluginRegistry {
   private validatePluginDependencies(metadata: ToolPlugin['metadata'], errors: string[]): void {
     if (metadata.dependencies && metadata.dependencies.length > 0) {
       for (const depId of metadata.dependencies) {
-        if (!this.plugins.has(depId)) {
+        if (!this.plugins.has(depId) && !this.lazyPlugins.has(depId)) {
           errors.push(`Plugin dependency "${depId}" is not registered`)
         }
       }
@@ -110,7 +115,33 @@ class PluginRegistry {
     }
   }
 
-  async register(plugin: ToolPlugin): Promise<void> {
+  async register(
+    plugin: ToolPlugin | LazyPluginLoader,
+    metadata?: PluginMetadataInfo
+  ): Promise<void> {
+    if (typeof plugin === 'function') {
+      const loader = plugin
+      if (!metadata) {
+        throw new Error('Metadata is required when registering a lazy plugin')
+      }
+
+      if (this.plugins.has(metadata.id)) {
+        errorHandler.warn(`Plugin with id "${metadata.id}" is already registered. Overwriting.`)
+        this.unregisterHooks(metadata.id)
+      }
+
+      if (this.lazyPlugins.has(metadata.id)) {
+        errorHandler.warn(
+          `Lazy plugin with id "${metadata.id}" is already registered. Overwriting.`
+        )
+      }
+
+      this.lazyPlugins.set(metadata.id, loader)
+      this.metadataCache.set(metadata.id, metadata)
+      this.updatePluginState(metadata.id, 'registered')
+      return
+    }
+
     const validation = this.validatePlugin(plugin)
     if (!validation.valid) {
       throw new Error(
@@ -121,6 +152,11 @@ class PluginRegistry {
     if (this.plugins.has(plugin.id)) {
       errorHandler.warn(`Plugin with id "${plugin.id}" is already registered. Overwriting.`)
       this.unregisterHooks(plugin.id)
+    }
+
+    if (this.lazyPlugins.has(plugin.id)) {
+      this.lazyPlugins.delete(plugin.id)
+      this.metadataCache.delete(plugin.id)
     }
 
     if (plugin.shortcut) {
@@ -144,6 +180,15 @@ class PluginRegistry {
     }
 
     this.plugins.set(plugin.id, plugin)
+    this.metadataCache.set(plugin.id, {
+      id: plugin.id,
+      name: plugin.name,
+      type: plugin.type,
+      metadata: plugin.metadata,
+      category: plugin.category,
+      ui: plugin.ui,
+      shortcut: plugin.shortcut,
+    })
     this.registerHooks(plugin)
     this.updatePluginState(plugin.id, 'registered')
 
@@ -161,11 +206,39 @@ class PluginRegistry {
     }
   }
 
-  get(id: string): ToolPlugin | undefined {
+  async get(id: string): Promise<ToolPlugin | undefined> {
+    const plugin = this.plugins.get(id)
+    if (plugin) {
+      return plugin
+    }
+
+    if (this.lazyPlugins.has(id)) {
+      return await this.loadPlugin(id)
+    }
+
+    return undefined
+  }
+
+  async getByType(type: string): Promise<ToolPlugin | undefined> {
+    const loadedPlugin = Array.from(this.plugins.values()).find((plugin) => plugin.type === type)
+    if (loadedPlugin) {
+      return loadedPlugin
+    }
+
+    for (const [pluginId, metadata] of this.metadataCache.entries()) {
+      if (metadata.type === type && this.lazyPlugins.has(pluginId)) {
+        return await this.loadPlugin(pluginId)
+      }
+    }
+
+    return undefined
+  }
+
+  getSync(id: string): ToolPlugin | undefined {
     return this.plugins.get(id)
   }
 
-  getByType(type: string): ToolPlugin | undefined {
+  getByTypeSync(type: string): ToolPlugin | undefined {
     return Array.from(this.plugins.values()).find((plugin) => plugin.type === type)
   }
 
@@ -173,12 +246,50 @@ class PluginRegistry {
     return Array.from(this.plugins.values())
   }
 
+  getAllMetadata(): PluginMetadataInfo[] {
+    const loadedMetadata = Array.from(this.plugins.values()).map((plugin) => ({
+      id: plugin.id,
+      name: plugin.name,
+      type: plugin.type,
+      metadata: plugin.metadata,
+      category: plugin.category,
+      ui: plugin.ui,
+      shortcut: plugin.shortcut,
+    }))
+
+    const lazyMetadata = Array.from(this.metadataCache.values()).filter(
+      (metadata) => !this.plugins.has(metadata.id)
+    )
+
+    return [...loadedMetadata, ...lazyMetadata]
+  }
+
+  getPluginMetadata(id: string): PluginMetadataInfo | undefined {
+    const plugin = this.plugins.get(id)
+    if (plugin) {
+      return {
+        id: plugin.id,
+        name: plugin.name,
+        type: plugin.type,
+        metadata: plugin.metadata,
+        category: plugin.category,
+        ui: plugin.ui,
+        shortcut: plugin.shortcut,
+      }
+    }
+    return this.metadataCache.get(id)
+  }
+
+  getAllPluginMetadata(): PluginMetadataInfo[] {
+    return this.getAllMetadata()
+  }
+
   getByCategory(category: string): ToolPlugin[] {
     return Array.from(this.plugins.values()).filter((plugin) => plugin.category === category)
   }
 
   has(id: string): boolean {
-    return this.plugins.has(id)
+    return this.plugins.has(id) || this.lazyPlugins.has(id)
   }
 
   async unregister(id: string): Promise<boolean> {
@@ -204,6 +315,9 @@ class PluginRegistry {
 
   clear(): void {
     this.plugins.clear()
+    this.lazyPlugins.clear()
+    this.metadataCache.clear()
+    this.loadingPromises.clear()
     this.hooks.clear()
     this.pluginStates.clear()
   }
@@ -309,7 +423,113 @@ class PluginRegistry {
    * Uses 'visiting' set to detect circular dependencies during traversal.
    */
   getDependencyOrder(): string[] {
-    return getDependencyOrder(Array.from(this.plugins.values()))
+    const allPlugins = [
+      ...Array.from(this.plugins.values()),
+      ...Array.from(this.metadataCache.values()).map((metadata) => ({
+        id: metadata.id,
+        metadata: metadata.metadata,
+      })),
+    ]
+    return getDependencyOrder(allPlugins as ToolPlugin[])
+  }
+
+  private async loadPlugin(id: string): Promise<ToolPlugin> {
+    const loadedPlugin = this.plugins.get(id)
+    if (loadedPlugin) {
+      return loadedPlugin
+    }
+
+    const existingPromise = this.loadingPromises.get(id)
+    if (existingPromise) {
+      return await existingPromise
+    }
+
+    const loader = this.lazyPlugins.get(id)
+    if (!loader) {
+      throw new Error(`Plugin "${id}" is not registered as a lazy plugin`)
+    }
+
+    const loadPromise = (async () => {
+      try {
+        const plugin = await loader()
+
+        if (plugin.id !== id) {
+          throw new Error(
+            `Plugin loader for "${id}" returned a plugin with different id "${plugin.id}"`
+          )
+        }
+
+        const validation = this.validatePlugin(plugin)
+        if (!validation.valid) {
+          throw new Error(`Plugin validation failed for "${id}": ${validation.errors.join(', ')}`)
+        }
+
+        if (plugin.shortcut) {
+          const existingShortcuts = Array.from(this.plugins.values())
+            .filter((p) => p.shortcut && p.id !== plugin.id)
+            .map((p) => {
+              if (!p.shortcut) {
+                throw new Error('Unexpected: shortcut is undefined')
+              }
+              return { pluginId: p.id, shortcut: p.shortcut }
+            })
+
+          const conflicts = checkShortcutConflict(plugin.shortcut, existingShortcuts)
+
+          if (conflicts.length > 0) {
+            const conflictList = conflicts.map((c) => `"${c.pluginId}" (${c.shortcut})`).join(', ')
+            errorHandler.warn(
+              `Shortcut conflict detected for plugin "${plugin.id}": shortcut "${plugin.shortcut}" conflicts with ${conflictList}`
+            )
+          }
+        }
+
+        if (plugin.metadata.dependencies && plugin.metadata.dependencies.length > 0) {
+          for (const depId of plugin.metadata.dependencies) {
+            if (!this.plugins.has(depId)) {
+              await this.loadPlugin(depId)
+            }
+          }
+        }
+
+        this.plugins.set(plugin.id, plugin)
+        this.lazyPlugins.delete(plugin.id)
+        this.metadataCache.set(plugin.id, {
+          id: plugin.id,
+          name: plugin.name,
+          type: plugin.type,
+          metadata: plugin.metadata,
+          category: plugin.category,
+          ui: plugin.ui,
+          shortcut: plugin.shortcut,
+        })
+        this.registerHooks(plugin)
+        this.updatePluginState(plugin.id, 'registered')
+
+        if (plugin.onInstall) {
+          try {
+            await plugin.onInstall()
+          } catch (error) {
+            this.updatePluginState(
+              plugin.id,
+              'error',
+              error instanceof Error ? error.message : String(error)
+            )
+            throw error
+          }
+        }
+
+        return plugin
+      } catch (error) {
+        this.updatePluginState(id, 'error', error instanceof Error ? error.message : String(error))
+        throw error
+      } finally {
+        this.loadingPromises.delete(id)
+      }
+    })()
+
+    this.loadingPromises.set(id, loadPromise)
+    return await loadPromise
   }
 }
 

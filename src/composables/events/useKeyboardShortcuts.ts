@@ -17,7 +17,7 @@ import { isValidToolType } from '@/types'
 
 export function useKeyboardShortcuts(
   app: App,
-  createToolInstanceForPlugin: (pluginId: string) => ToolInstance | null,
+  createToolInstanceForPlugin: (pluginId: string) => Promise<ToolInstance | null>,
   elementPopover?: ReturnType<typeof import('../state/useElementPopover').useElementPopover>
 ) {
   const store = useCanvasStore()
@@ -28,22 +28,22 @@ export function useKeyboardShortcuts(
       string,
       { pluginId: string; toolType: ToolType | 'zoomIn' | 'zoomOut' }
     >()
-    const plugins = pluginRegistry.getAll()
+    const pluginsMetadata = pluginRegistry.getAllPluginMetadata()
 
-    for (const plugin of plugins) {
-      if (plugin.shortcut) {
-        const parsed = parseShortcut(plugin.shortcut)
+    for (const metadata of pluginsMetadata) {
+      if (metadata.shortcut) {
+        const parsed = parseShortcut(metadata.shortcut)
         if (parsed) {
           const shortcutKey = buildShortcutKey(parsed)
-          if (plugin.type === 'zoomIn' || plugin.type === 'zoomOut') {
+          if (metadata.type === 'zoomIn' || metadata.type === 'zoomOut') {
             shortcutMap.set(shortcutKey, {
-              pluginId: plugin.id,
-              toolType: plugin.type as 'zoomIn' | 'zoomOut',
+              pluginId: metadata.id,
+              toolType: metadata.type as 'zoomIn' | 'zoomOut',
             })
-          } else if (isValidToolType(plugin.type)) {
+          } else if (isValidToolType(metadata.type)) {
             shortcutMap.set(shortcutKey, {
-              pluginId: plugin.id,
-              toolType: plugin.type,
+              pluginId: metadata.id,
+              toolType: metadata.type,
             })
           }
         }
@@ -90,7 +90,7 @@ export function useKeyboardShortcuts(
 
   const shortcutMap = ref(buildShortcutMap())
 
-  function handleKeyDown(e: KeyboardEvent) {
+  async function handleKeyDown(e: KeyboardEvent) {
     if (e.code === 'Space') {
       store.enablePanWithSpace()
       return
@@ -108,7 +108,7 @@ export function useKeyboardShortcuts(
           return
         }
 
-        const plugin = pluginRegistry.get(pluginId)
+        const plugin = await pluginRegistry.get(pluginId)
         if (
           plugin &&
           (plugin.id === 'export' ||
@@ -116,7 +116,7 @@ export function useKeyboardShortcuts(
             plugin.id === 'undo' ||
             plugin.id === 'redo')
         ) {
-          const toolInstance = createToolInstanceForPlugin(pluginId)
+          const toolInstance = await createToolInstanceForPlugin(pluginId)
           if (toolInstance?.onActivate) {
             toolInstance.onActivate()
           }

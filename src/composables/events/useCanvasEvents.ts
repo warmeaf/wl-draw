@@ -24,7 +24,7 @@ import type { DrawingState } from '../tool/useToolInstance'
 export function useCanvasEvents(
   app: App,
   drawingState: DrawingState,
-  getToolInstance: (toolType: string) => ToolInstance | null,
+  getToolInstance: (toolType: string) => Promise<ToolInstance | null>,
   elementPopover?: ReturnType<typeof import('../state/useElementPopover').useElementPopover>,
   canvasContainer?: HTMLElement | null
 ) {
@@ -74,11 +74,11 @@ export function useCanvasEvents(
     }
   }
 
-  function handleDrag(e: DragEvent) {
+  async function handleDrag(e: DragEvent) {
     if (!tree || !drawingState.isDrawing.value) return
 
     const tool = store.currentTool
-    const plugin = pluginRegistry.getByType(tool)
+    const plugin = await pluginRegistry.getByType(tool)
     if (!plugin || !plugin.capabilities?.handlesDrag) return
 
     const bounds = e.getPageBounds()
@@ -94,7 +94,7 @@ export function useCanvasEvents(
       })
     }
 
-    const toolInstance = getToolInstance(tool)
+    const toolInstance = await getToolInstance(tool)
     if (toolInstance?.updateDrawing) {
       toolInstance.updateDrawing(e)
     }
@@ -102,7 +102,7 @@ export function useCanvasEvents(
 
   async function finishDrawing() {
     const tool = store.currentTool
-    const plugin = pluginRegistry.getByType(tool)
+    const plugin = await pluginRegistry.getByType(tool)
     if (!plugin || !plugin.capabilities?.handlesDragEnd) return false
 
     const canFinish = await pluginRegistry.executeHook('beforeDrawingFinish', {
@@ -114,7 +114,7 @@ export function useCanvasEvents(
 
     const objectCountBefore = store.objects.length
 
-    const toolInstance = getToolInstance(tool)
+    const toolInstance = await getToolInstance(tool)
     if (toolInstance?.finishDrawing) {
       toolInstance.finishDrawing()
     }
@@ -180,7 +180,7 @@ export function useCanvasEvents(
     }
   }
 
-  function handleTap(e: PointerEvent) {
+  async function handleTap(e: PointerEvent) {
     if (!tree) return
 
     const tool = store.currentTool
@@ -194,12 +194,12 @@ export function useCanvasEvents(
       }
     }
 
-    const plugin = pluginRegistry.getByType(tool)
+    const plugin = await pluginRegistry.getByType(tool)
     if (!plugin || !plugin.capabilities?.handlesTap) return
 
     const objectCountBefore = store.objects.length
 
-    const toolInstance = getToolInstance(tool)
+    const toolInstance = await getToolInstance(tool)
     if (toolInstance?.handleTap) {
       toolInstance.handleTap(e)
     }
@@ -353,7 +353,7 @@ export function useCanvasEvents(
     if (!tree) return
 
     const tool = store.currentTool
-    const plugin = pluginRegistry.getByType(tool)
+    const plugin = await pluginRegistry.getByType(tool)
 
     saveDragStartPositions()
 
@@ -375,7 +375,7 @@ export function useCanvasEvents(
 
     initializeDrawingState(point)
 
-    const toolInstance = getToolInstance(tool)
+    const toolInstance = await getToolInstance(tool)
     await notifyDrawingStart(tool, point, toolInstance)
   }
 

@@ -12,7 +12,7 @@ import type { useCanvasMode } from './useCanvasMode'
 import type { DrawingState } from './useToolInstance'
 
 export function useToolSwitch(
-  getToolInstance: (toolType: string) => ToolInstance | null,
+  getToolInstance: (toolType: string) => Promise<ToolInstance | null>,
   canvasMode: ReturnType<typeof useCanvasMode>,
   drawingState: DrawingState,
   elementPopover?: ReturnType<typeof import('../state/useElementPopover').useElementPopover>
@@ -24,7 +24,7 @@ export function useToolSwitch(
     () => store.currentTool,
     async (newTool, oldTool) => {
       if (oldTool) {
-        const oldPlugin = pluginRegistry.getByType(oldTool)
+        const oldPlugin = await pluginRegistry.getByType(oldTool)
         if (oldPlugin) {
           pluginRegistry.updatePluginState(oldPlugin.id, 'deactivated')
           pluginEventBus.emit('plugin:deactivated', {
@@ -48,11 +48,11 @@ export function useToolSwitch(
       }
 
       drawingState.resetState()
-      canvasMode.autoSetMode(newTool)
-      canvasMode.autoSetDrag(newTool)
+      await canvasMode.autoSetMode(newTool)
+      await canvasMode.autoSetDrag(newTool)
 
-      const newToolInstance = getToolInstance(newTool)
-      const newPlugin = pluginRegistry.getByType(newTool)
+      const newToolInstance = await getToolInstance(newTool)
+      const newPlugin = await pluginRegistry.getByType(newTool)
       if (newPlugin) {
         pluginRegistry.updatePluginState(newPlugin.id, 'activated')
         pluginEventBus.emit('plugin:activated', {

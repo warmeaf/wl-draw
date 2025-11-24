@@ -7,8 +7,8 @@ import { pluginRegistry } from '@/plugins/registry'
 import type { ToolType } from '@/types'
 
 export function useCanvasMode(app: App) {
-  function autoSetMode(newTool: ToolType) {
-    const plugin = pluginRegistry.getByType(newTool)
+  async function autoSetMode(newTool: ToolType) {
+    const plugin = await pluginRegistry.getByType(newTool)
     if (!plugin) return
 
     const capabilities = plugin.capabilities
@@ -19,8 +19,8 @@ export function useCanvasMode(app: App) {
     }
   }
 
-  function autoSetDrag(newTool: ToolType) {
-    const plugin = pluginRegistry.getByType(newTool)
+  async function autoSetDrag(newTool: ToolType) {
+    const plugin = await pluginRegistry.getByType(newTool)
     if (!plugin || !app.config.move) return
 
     app.config.move.drag = plugin.capabilities?.enablesDrag === true

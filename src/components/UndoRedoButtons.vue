@@ -9,8 +9,8 @@ import { pluginRegistry } from '@/plugins/registry'
 
 const { undo, redo, canUndo, canRedo } = useHistory()
 
-const undoPlugin = computed(() => pluginRegistry.get('undo'))
-const redoPlugin = computed(() => pluginRegistry.get('redo'))
+const undoPlugin = computed(() => pluginRegistry.getPluginMetadata('undo'))
+const redoPlugin = computed(() => pluginRegistry.getPluginMetadata('redo'))
 
 const undoUi = computed(() => undoPlugin.value?.ui)
 const redoUi = computed(() => redoPlugin.value?.ui)

@@ -38,9 +38,9 @@ export function useToolInstance(app: App, drawingState: DrawingState) {
     }
   }
 
-  function getToolInstance(toolType: string): ToolInstance | null {
+  async function getToolInstance(toolType: string): Promise<ToolInstance | null> {
     if (!toolInstanceCache.has(toolType)) {
-      const plugin = pluginRegistry.getByType(toolType)
+      const plugin = await pluginRegistry.getByType(toolType)
       if (plugin) {
         const instance = plugin.createTool(createToolContext())
         toolInstanceCache.set(toolType, instance)
@@ -49,8 +49,8 @@ export function useToolInstance(app: App, drawingState: DrawingState) {
     return toolInstanceCache.get(toolType) || null
   }
 
-  function createToolInstanceForPlugin(pluginId: string): ToolInstance | null {
-    const plugin = pluginRegistry.get(pluginId)
+  async function createToolInstanceForPlugin(pluginId: string): Promise<ToolInstance | null> {
+    const plugin = await pluginRegistry.get(pluginId)
     if (!plugin) return null
 
     if (!toolInstanceCache.has(pluginId)) {

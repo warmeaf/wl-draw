@@ -14,8 +14,8 @@ import { useCanvasStore } from '@/stores/canvas'
 const store = useCanvasStore()
 
 const tree = computed(() => store.appInstance?.tree ?? null)
-const exportPlugin = computed(() => pluginRegistry.getByType('export'))
-const exportJsonPlugin = computed(() => pluginRegistry.get('exportJson'))
+const exportPlugin = computed(() => pluginRegistry.getPluginMetadata('export'))
+const exportJsonPlugin = computed(() => pluginRegistry.getPluginMetadata('exportJson'))
 const exportTool = computed(() => {
   if (!tree.value) return null
   return useExportTool(tree.value, store)

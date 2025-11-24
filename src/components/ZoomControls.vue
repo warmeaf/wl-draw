@@ -17,24 +17,24 @@ const { zoomIn, zoomOut, resetZoom } = useZoomTool(elementPopover)
 const zoomPercent = computed(() => Math.round(store.zoom * 100))
 
 const zoomOutPlugin = computed(() => {
-  const plugin = pluginRegistry.getByType('zoomOut')
-  if (!plugin?.ui) return null
+  const metadata = pluginRegistry.getPluginMetadata('zoomOut')
+  if (!metadata?.ui) return null
   return {
-    type: plugin.type,
-    label: plugin.ui.label,
-    shortcut: plugin.shortcut,
-    iconName: plugin.ui.iconComponent,
+    type: metadata.type,
+    label: metadata.ui.label,
+    shortcut: metadata.shortcut,
+    iconName: metadata.ui.iconComponent,
   }
 })
 
 const zoomInPlugin = computed(() => {
-  const plugin = pluginRegistry.getByType('zoomIn')
-  if (!plugin?.ui) return null
+  const metadata = pluginRegistry.getPluginMetadata('zoomIn')
+  if (!metadata?.ui) return null
   return {
-    type: plugin.type,
-    label: plugin.ui.label,
-    shortcut: plugin.shortcut,
-    iconName: plugin.ui.iconComponent,
+    type: metadata.type,
+    label: metadata.ui.label,
+    shortcut: metadata.shortcut,
+    iconName: metadata.ui.iconComponent,
   }
 })
 

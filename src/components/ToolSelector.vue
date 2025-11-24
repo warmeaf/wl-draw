@@ -14,20 +14,21 @@ const store = useCanvasStore()
 const tools = computed(() => {
   const excludedTypes = ['export', 'zoomIn', 'zoomOut', 'redo', 'undo']
   return pluginRegistry
-    .getAll()
+    .getAllPluginMetadata()
     .filter(
-      (plugin) => plugin.ui && !excludedTypes.includes(plugin.type) && isValidToolType(plugin.type)
+      (metadata) =>
+        metadata.ui && !excludedTypes.includes(metadata.type) && isValidToolType(metadata.type)
     )
-    .map((plugin) => {
-      const ui = plugin.ui as NonNullable<typeof plugin.ui>
-      const toolType = plugin.type
+    .map((metadata) => {
+      const ui = metadata.ui as NonNullable<typeof metadata.ui>
+      const toolType = metadata.type
       if (!isValidToolType(toolType)) {
         throw new Error(`Invalid tool type: ${toolType}`)
       }
       return {
         type: toolType,
         label: ui.label,
-        shortcut: plugin.shortcut,
+        shortcut: metadata.shortcut,
         iconName: ui.iconComponent,
         dividerAfter: ui.dividerAfter,
       }

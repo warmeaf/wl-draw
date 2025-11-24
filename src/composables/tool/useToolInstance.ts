@@ -60,9 +60,32 @@ export function useToolInstance(app: App, drawingState: DrawingState) {
     return toolInstanceCache.get(pluginId) || null
   }
 
+  function destroyToolInstance(key: string): boolean {
+    const instance = toolInstanceCache.get(key)
+    if (instance) {
+      if (instance.onDestroy) {
+        instance.onDestroy()
+      }
+      toolInstanceCache.delete(key)
+      return true
+    }
+    return false
+  }
+
+  function destroyAllToolInstances(): void {
+    for (const [_key, instance] of toolInstanceCache.entries()) {
+      if (instance.onDestroy) {
+        instance.onDestroy()
+      }
+    }
+    toolInstanceCache.clear()
+  }
+
   return {
     getToolInstance,
     createToolInstanceForPlugin,
+    destroyToolInstance,
+    destroyAllToolInstances,
     toolInstances: toolInstanceCache,
   }
 }

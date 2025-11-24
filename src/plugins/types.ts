@@ -73,6 +73,7 @@ export interface ToolInstance {
   handleTap?: (e: PointerEvent) => void
   onActivate?: () => void
   onDeactivate?: () => void
+  onDestroy?: () => void
 }
 
 export interface ToolPluginUI {

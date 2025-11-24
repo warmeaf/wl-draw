@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 export type StrokeType = 'solid' | 'dashed'
 type Size = 'small' | 'medium' | 'large'
 

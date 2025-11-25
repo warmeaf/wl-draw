@@ -6,7 +6,6 @@ import { useDeleteTool } from '@/composables/features/useDeleteTool'
 import { useElementPopover } from '@/composables/state/useElementPopover'
 import { useCanvasTools } from '@/composables/useCanvasTools'
 import { canvasConfig } from '@/config/canvas'
-import { themeColors } from '@/config/theme'
 import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { useCanvasStore } from '@/stores/canvas'
 
@@ -70,8 +69,8 @@ onMounted(() => {
   app = new App({
     view: canvasContainer.value,
     editor: {
-      stroke: themeColors.selectionBox,
-      pointStroke: themeColors.controlPoint,
+      stroke: canvasConfig.theme.selectionBox,
+      pointStroke: canvasConfig.theme.controlPoint,
     },
     zoom: { min: canvasConfig.zoom.min, max: canvasConfig.zoom.max },
     wheel: {
@@ -81,16 +80,16 @@ onMounted(() => {
       drag: false,
     },
   })
-  app.tree.fill = themeColors.canvasBackground
+  app.tree.fill = canvasConfig.theme.background
 
   store.setAppInstance(app)
 
   const snap = new Snap(app, {
     attachEvents: ['move', 'scale'],
-    lineColor: themeColors.snapLineColor,
+    lineColor: canvasConfig.theme.snapLineColor,
     distanceLabelStyle: {
       text: {
-        fill: themeColors.snapLineColor,
+        fill: canvasConfig.theme.snapLineColor,
       },
     },
   })

@@ -6,7 +6,6 @@ import type { App } from 'leafer-ui'
 import { Ellipse, Image, Line, Path, Pen, Rect, Text } from 'leafer-ui'
 import { defineStore } from 'pinia'
 import { canvasConfig } from '@/config/canvas'
-import { themeColors } from '@/config/theme'
 import { ELEMENT_TYPES, TOOL_TYPES } from '@/constants'
 import type { LeaferElement, ToolType } from '@/types'
 import type { ElementType } from '@/types/elementTypes'
@@ -31,11 +30,11 @@ export const useCanvasStore = defineStore('canvas', {
     objects: [] as CanvasObject[],
 
     zoom: canvasConfig.zoom.default,
-    fillColor: themeColors.fill,
-    strokeColor: themeColors.stroke,
+    fillColor: canvasConfig.theme.fill,
+    strokeColor: canvasConfig.theme.stroke,
     strokeWidth: 2,
     fontSize: 16,
-    textColor: themeColors.text,
+    textColor: canvasConfig.theme.text,
   }),
 
   actions: {

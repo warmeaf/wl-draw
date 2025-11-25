@@ -13,7 +13,7 @@ export function useHistory() {
   const elementPopover = inject<
     | ReturnType<typeof import('../../composables/state/useElementPopover').useElementPopover>
     | undefined
-  >('elementPopover')
+  >('elementPopover', undefined)
 
   const canUndo = computed(() => historyStore.canUndo)
   const canRedo = computed(() => historyStore.canRedo)

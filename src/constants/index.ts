@@ -5,5 +5,6 @@
 
 export * from './elementTypes'
 export * from './thresholds'
+export * from './timing'
 export * from './toolTypes'
 export * from './uiConstants'

@@ -7,7 +7,7 @@ import type { App } from 'leafer-ui'
 import { DragEvent, Line, MoveEvent, type Pen, PointerEvent, Text } from 'leafer-ui'
 import { ref } from 'vue'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
-import { ELEMENT_TYPES, THRESHOLDS, TOOL_TYPES, UI_CONSTANTS } from '@/constants'
+import { ELEMENT_TYPES, THRESHOLDS, TIMING, TOOL_TYPES, UI_CONSTANTS } from '@/constants'
 import { useHistory } from '@/plugins/composables/useHistory'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
@@ -42,7 +42,7 @@ export function useCanvasEvents(
     }) => {
       pluginEventBus.emit('drawing:update', payload)
     },
-    16
+    TIMING.DRAWING_UPDATE_THROTTLE
   )
 
   function showPopoverForSelectedElement() {

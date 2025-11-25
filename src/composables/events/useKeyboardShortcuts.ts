@@ -6,7 +6,7 @@ import { useThrottleFn } from '@vueuse/core'
 import type { App } from 'leafer-ui'
 import { KeyEvent, ZoomEvent } from 'leafer-ui'
 import { ref } from 'vue'
-import { TOOL_TYPES } from '@/constants'
+import { TIMING, TOOL_TYPES } from '@/constants'
 import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
@@ -27,7 +27,7 @@ export function useKeyboardShortcuts(
 
   const throttledEmitCanvasZoom = useThrottleFn((payload: { zoom: number }) => {
     pluginEventBus.emit('canvas:zoom', payload)
-  }, 16)
+  }, TIMING.CANVAS_ZOOM_THROTTLE)
 
   function buildShortcutMap() {
     const shortcutMap = new Map<

@@ -2,9 +2,12 @@
  * Composable for managing element popover display state and position
  */
 
+import { useDebounceFn } from '@vueuse/core'
 import { Line, Pen, Text } from 'leafer-ui'
 import { ref } from 'vue'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
+import { TIMING } from '@/constants'
+import { useHistory } from '@/plugins/composables/useHistory'
 import type { LeaferElement } from '@/types'
 
 type ElementType = 'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image' | null
@@ -127,6 +130,12 @@ const elementPropertySetterMap: Record<string, ElementPropertySetter> = {
 }
 
 export function useElementPopover() {
+  const { addSnapshot } = useHistory()
+
+  const debouncedAddSnapshot = useDebounceFn(() => {
+    addSnapshot()
+  }, TIMING.HISTORY_SNAPSHOT_THROTTLE)
+
   const showPopover = ref(false)
 
   const popoverX = ref(0)
@@ -186,6 +195,7 @@ export function useElementPopover() {
     if (selectedElement.value) {
       selectedElement.value.fill = color
       selectedElementFillColor.value = color
+      debouncedAddSnapshot()
     }
   }
 
@@ -193,9 +203,11 @@ export function useElementPopover() {
     if (selectedElement.value && selectedElement.value instanceof Pen) {
       selectedElement.value.pathElement.stroke = color
       selectedElementStrokeColor.value = color
+      debouncedAddSnapshot()
     } else if (selectedElement.value) {
       selectedElement.value.stroke = color
       selectedElementStrokeColor.value = color
+      debouncedAddSnapshot()
     }
   }
 
@@ -203,9 +215,11 @@ export function useElementPopover() {
     if (selectedElement.value && selectedElement.value instanceof Pen) {
       selectedElement.value.pathElement.strokeWidth = width
       selectedElementStrokeWidth.value = width
+      debouncedAddSnapshot()
     } else if (selectedElement.value) {
       selectedElement.value.strokeWidth = width
       selectedElementStrokeWidth.value = width
+      debouncedAddSnapshot()
     }
   }
 
@@ -213,9 +227,11 @@ export function useElementPopover() {
     if (selectedElement.value && selectedElement.value instanceof Pen) {
       selectedElement.value.pathElement.dashPattern = pattern
       selectedElementDashPattern.value = pattern
+      debouncedAddSnapshot()
     } else if (selectedElement.value) {
       selectedElement.value.dashPattern = pattern
       selectedElementDashPattern.value = pattern
+      debouncedAddSnapshot()
     }
   }
 
@@ -227,6 +243,7 @@ export function useElementPopover() {
     ) {
       selectedElement.value.startArrow = arrowType
       selectedElementStartArrow.value = arrowType
+      debouncedAddSnapshot()
     }
   }
 
@@ -238,6 +255,7 @@ export function useElementPopover() {
     ) {
       selectedElement.value.endArrow = arrowType
       selectedElementEndArrow.value = arrowType
+      debouncedAddSnapshot()
     }
   }
 
@@ -245,6 +263,7 @@ export function useElementPopover() {
     if (selectedElement.value && selectedElement.value instanceof Text) {
       selectedElement.value.fill = color
       selectedElementTextColor.value = color
+      debouncedAddSnapshot()
     }
   }
 
@@ -252,6 +271,7 @@ export function useElementPopover() {
     if (selectedElement.value && selectedElement.value instanceof Text) {
       selectedElement.value.fontSize = size
       selectedElementFontSize.value = size
+      debouncedAddSnapshot()
     }
   }
 

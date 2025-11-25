@@ -7,6 +7,7 @@ import type { App } from 'leafer-ui'
 import { KeyEvent, ZoomEvent } from 'leafer-ui'
 import { ref } from 'vue'
 import { TIMING, TOOL_TYPES } from '@/constants'
+import { useHistory } from '@/plugins/composables/useHistory'
 import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
@@ -24,6 +25,7 @@ export function useKeyboardShortcuts(
 ) {
   const store = useCanvasStore()
   const { zoomIn, zoomOut } = useZoomTool(elementPopover)
+  const { undo, redo } = useHistory()
 
   const throttledEmitCanvasZoom = useThrottleFn((payload: { zoom: number }) => {
     pluginEventBus.emit('canvas:zoom', payload)
@@ -32,7 +34,7 @@ export function useKeyboardShortcuts(
   function buildShortcutMap() {
     const shortcutMap = new Map<
       string,
-      { pluginId: string; toolType: ToolType | 'zoomIn' | 'zoomOut' }
+      { pluginId: string; toolType: ToolType | 'zoomIn' | 'zoomOut' | 'undo' | 'redo' }
     >()
     const pluginsMetadata = pluginRegistry.getAllPluginMetadata()
 
@@ -45,6 +47,11 @@ export function useKeyboardShortcuts(
             shortcutMap.set(shortcutKey, {
               pluginId: metadata.id,
               toolType: metadata.type as 'zoomIn' | 'zoomOut',
+            })
+          } else if (metadata.type === 'undo' || metadata.type === 'redo') {
+            shortcutMap.set(shortcutKey, {
+              pluginId: metadata.id,
+              toolType: metadata.type as 'undo' | 'redo',
             })
           } else if (isValidToolType(metadata.type)) {
             shortcutMap.set(shortcutKey, {
@@ -115,15 +122,19 @@ export function useKeyboardShortcuts(
             return
           }
 
+          if (toolType === 'undo') {
+            undo()
+            return
+          }
+
+          if (toolType === 'redo') {
+            redo()
+            return
+          }
+
           try {
             const plugin = await pluginRegistry.get(pluginId)
-            if (
-              plugin &&
-              (plugin.id === 'export' ||
-                plugin.id === 'exportJson' ||
-                plugin.id === 'undo' ||
-                plugin.id === 'redo')
-            ) {
+            if (plugin && (plugin.id === 'export' || plugin.id === 'exportJson')) {
               const toolInstance = await createToolInstanceForPlugin(pluginId)
               if (toolInstance?.onActivate) {
                 toolInstance.onActivate()

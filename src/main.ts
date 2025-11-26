@@ -15,6 +15,10 @@ async function bootstrap() {
   const app = createApp(App)
 
   app.use(pinia)
+
+  const { initializePluginsAfterPinia } = await import('./plugins')
+  await initializePluginsAfterPinia()
+
   app.mount('#app')
 }
 

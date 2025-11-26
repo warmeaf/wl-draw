@@ -8,6 +8,7 @@ import { useCanvasTools } from '@/composables/useCanvasTools'
 import { canvasConfig } from '@/config/canvas'
 import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { useCanvasStore } from '@/stores/canvas'
+import { useHistoryStore } from '@/stores/history'
 
 import '@leafer-in/editor'
 import '@leafer-in/export'
@@ -19,6 +20,7 @@ import { Snap } from 'leafer-x-easy-snap'
 
 const canvasContainer = ref<HTMLElement | null>(null)
 const store = useCanvasStore()
+const historyStore = useHistoryStore()
 const { setupZoomKeyboardPrevention } = useZoomTool()
 const elementPopover = inject<ReturnType<typeof useElementPopover>>(
   'elementPopover',
@@ -61,6 +63,15 @@ const handleFontSizeUpdate = (size: number) => {
   elementPopover.updateElementFontSize(size)
 }
 
+const restoreCanvasFromHistory = () => {
+  if (historyStore.snapshots.length > 0) {
+    const lastSnapshot = historyStore.snapshots[historyStore.currentIndex]
+    if (lastSnapshot) {
+      store.fromSnapshot(lastSnapshot)
+    }
+  }
+}
+
 onMounted(() => {
   zoomKeyboardCleanup = setupZoomKeyboardPrevention()
 
@@ -97,6 +108,8 @@ onMounted(() => {
 
   useCanvasTools(app, elementPopover, canvasContainer.value)
   deleteToolCleanup = useDeleteTool(app, store)
+
+  restoreCanvasFromHistory()
 })
 
 onBeforeUnmount(() => {

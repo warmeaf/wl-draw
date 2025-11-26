@@ -262,3 +262,20 @@ export async function initializeBuiltinPlugins(): Promise<void> {
     }
   }
 }
+
+export async function initializePiniaDependentPlugins(): Promise<void> {
+  const { historyCachePlugin } = await import('./historyCache')
+  try {
+    await pluginRegistry.register(historyCachePlugin)
+  } catch (error) {
+    errorHandler.handlePluginError(
+      historyCachePlugin.id,
+      `Failed to register Pinia-dependent plugin: ${error instanceof Error ? error.message : String(error)}`,
+      error instanceof Error ? error : undefined,
+      {
+        pluginName: historyCachePlugin.name,
+        operation: 'register',
+      }
+    )
+  }
+}

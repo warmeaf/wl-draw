@@ -132,7 +132,7 @@ function handleSelect(key: string) {
   } else if (key === 'export-json') {
     handleExportJSON()
   } else if (key === 'github') {
-    window.open('https://github.com/warmeaf/wl-draw/tree/plugin-architecture', '_blank')
+    window.open('https://github.com/warmeaf/wl-draw/', '_blank')
   }
 }
 </script>

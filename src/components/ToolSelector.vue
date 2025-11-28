@@ -12,7 +12,8 @@ import { isValidToolType } from '@/types'
 const store = useCanvasStore()
 
 const tools = computed(() => {
-  const excludedTypes = ['export', 'zoomIn', 'zoomOut', 'redo', 'undo']
+  // pen 工具暂时不用，回显有问题，后续通过 Line 实现
+  const excludedTypes = ['export', 'zoomIn', 'zoomOut', 'redo', 'undo', 'pen']
   return pluginRegistry
     .getAllPluginMetadata()
     .filter(

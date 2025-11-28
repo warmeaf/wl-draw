@@ -6,7 +6,13 @@ import { type App, KeyEvent } from 'leafer-ui'
 import { useHistory } from '@/plugins/composables/useHistory'
 import type { useCanvasStore } from '@/stores/canvas'
 
-export function useDeleteTool(app: App | null, store: ReturnType<typeof useCanvasStore>) {
+export function useDeleteTool(
+  app: App | null,
+  store: ReturnType<typeof useCanvasStore>,
+  elementPopover: ReturnType<
+    typeof import('@/composables/state/useElementPopover').useElementPopover
+  >
+) {
   if (!app) return () => {}
 
   const { addSnapshot } = useHistory()
@@ -26,6 +32,7 @@ export function useDeleteTool(app: App | null, store: ReturnType<typeof useCanva
 
       if (hasDeleted) {
         addSnapshot()
+        elementPopover.hidePopover()
       }
     }
   }

@@ -107,7 +107,7 @@ onMounted(() => {
   snap.enable(true)
 
   useCanvasTools(app, elementPopover, canvasContainer.value)
-  deleteToolCleanup = useDeleteTool(app, store)
+  deleteToolCleanup = useDeleteTool(app, store, elementPopover)
 
   restoreCanvasFromHistory()
 })

@@ -4,7 +4,7 @@
 
 import { useThrottleFn } from '@vueuse/core'
 import type { App } from 'leafer-ui'
-import { DragEvent, Line, MoveEvent, type Pen, PointerEvent, Text } from 'leafer-ui'
+import { DragEvent, Line, MoveEvent, PointerEvent, Text } from 'leafer-ui'
 import { ref } from 'vue'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { ELEMENT_TYPES, THRESHOLDS, TIMING, TOOL_TYPES, UI_CONSTANTS } from '@/constants'
@@ -14,13 +14,7 @@ import { pluginRegistry } from '@/plugins/registry'
 import type { ToolInstance } from '@/plugins/types'
 import { type CanvasObject, useCanvasStore } from '@/stores/canvas'
 import { errorHandler } from '@/utils/errorHandler'
-import {
-  getLineArrowType,
-  getPenDashPattern,
-  getPenStrokeColor,
-  getPenStrokeWidth,
-  getTextFillColor,
-} from '@/utils/typeGuards'
+import { getLineArrowType, getTextFillColor } from '@/utils/typeGuards'
 import type { DrawingState } from '../tool/useToolInstance'
 
 export function useCanvasEvents(
@@ -249,14 +243,6 @@ export function useCanvasEvents(
     }
   }
 
-  function getPenElementProps(pen: Pen) {
-    return {
-      strokeColor: getPenStrokeColor(pen),
-      strokeWidth: getPenStrokeWidth(pen),
-      dashPattern: getPenDashPattern(pen),
-    }
-  }
-
   function getTextElementProps(text: Text) {
     return {
       textColor: getTextFillColor(text),
@@ -292,18 +278,6 @@ export function useCanvasEvents(
 
   function getElementProps(obj: CanvasObject) {
     const fillColor = typeof obj.element.fill === 'string' ? obj.element.fill : '#ffffff'
-
-    if (obj.type === ELEMENT_TYPES.PEN) {
-      const penProps = getPenElementProps(obj.element as Pen)
-      return {
-        fillColor,
-        ...penProps,
-        startArrow: 'none' as ArrowType,
-        endArrow: UI_CONSTANTS.DEFAULT_END_ARROW,
-        textColor: undefined,
-        fontSize: undefined,
-      }
-    }
 
     if (obj.type === ELEMENT_TYPES.TEXT && obj.element instanceof Text) {
       const textProps = getTextElementProps(obj.element)

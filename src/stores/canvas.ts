@@ -3,7 +3,7 @@
  */
 
 import type { App } from 'leafer-ui'
-import { Ellipse, Image, Line, Path, Pen, Rect, Text } from 'leafer-ui'
+import { Ellipse, Image, Line, Path, Rect, Text } from 'leafer-ui'
 import { defineStore } from 'pinia'
 import { canvasConfig } from '@/config/canvas'
 import { ELEMENT_TYPES, TOOL_TYPES } from '@/constants'
@@ -186,7 +186,7 @@ export const useCanvasStore = defineStore('canvas', {
           case 'Line':
             return new Line(data as ConstructorParameters<typeof Line>[0])
           case 'Pen':
-            return new Pen(data as ConstructorParameters<typeof Pen>[0])
+            return new Line(data as ConstructorParameters<typeof Line>[0])
           case 'Text':
             return new Text(data as ConstructorParameters<typeof Text>[0])
           case 'Image':

@@ -3,7 +3,7 @@
  */
 
 import type { DragEvent } from 'leafer-ui'
-import { Pen } from 'leafer-ui'
+import { Line } from 'leafer-ui'
 import type { Ref } from 'vue'
 import { THRESHOLDS, TOOL_TYPES } from '@/constants'
 import type { useCanvasStore } from '@/stores/canvas'
@@ -19,25 +19,26 @@ export function usePenTool(
   function startDrawing() {
     if (!tree || !startPoint.value) return
 
-    const pen = new Pen()
-    pen.setStyle({
+    const line = new Line({
+      points: [startPoint.value.x, startPoint.value.y, startPoint.value.x, startPoint.value.y],
       stroke: store.strokeColor,
       strokeWidth: store.strokeWidth,
       dashPattern: undefined,
       strokeCap: 'round',
       strokeJoin: 'round',
+      curve: true,
+      editable: true,
     })
-    pen.editable = true
 
-    currentElement.value = pen
-    tree.add(pen)
+    currentElement.value = line
+    tree.add(line)
   }
 
   function updateDrawing(e: DragEvent) {
     if (!currentElement.value || !penPathPoints.value.length) return
 
-    const pen = currentElement.value
-    if (!(pen instanceof Pen)) return
+    const line = currentElement.value
+    if (!(line instanceof Line)) return
 
     const point = e.getPagePoint()
     if (!point) return
@@ -60,22 +61,25 @@ export function usePenTool(
     const updatedPoints = penPathPoints.value
     if (updatedPoints.length < 2) return
 
-    pen.drawPoints(updatedPoints, true)
+    // Convert points array to flat format [x1, y1, x2, y2, ...]
+    const flatPoints: number[] = []
+    for (const p of updatedPoints) {
+      flatPoints.push(p.x, p.y)
+    }
+    line.points = flatPoints
   }
 
   function finishDrawing() {
     if (!currentElement.value || !penPathPoints.value.length) return
 
-    const pen = currentElement.value
-    if (!(pen instanceof Pen)) return
-
-    pen.fill = 'transparent'
+    const line = currentElement.value
+    if (!(line instanceof Line)) return
 
     const id = `pen-${Date.now()}`
     store.addObject({
       id,
       type: 'pen',
-      element: pen,
+      element: line,
     })
 
     store.setTool(TOOL_TYPES.SELECT)

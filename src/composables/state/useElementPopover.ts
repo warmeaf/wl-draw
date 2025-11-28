@@ -3,7 +3,7 @@
  */
 
 import { useDebounceFn } from '@vueuse/core'
-import { Line, Pen, Text } from 'leafer-ui'
+import { Line, Text } from 'leafer-ui'
 import { ref } from 'vue'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { TIMING } from '@/constants'
@@ -200,11 +200,7 @@ export function useElementPopover() {
   }
 
   function updateElementStrokeColor(color: string) {
-    if (selectedElement.value && selectedElement.value instanceof Pen) {
-      selectedElement.value.pathElement.stroke = color
-      selectedElementStrokeColor.value = color
-      debouncedAddSnapshot()
-    } else if (selectedElement.value) {
+    if (selectedElement.value) {
       selectedElement.value.stroke = color
       selectedElementStrokeColor.value = color
       debouncedAddSnapshot()
@@ -212,11 +208,7 @@ export function useElementPopover() {
   }
 
   function updateElementStrokeWidth(width: number) {
-    if (selectedElement.value && selectedElement.value instanceof Pen) {
-      selectedElement.value.pathElement.strokeWidth = width
-      selectedElementStrokeWidth.value = width
-      debouncedAddSnapshot()
-    } else if (selectedElement.value) {
+    if (selectedElement.value) {
       selectedElement.value.strokeWidth = width
       selectedElementStrokeWidth.value = width
       debouncedAddSnapshot()
@@ -224,11 +216,7 @@ export function useElementPopover() {
   }
 
   function updateElementDashPattern(pattern: number[] | undefined) {
-    if (selectedElement.value && selectedElement.value instanceof Pen) {
-      selectedElement.value.pathElement.dashPattern = pattern
-      selectedElementDashPattern.value = pattern
-      debouncedAddSnapshot()
-    } else if (selectedElement.value) {
+    if (selectedElement.value) {
       selectedElement.value.dashPattern = pattern
       selectedElementDashPattern.value = pattern
       debouncedAddSnapshot()

@@ -2,7 +2,7 @@
  * Type guard utilities for runtime type checking
  */
 
-import type { Line, Pen, Text } from 'leafer-ui'
+import type { Line, Text } from 'leafer-ui'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 
 export function isString(value: unknown): value is string {
@@ -81,21 +81,6 @@ export function getArrowTypeProperty(
 ): ArrowType {
   const value = obj[key]
   return isValidArrowType(value) ? value : defaultValue
-}
-
-export function getPenStrokeColor(pen: Pen): string {
-  const stroke = pen.pathElement.stroke
-  return isString(stroke) ? stroke : ''
-}
-
-export function getPenStrokeWidth(pen: Pen): number {
-  const strokeWidth = pen.pathElement.strokeWidth
-  return isNumber(strokeWidth) ? strokeWidth : 0
-}
-
-export function getPenDashPattern(pen: Pen): number[] | undefined {
-  const dashPattern = pen.pathElement.dashPattern
-  return isNumberArray(dashPattern) ? dashPattern : undefined
 }
 
 export function getTextFillColor(text: Text): string {

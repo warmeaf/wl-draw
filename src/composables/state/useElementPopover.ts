@@ -207,10 +207,16 @@ export function useElementPopover() {
     }
   }
 
-  function updateElementStrokeWidth(width: number) {
+  function updateElementStrokeWidth(width: number, dashPattern?: number[]) {
     if (selectedElement.value) {
       selectedElement.value.strokeWidth = width
       selectedElementStrokeWidth.value = width
+
+      if (dashPattern !== undefined) {
+        selectedElement.value.dashPattern = dashPattern
+        selectedElementDashPattern.value = dashPattern
+      }
+
       debouncedAddSnapshot()
     }
   }

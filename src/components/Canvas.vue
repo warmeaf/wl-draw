@@ -9,6 +9,7 @@ import { canvasConfig } from '@/config/canvas'
 import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { useCanvasStore } from '@/stores/canvas'
 import { useHistoryStore } from '@/stores/history'
+import { calculateDashPattern } from '@/utils/stroke'
 
 import '@leafer-in/editor'
 import '@leafer-in/export'
@@ -32,7 +33,12 @@ let deleteToolCleanup: (() => void) | null = null
 let zoomKeyboardCleanup: (() => void) | null = null
 
 const handleStrokeTypeChange = (type: 'solid' | 'dashed') => {
-  elementPopover.updateElementDashPattern(type === 'dashed' ? [5, 5] : undefined)
+  if (type === 'dashed') {
+    const currentStrokeWidth = elementPopover.selectedElementStrokeWidth.value
+    elementPopover.updateElementDashPattern(calculateDashPattern(currentStrokeWidth))
+  } else {
+    elementPopover.updateElementDashPattern(undefined)
+  }
 }
 
 const handleFillColorUpdate = (color: string) => {
@@ -44,7 +50,9 @@ const handleStrokeColorUpdate = (color: string) => {
 }
 
 const handleStrokeWidthUpdate = (width: number) => {
-  elementPopover.updateElementStrokeWidth(width)
+  const hasDashedStroke = elementPopover.selectedElementDashPattern.value
+  const dashPattern = hasDashedStroke ? calculateDashPattern(width) : undefined
+  elementPopover.updateElementStrokeWidth(width, dashPattern)
 }
 
 const handleStartArrowUpdate = (arrowType: ArrowType) => {

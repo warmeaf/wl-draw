@@ -84,6 +84,10 @@ onMounted(() => {
       selectedStyle: {
         strokeWidth: 0,
       },
+      rect: {
+        strokeWidth: 1,
+        opacity: 0.5,
+      },
     },
     zoom: { min: canvasConfig.zoom.min, max: canvasConfig.zoom.max },
     wheel: {

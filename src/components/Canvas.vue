@@ -81,7 +81,9 @@ onMounted(() => {
     view: canvasContainer.value,
     editor: {
       stroke: canvasConfig.theme.selectionBox,
-      pointStroke: canvasConfig.theme.controlPoint,
+      selectedStyle: {
+        strokeWidth: 0,
+      },
     },
     zoom: { min: canvasConfig.zoom.min, max: canvasConfig.zoom.max },
     wheel: {

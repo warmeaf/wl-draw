@@ -2,6 +2,7 @@
  * Composable for handling canvas interaction events (drag, tap)
  */
 
+import { InnerEditorEvent } from '@leafer-in/editor'
 import { useThrottleFn } from '@vueuse/core'
 import type { App } from 'leafer-ui'
 import { DragEvent, Line, MoveEvent, PointerEvent, Text } from 'leafer-ui'
@@ -28,6 +29,7 @@ export function useCanvasEvents(
   const tree = app.tree
   const { addSnapshot } = useHistory()
   const wasPopoverVisibleBeforeDrag = ref(false)
+  const originalTextValue = ref<string | null>(null)
 
   const throttledEmitDrawingUpdate = useThrottleFn(
     (payload: {
@@ -404,11 +406,31 @@ export function useCanvasEvents(
     }
   }
 
+  function handleOpenInnerEditor() {
+    const editTarget = app.editor.innerEditor?.editTarget
+    if (editTarget instanceof Text) {
+      originalTextValue.value = String(editTarget.text ?? '')
+    }
+  }
+
+  function handleCloseInnerEditor() {
+    const editTarget = app.editor.innerEditor?.editTarget
+    if (editTarget instanceof Text && originalTextValue.value !== null) {
+      const currentText = String(editTarget.text ?? '')
+      if (currentText !== originalTextValue.value) {
+        addSnapshot()
+      }
+    }
+    originalTextValue.value = null
+  }
+
   const dragStartId = app.on_(DragEvent.START, handleDragStart)
   const dragId = app.on_(DragEvent.DRAG, handleDrag)
   const dragEndId = app.on_(DragEvent.END, handleDragEnd)
   const tapId = app.on_(PointerEvent.TAP, handleTap)
   const moveId = app.tree.on_(MoveEvent.MOVE, handleMove)
+  app.editor.on(InnerEditorEvent.OPEN, handleOpenInnerEditor)
+  app.editor.on(InnerEditorEvent.CLOSE, handleCloseInnerEditor)
 
   function cleanup() {
     app.off_(dragStartId)
@@ -416,6 +438,8 @@ export function useCanvasEvents(
     app.off_(dragEndId)
     app.off_(tapId)
     app.tree.off_(moveId)
+    app.editor.off(InnerEditorEvent.OPEN, handleOpenInnerEditor)
+    app.editor.off(InnerEditorEvent.CLOSE, handleCloseInnerEditor)
   }
 
   return {

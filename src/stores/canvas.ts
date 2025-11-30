@@ -128,10 +128,21 @@ export const useCanvasStore = defineStore('canvas', {
     toSnapshot(): HistorySnapshot {
       const objects = this.objects.map((obj) => {
         const elementData = obj.element?.toJSON ? obj.element.toJSON() : null
+        let clonedData: Record<string, unknown> | null = null
+
+        if (elementData) {
+          try {
+            clonedData = JSON.parse(JSON.stringify(elementData)) as Record<string, unknown>
+          } catch (error) {
+            console.error('Failed to clone element data:', error)
+            clonedData = elementData as Record<string, unknown>
+          }
+        }
+
         return {
           id: obj.id,
           type: obj.type,
-          data: elementData,
+          data: clonedData,
         }
       })
 
@@ -229,12 +240,20 @@ export const useCanvasStore = defineStore('canvas', {
       snapshot.objects.forEach((objData) => {
         if (!objData.data || typeof objData.data !== 'object') return
 
-        const data = objData.data as Record<string, unknown>
-        const tag = typeof data.tag === 'string' ? data.tag : null
+        const originalData = objData.data as Record<string, unknown>
+        const tag = typeof originalData.tag === 'string' ? originalData.tag : null
 
         if (!tag) return
 
-        const element = this.createElementFromData(tag, data)
+        let clonedData: Record<string, unknown>
+        try {
+          clonedData = JSON.parse(JSON.stringify(originalData)) as Record<string, unknown>
+        } catch (error) {
+          console.error('Failed to clone element data during restoration:', error)
+          clonedData = originalData
+        }
+
+        const element = this.createElementFromData(tag, clonedData)
 
         if (element && this.isValidObjectType(objData.type)) {
           tree.add(element)

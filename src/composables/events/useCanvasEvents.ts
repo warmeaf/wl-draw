@@ -8,12 +8,14 @@ import type { App } from 'leafer-ui'
 import { DragEvent, Line, MoveEvent, PointerEvent, Text } from 'leafer-ui'
 import { ref } from 'vue'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
-import { ELEMENT_TYPES, THRESHOLDS, TIMING, TOOL_TYPES, UI_CONSTANTS } from '@/constants'
+import { ELEMENT_TYPES, TIMING, TOOL_TYPES, UI_CONSTANTS } from '@/constants'
 import { useHistory } from '@/plugins/composables/useHistory'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
 import type { ToolInstance } from '@/plugins/types'
 import { type CanvasObject, useCanvasStore } from '@/stores/canvas'
+import { useHistoryStore } from '@/stores/history'
+import type { HistorySnapshot } from '@/types/history'
 import { errorHandler } from '@/utils/errorHandler'
 import { getLineArrowType, getTextFillColor } from '@/utils/typeGuards'
 import type { DrawingState } from '../tool/useToolInstance'
@@ -28,6 +30,7 @@ export function useCanvasEvents(
   const store = useCanvasStore()
   const tree = app.tree
   const { addSnapshot } = useHistory()
+  const historyStore = useHistoryStore()
   const wasPopoverVisibleBeforeDrag = ref(false)
   const originalTextValue = ref<string | null>(null)
 
@@ -129,17 +132,9 @@ export function useCanvasEvents(
         return false
       }
 
-      const objectCountBefore = store.objects.length
-
       const toolInstance = await getToolInstance(tool)
       if (toolInstance?.finishDrawing) {
         toolInstance.finishDrawing()
-      }
-
-      const objectCountAfter = store.objects.length
-
-      if (objectCountAfter > objectCountBefore) {
-        addSnapshot()
       }
 
       await pluginRegistry.executeHook('afterDrawingFinish', {
@@ -158,35 +153,30 @@ export function useCanvasEvents(
     }
   }
 
-  /**
-   * Checks if any dragged object has moved beyond the minimum threshold.
-   * Uses threshold to avoid creating snapshots for micro-movements that don't represent intentional changes.
-   */
-  function hasObjectPositionChanged(): boolean {
-    for (const [objectId, startPosition] of drawingState.dragStartPositions.value.entries()) {
-      const obj = store.objects.find((o) => o.id === objectId)
-      if (obj?.element) {
-        const currentX = obj.element.x ?? 0
-        const currentY = obj.element.y ?? 0
-        const deltaX = Math.abs(currentX - startPosition.x)
-        const deltaY = Math.abs(currentY - startPosition.y)
-
-        if (
-          deltaX > THRESHOLDS.POSITION_CHANGE_MIN_DELTA ||
-          deltaY > THRESHOLDS.POSITION_CHANGE_MIN_DELTA
-        ) {
-          return true
-        }
-      }
+  function compareSnapshots(
+    snapshot1: HistorySnapshot,
+    snapshot2: HistorySnapshot | null
+  ): boolean {
+    const normalized1 = {
+      ...snapshot1,
+      metadata: {
+        ...snapshot1.metadata,
+        exportedAt: '',
+      },
     }
-    return false
+    const normalized2 = snapshot2
+      ? {
+          ...snapshot2,
+          metadata: {
+            ...snapshot2.metadata,
+            exportedAt: '',
+          },
+        }
+      : null
+    return JSON.stringify(normalized1) === JSON.stringify(normalized2)
   }
 
   function handleObjectDragEnd() {
-    if (hasObjectPositionChanged()) {
-      addSnapshot()
-    }
-
     if (wasPopoverVisibleBeforeDrag.value) {
       showPopoverForSelectedElement()
     }
@@ -202,6 +192,15 @@ export function useCanvasEvents(
       await finishDrawing()
     } else if (drawingState.dragStartPositions.value.size > 0) {
       handleObjectDragEnd()
+    }
+
+    const currentSnapshot = store.toSnapshot()
+    const lastSnapshot = historyStore.snapshots[historyStore.currentIndex] ?? null
+
+    // console.log(currentSnapshot, JSON.stringify(lastSnapshot))
+
+    if (!compareSnapshots(currentSnapshot, lastSnapshot)) {
+      addSnapshot()
     }
   }
 

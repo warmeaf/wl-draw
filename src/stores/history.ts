@@ -29,7 +29,13 @@ export const useHistoryStore = defineStore('history', {
         this.snapshots = this.snapshots.slice(0, this.currentIndex + 1)
       }
 
-      this.snapshots.push(snapshot)
+      try {
+        const clonedSnapshot = JSON.parse(JSON.stringify(snapshot))
+        this.snapshots.push(clonedSnapshot)
+      } catch (error) {
+        console.error('Failed to clone snapshot:', error)
+        return
+      }
 
       if (this.snapshots.length > MAX_HISTORY_SIZE) {
         this.snapshots.shift()

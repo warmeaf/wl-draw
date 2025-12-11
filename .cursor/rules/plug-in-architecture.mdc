@@ -1,7 +1,6 @@
 ---
-alwaysApply: true
+alwaysApply: false
 ---
-
 # The core principles of a plug-in architecture
 
 In building scalable and maintainable front-end applications, a plug-in architecture is a very powerful and popular pattern. Its core idea is to keep the main application (core system) concise and stable while allowing functionality to be extended through plug-ins, thereby achieving a high degree of flexibility and decoupling.

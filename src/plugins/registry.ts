@@ -39,6 +39,8 @@ class PluginRegistry {
   >()
   private pluginStates = new Map<string, PluginState>()
 
+  // ==================== Plugin Validation Methods ====================
+
   private validatePluginId(plugin: ToolPlugin, errors: string[]): void {
     if (!plugin.id || plugin.id.trim() === '') {
       errors.push(
@@ -114,6 +116,122 @@ class PluginRegistry {
     }
   }
 
+  // ==================== Shortcut Conflict Checking ====================
+
+  private checkPluginShortcutConflicts(plugin: ToolPlugin): void {
+    if (!plugin.shortcut) {
+      return
+    }
+
+    const existingShortcuts = Array.from(this.plugins.values())
+      .filter((p) => p.shortcut && p.id !== plugin.id)
+      .map((p) => {
+        if (!p.shortcut) {
+          errorHandler.handleRuntimeError(
+            'Unexpected: shortcut is undefined during conflict check',
+            undefined,
+            { pluginId: p.id },
+            ErrorSeverity.MEDIUM
+          )
+          return null
+        }
+        return { pluginId: p.id, shortcut: p.shortcut }
+      })
+      .filter((s): s is { pluginId: string; shortcut: string } => s !== null)
+
+    const conflicts = checkShortcutConflict(plugin.shortcut, existingShortcuts)
+
+    if (conflicts.length > 0) {
+      const conflictList = conflicts.map((c) => `"${c.pluginId}" (${c.shortcut})`).join(', ')
+      errorHandler.warn(
+        `Shortcut conflict detected for plugin "${plugin.id}": shortcut "${plugin.shortcut}" conflicts with ${conflictList}`
+      )
+    }
+  }
+
+  // ==================== Plugin Registration Core Logic ====================
+
+  private executeRollback(rollbackStack: Array<() => void>): void {
+    if (rollbackStack.length === 0) {
+      return
+    }
+    for (const rollback of rollbackStack.reverse()) {
+      rollback()
+    }
+  }
+
+  private async executePluginInstallHook(
+    plugin: ToolPlugin,
+    rollbackStack: Array<() => void>
+  ): Promise<void> {
+    if (!plugin.onInstall) {
+      return
+    }
+
+    try {
+      await plugin.onInstall()
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      this.updatePluginState(plugin.id, 'error', errorMessage)
+      errorHandler.handlePluginError(
+        plugin.id,
+        `onInstall hook failed: ${errorMessage}`,
+        error instanceof Error ? error : undefined,
+        {
+          pluginName: plugin.name,
+          operation: 'onInstall',
+        },
+        ErrorSeverity.HIGH
+      )
+
+      this.executeRollback(rollbackStack)
+
+      throw error
+    }
+  }
+
+  private createPluginMetadata(plugin: ToolPlugin): PluginMetadataInfo {
+    return {
+      id: plugin.id,
+      name: plugin.name,
+      type: plugin.type,
+      metadata: plugin.metadata,
+      category: plugin.category,
+      ui: plugin.ui,
+      shortcut: plugin.shortcut,
+    }
+  }
+
+  private async registerPluginCore(
+    plugin: ToolPlugin,
+    rollbackStack: Array<() => void>
+  ): Promise<void> {
+    this.plugins.set(plugin.id, plugin)
+    rollbackStack.push(() => {
+      this.plugins.delete(plugin.id)
+    })
+
+    const metadata = this.createPluginMetadata(plugin)
+    this.metadataCache.set(plugin.id, metadata)
+    rollbackStack.push(() => {
+      this.metadataCache.delete(plugin.id)
+    })
+
+    this.registerHooks(plugin)
+    rollbackStack.push(() => {
+      this.unregisterHooks(plugin.id)
+    })
+
+    this.updatePluginState(plugin.id, 'registered')
+    rollbackStack.push(() => {
+      this.pluginStates.delete(plugin.id)
+    })
+
+    await this.executePluginInstallHook(plugin, rollbackStack)
+  }
+
+  // ==================== Public Plugin Registration API ====================
+
   validatePlugin(plugin: ToolPlugin): { valid: boolean; errors: string[] } {
     const errors: string[] = []
 
@@ -134,7 +252,7 @@ class PluginRegistry {
     metadata?: PluginMetadataInfo
   ): Promise<void> {
     if (typeof plugin === 'function') {
-      const loader = plugin
+      const lazyPluginLoader = plugin
       if (!metadata) {
         errorHandler.handleValidationError(
           'Metadata is required when registering a lazy plugin',
@@ -158,7 +276,7 @@ class PluginRegistry {
         )
       }
 
-      this.lazyPlugins.set(metadata.id, loader)
+      this.lazyPlugins.set(metadata.id, lazyPluginLoader)
       this.metadataCache.set(metadata.id, metadata)
       this.updatePluginState(metadata.id, 'registered')
       return
@@ -192,98 +310,19 @@ class PluginRegistry {
       this.metadataCache.delete(plugin.id)
     }
 
-    if (plugin.shortcut) {
-      const existingShortcuts = Array.from(this.plugins.values())
-        .filter((p) => p.shortcut && p.id !== plugin.id)
-        .map((p) => {
-          if (!p.shortcut) {
-            errorHandler.handleRuntimeError(
-              'Unexpected: shortcut is undefined during conflict check',
-              undefined,
-              { pluginId: p.id },
-              ErrorSeverity.MEDIUM
-            )
-            return null
-          }
-          return { pluginId: p.id, shortcut: p.shortcut }
-        })
-        .filter((s): s is { pluginId: string; shortcut: string } => s !== null)
-
-      const conflicts = checkShortcutConflict(plugin.shortcut, existingShortcuts)
-
-      if (conflicts.length > 0) {
-        const conflictList = conflicts.map((c) => `"${c.pluginId}" (${c.shortcut})`).join(', ')
-        errorHandler.warn(
-          `Shortcut conflict detected for plugin "${plugin.id}": shortcut "${plugin.shortcut}" conflicts with ${conflictList}`
-        )
-      }
-    }
+    this.checkPluginShortcutConflicts(plugin)
 
     const rollbackStack: (() => void)[] = []
 
     try {
-      this.plugins.set(plugin.id, plugin)
-      rollbackStack.push(() => {
-        this.plugins.delete(plugin.id)
-      })
-
-      const metadata: PluginMetadataInfo = {
-        id: plugin.id,
-        name: plugin.name,
-        type: plugin.type,
-        metadata: plugin.metadata,
-        category: plugin.category,
-        ui: plugin.ui,
-        shortcut: plugin.shortcut,
-      }
-      this.metadataCache.set(plugin.id, metadata)
-      rollbackStack.push(() => {
-        this.metadataCache.delete(plugin.id)
-      })
-
-      this.registerHooks(plugin)
-      rollbackStack.push(() => {
-        this.unregisterHooks(plugin.id)
-      })
-
-      this.updatePluginState(plugin.id, 'registered')
-      rollbackStack.push(() => {
-        this.pluginStates.delete(plugin.id)
-      })
-
-      if (plugin.onInstall) {
-        try {
-          await plugin.onInstall()
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error)
-          this.updatePluginState(plugin.id, 'error', errorMessage)
-          errorHandler.handlePluginError(
-            plugin.id,
-            `onInstall hook failed: ${errorMessage}`,
-            error instanceof Error ? error : undefined,
-            {
-              pluginName: plugin.name,
-              operation: 'onInstall',
-            },
-            ErrorSeverity.HIGH
-          )
-
-          for (const rollback of rollbackStack.reverse()) {
-            rollback()
-          }
-
-          throw error
-        }
-      }
+      await this.registerPluginCore(plugin, rollbackStack)
     } catch (error) {
-      if (rollbackStack.length > 0) {
-        for (const rollback of rollbackStack.reverse()) {
-          rollback()
-        }
-      }
+      this.executeRollback(rollbackStack)
       throw error
     }
   }
+
+  // ==================== Plugin Retrieval Methods ====================
 
   async get(id: string): Promise<ToolPlugin | undefined> {
     const plugin = this.plugins.get(id)
@@ -420,6 +459,8 @@ class PluginRegistry {
     return Array.from(this.pluginStates.values())
   }
 
+  // ==================== Plugin State Management ====================
+
   updatePluginState(id: string, status: PluginState['status'], error?: string): void {
     const existingState = this.pluginStates.get(id)
     const now = new Date()
@@ -435,6 +476,8 @@ class PluginRegistry {
 
     this.pluginStates.set(id, newState)
   }
+
+  // ==================== Hook Management Methods ====================
 
   private registerHooks(plugin: ToolPlugin): void {
     if (!plugin.hooks) return
@@ -454,9 +497,9 @@ class PluginRegistry {
         if (!this.hooks.has(hookKey)) {
           this.hooks.set(hookKey, [])
         }
-        const handlers = this.hooks.get(hookKey)
-        if (handlers) {
-          handlers.push({
+        const hookHandlers = this.hooks.get(hookKey)
+        if (hookHandlers) {
+          hookHandlers.push({
             pluginId: plugin.id,
             handler: hook as HookHandler | HookInterceptor,
           })
@@ -466,12 +509,64 @@ class PluginRegistry {
   }
 
   private unregisterHooks(pluginId: string): void {
-    for (const [hookKey, handlers] of this.hooks.entries()) {
-      const filtered = handlers.filter((h) => h.pluginId !== pluginId)
+    for (const [hookKey, hookHandlers] of this.hooks.entries()) {
+      const filtered = hookHandlers.filter((h) => h.pluginId !== pluginId)
       if (filtered.length === 0) {
         this.hooks.delete(hookKey)
       } else {
         this.hooks.set(hookKey, filtered)
+      }
+    }
+  }
+
+  private isInterceptorHook(hookName: keyof PluginHooks): boolean {
+    return hookName.startsWith('before')
+  }
+
+  private async executeInterceptorHook(
+    hookName: keyof PluginHooks,
+    hookHandlers: Array<{ pluginId: string; handler: HookHandler | HookInterceptor }>,
+    context: ToolSwitchContext | DrawingStartContext | DrawingFinishContext
+  ): Promise<boolean> {
+    for (const { pluginId, handler } of hookHandlers) {
+      try {
+        const result = await (handler as HookInterceptor)(context)
+        if (result === false) {
+          return false
+        }
+      } catch (error) {
+        errorHandler.handlePluginError(
+          pluginId,
+          `Hook "${hookName}" execution failed`,
+          error instanceof Error ? error : undefined,
+          {
+            operation: hookName,
+          },
+          ErrorSeverity.MEDIUM
+        )
+      }
+    }
+    return true
+  }
+
+  private async executeHandlerHook(
+    hookName: keyof PluginHooks,
+    hookHandlers: Array<{ pluginId: string; handler: HookHandler | HookInterceptor }>,
+    context: ToolSwitchContext | DrawingStartContext | DrawingFinishContext
+  ): Promise<void> {
+    for (const { pluginId, handler } of hookHandlers) {
+      try {
+        await (handler as HookHandler)(context)
+      } catch (error) {
+        errorHandler.handlePluginError(
+          pluginId,
+          `Hook "${hookName}" execution failed`,
+          error instanceof Error ? error : undefined,
+          {
+            operation: hookName,
+          },
+          ErrorSeverity.MEDIUM
+        )
       }
     }
   }
@@ -486,49 +581,17 @@ class PluginRegistry {
           ? DrawingFinishContext
           : never
   ): Promise<boolean> {
-    const handlers = this.hooks.get(hookName)
-    if (!handlers || handlers.length === 0) {
+    const hookHandlers = this.hooks.get(hookName)
+    if (!hookHandlers || hookHandlers.length === 0) {
       return true
     }
 
-    if (hookName.startsWith('before')) {
-      for (const { pluginId, handler } of handlers) {
-        try {
-          const result = await (handler as HookInterceptor)(context)
-          if (result === false) {
-            return false
-          }
-        } catch (error) {
-          errorHandler.handlePluginError(
-            pluginId,
-            `Hook "${hookName}" execution failed`,
-            error instanceof Error ? error : undefined,
-            {
-              operation: hookName,
-            },
-            ErrorSeverity.MEDIUM
-          )
-        }
-      }
+    if (this.isInterceptorHook(hookName)) {
+      return await this.executeInterceptorHook(hookName, hookHandlers, context)
     } else {
-      for (const { pluginId, handler } of handlers) {
-        try {
-          await (handler as HookHandler)(context)
-        } catch (error) {
-          errorHandler.handlePluginError(
-            pluginId,
-            `Hook "${hookName}" execution failed`,
-            error instanceof Error ? error : undefined,
-            {
-              operation: hookName,
-            },
-            ErrorSeverity.MEDIUM
-          )
-        }
-      }
+      await this.executeHandlerHook(hookName, hookHandlers, context)
+      return true
     }
-
-    return true
   }
 
   /**
@@ -575,19 +638,21 @@ class PluginRegistry {
     }
   }
 
+  // ==================== Lazy Plugin Loading ====================
+
   private async loadPlugin(id: string): Promise<ToolPlugin> {
     const loadedPlugin = this.plugins.get(id)
     if (loadedPlugin) {
       return loadedPlugin
     }
 
-    const existingPromise = this.loadingPromises.get(id)
-    if (existingPromise) {
-      return await existingPromise
+    const existingLoadPromise = this.loadingPromises.get(id)
+    if (existingLoadPromise) {
+      return await existingLoadPromise
     }
 
-    const loader = this.lazyPlugins.get(id)
-    if (!loader) {
+    const lazyPluginLoader = this.lazyPlugins.get(id)
+    if (!lazyPluginLoader) {
       errorHandler.handlePluginError(
         id,
         'Plugin is not registered as a lazy plugin',
@@ -600,9 +665,9 @@ class PluginRegistry {
       throw new Error(`Plugin "${id}" is not registered as a lazy plugin`)
     }
 
-    const loadPromise = (async () => {
+    const pluginLoadPromise = (async () => {
       try {
-        const plugin = await loader()
+        const plugin = await lazyPluginLoader()
 
         if (plugin.id !== id) {
           const errorMessage = `Plugin loader returned a plugin with different id "${plugin.id}"`
@@ -638,32 +703,7 @@ class PluginRegistry {
           throw new Error(`Plugin validation failed for "${id}": ${validation.errors.join(', ')}`)
         }
 
-        if (plugin.shortcut) {
-          const existingShortcuts = Array.from(this.plugins.values())
-            .filter((p) => p.shortcut && p.id !== plugin.id)
-            .map((p) => {
-              if (!p.shortcut) {
-                errorHandler.handleRuntimeError(
-                  'Unexpected: shortcut is undefined during conflict check',
-                  undefined,
-                  { pluginId: p.id },
-                  ErrorSeverity.MEDIUM
-                )
-                return null
-              }
-              return { pluginId: p.id, shortcut: p.shortcut }
-            })
-            .filter((s): s is { pluginId: string; shortcut: string } => s !== null)
-
-          const conflicts = checkShortcutConflict(plugin.shortcut, existingShortcuts)
-
-          if (conflicts.length > 0) {
-            const conflictList = conflicts.map((c) => `"${c.pluginId}" (${c.shortcut})`).join(', ')
-            errorHandler.warn(
-              `Shortcut conflict detected for plugin "${plugin.id}": shortcut "${plugin.shortcut}" conflicts with ${conflictList}`
-            )
-          }
-        }
+        this.checkPluginShortcutConflicts(plugin)
 
         if (plugin.metadata.dependencies && plugin.metadata.dependencies.length > 0) {
           for (const depId of plugin.metadata.dependencies) {
@@ -676,67 +716,11 @@ class PluginRegistry {
         const rollbackStack: (() => void)[] = []
 
         try {
-          this.plugins.set(plugin.id, plugin)
-          rollbackStack.push(() => {
-            this.plugins.delete(plugin.id)
-          })
-
           this.lazyPlugins.delete(plugin.id)
 
-          const metadata: PluginMetadataInfo = {
-            id: plugin.id,
-            name: plugin.name,
-            type: plugin.type,
-            metadata: plugin.metadata,
-            category: plugin.category,
-            ui: plugin.ui,
-            shortcut: plugin.shortcut,
-          }
-          this.metadataCache.set(plugin.id, metadata)
-          rollbackStack.push(() => {
-            this.metadataCache.delete(plugin.id)
-          })
-
-          this.registerHooks(plugin)
-          rollbackStack.push(() => {
-            this.unregisterHooks(plugin.id)
-          })
-
-          this.updatePluginState(plugin.id, 'registered')
-          rollbackStack.push(() => {
-            this.pluginStates.delete(plugin.id)
-          })
-
-          if (plugin.onInstall) {
-            try {
-              await plugin.onInstall()
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : String(error)
-              this.updatePluginState(plugin.id, 'error', errorMessage)
-              errorHandler.handlePluginError(
-                plugin.id,
-                `onInstall hook failed: ${errorMessage}`,
-                error instanceof Error ? error : undefined,
-                {
-                  pluginName: plugin.name,
-                  operation: 'onInstall',
-                },
-                ErrorSeverity.HIGH
-              )
-
-              for (const rollback of rollbackStack.reverse()) {
-                rollback()
-              }
-
-              throw error
-            }
-          }
+          await this.registerPluginCore(plugin, rollbackStack)
         } catch (error) {
-          if (rollbackStack.length > 0) {
-            for (const rollback of rollbackStack.reverse()) {
-              rollback()
-            }
-          }
+          this.executeRollback(rollbackStack)
           throw error
         }
 
@@ -759,8 +743,8 @@ class PluginRegistry {
       }
     })()
 
-    this.loadingPromises.set(id, loadPromise)
-    return await loadPromise
+    this.loadingPromises.set(id, pluginLoadPromise)
+    return await pluginLoadPromise
   }
 }
 

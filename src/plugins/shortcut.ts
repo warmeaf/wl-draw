@@ -99,19 +99,35 @@ export function checkShortcutConflict(
   })
 }
 
-export function matchShortcut(e: KeyboardEvent, parsed: ParsedShortcut): boolean {
-  if (parsed.key !== e.code) return false
+function checkModifierKeys(parsed: ParsedShortcut, event: KeyboardEvent): boolean {
+  const requiresCtrl = parsed.ctrl
+  const requiresMeta = parsed.meta
+  const requiresShift = parsed.shift
+  const requiresAlt = parsed.alt
 
-  if (parsed.ctrl) {
-    if (!(e.ctrlKey || e.metaKey)) return false
-  } else if (parsed.meta) {
-    if (!e.metaKey) return false
+  const hasCtrl = event.ctrlKey || event.metaKey
+  const hasMeta = event.metaKey
+  const hasShift = event.shiftKey
+  const hasAlt = event.altKey
+
+  if (requiresCtrl) {
+    if (!hasCtrl) return false
+  } else if (requiresMeta) {
+    if (!hasMeta) return false
   } else {
-    if (e.ctrlKey || e.metaKey) return false
+    if (hasCtrl || hasMeta) return false
   }
 
-  if (parsed.shift !== e.shiftKey) return false
-  if (parsed.alt !== e.altKey) return false
+  if (requiresShift !== hasShift) return false
+  if (requiresAlt !== hasAlt) return false
 
   return true
+}
+
+export function matchShortcut(e: KeyboardEvent, parsed: ParsedShortcut): boolean {
+  if (parsed.key !== e.code) {
+    return false
+  }
+
+  return checkModifierKeys(parsed, e)
 }

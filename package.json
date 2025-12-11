@@ -7,7 +7,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "typecheck": "vue-tsc --noEmit",
     "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
     "lint": "biome lint --write .",
     "lint:check": "biome lint .",
     "format": "biome format --write .",
@@ -49,8 +53,13 @@
     "@tailwindcss/vite": "^4.1.17",
     "@types/node": "^24.10.1",
     "@vitejs/plugin-vue": "^6.0.2",
+    "@vitest/coverage-v8": "^4.0.15",
+    "@vitest/ui": "^4.0.15",
+    "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.8.1",
+    "happy-dom": "^20.0.11",
     "husky": "^9.1.7",
+    "jsdom": "^27.3.0",
     "lint-staged": "^16.2.7",
     "only-allow": "^1.2.1",
     "tailwindcss": "^4.1.17",
@@ -59,6 +68,7 @@
     "unplugin-icons": "^22.5.0",
     "unplugin-vue-components": "^30.0.0",
     "vite": "npm:rolldown-vite@7.2.7",
+    "vitest": "^4.0.15",
     "vue-tsc": "^3.1.5"
   }
 }

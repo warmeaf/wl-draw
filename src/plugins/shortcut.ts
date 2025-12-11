@@ -98,3 +98,20 @@ export function checkShortcutConflict(
     return normalized === normalizedNew
   })
 }
+
+export function matchShortcut(e: KeyboardEvent, parsed: ParsedShortcut): boolean {
+  if (parsed.key !== e.code) return false
+
+  if (parsed.ctrl) {
+    if (!(e.ctrlKey || e.metaKey)) return false
+  } else if (parsed.meta) {
+    if (!e.metaKey) return false
+  } else {
+    if (e.ctrlKey || e.metaKey) return false
+  }
+
+  if (parsed.shift !== e.shiftKey) return false
+  if (parsed.alt !== e.altKey) return false
+
+  return true
+}

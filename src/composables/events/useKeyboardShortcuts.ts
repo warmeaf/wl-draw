@@ -11,7 +11,7 @@ import { useHistory } from '@/plugins/composables/useHistory'
 import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
-import { parseShortcut } from '@/plugins/shortcut'
+import { matchShortcut, parseShortcut } from '@/plugins/shortcut'
 import type { ToolInstance } from '@/plugins/types'
 import { useCanvasStore } from '@/stores/canvas'
 import type { ToolType } from '@/types'
@@ -79,26 +79,6 @@ export function useKeyboardShortcuts(
     if (parsed.alt) modifiers.push('Alt')
     if (parsed.meta) modifiers.push('Meta')
     return modifiers.length > 0 ? `${modifiers.join('+')}+${parsed.key}` : parsed.key
-  }
-
-  function matchShortcut(
-    e: KeyboardEvent,
-    parsed: { key: string; ctrl: boolean; shift: boolean; alt: boolean; meta: boolean }
-  ): boolean {
-    if (parsed.key !== e.code) return false
-
-    if (parsed.ctrl) {
-      if (!(e.ctrlKey || e.metaKey)) return false
-    } else if (parsed.meta) {
-      if (!e.metaKey) return false
-    } else {
-      if (e.ctrlKey || e.metaKey) return false
-    }
-
-    if (parsed.shift !== e.shiftKey) return false
-    if (parsed.alt !== e.altKey) return false
-
-    return true
   }
 
   const shortcutMap = ref(buildShortcutMap())

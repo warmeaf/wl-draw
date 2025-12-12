@@ -17,23 +17,26 @@ export function useDeleteTool(
 
   const { addSnapshot } = useHistory()
 
-  const handleKeyDown = (e: { code?: string }) => {
-    if (e.code === 'Delete' || e.code === 'Backspace') {
-      const list = app.editor.list || []
-      let hasDeleted = false
+  const handleKeyDown = (keyEvent: { code?: string }) => {
+    const isDeleteKey = keyEvent.code === 'Delete' || keyEvent.code === 'Backspace'
+    if (!isDeleteKey) return
 
-      list.forEach((item) => {
-        const obj = store.objects.find((o) => o.element.innerId === item.innerId)
-        if (obj) {
-          store.removeObject(obj.id)
-          hasDeleted = true
-        }
-      })
+    const selectedElements = app.editor.list || []
+    let hasDeletedAnyElement = false
 
-      if (hasDeleted) {
-        addSnapshot()
-        elementPopover.hidePopover()
+    selectedElements.forEach((selectedElement) => {
+      const objectToDelete = store.objects.find(
+        (canvasObject) => canvasObject.element.innerId === selectedElement.innerId
+      )
+      if (objectToDelete) {
+        store.removeObject(objectToDelete.id)
+        hasDeletedAnyElement = true
       }
+    })
+
+    if (hasDeletedAnyElement) {
+      addSnapshot()
+      elementPopover.hidePopover()
     }
   }
 

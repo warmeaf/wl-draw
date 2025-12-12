@@ -19,6 +19,10 @@ import { errorHandler } from '@/utils/errorHandler'
 import type { DrawingState } from '../tool/useToolInstance'
 import { getElementProperties } from './elementPropsUtils'
 
+const SINGLE_SELECTION_COUNT = 1
+const EMPTY_EXPORTED_AT = ''
+const DEFAULT_POSITION = 0
+
 export function useCanvasEvents(
   app: App,
   drawingState: DrawingState,
@@ -27,7 +31,7 @@ export function useCanvasEvents(
   canvasContainer?: HTMLElement | null
 ) {
   const store = useCanvasStore()
-  const tree = app.tree
+  const canvasTree = app.tree
   const { addSnapshot } = useHistory()
   const historyStore = useHistoryStore()
   const wasPopoverVisibleBeforeDrag = ref(false)
@@ -43,83 +47,109 @@ export function useCanvasEvents(
     TIMING.DRAWING_UPDATE_THROTTLE
   )
 
+  function calculatePopoverPosition(
+    elementBounds: { x: number; y: number; width: number },
+    containerRect: DOMRect
+  ): { clientX: number; clientY: number } {
+    const popoverX = elementBounds.x + elementBounds.width + UI_CONSTANTS.ELEMENT_POPOVER_OFFSET_X
+    const popoverY = elementBounds.y
+    const clientX = containerRect.left + popoverX
+    const clientY = containerRect.top + popoverY
+    return { clientX, clientY }
+  }
+
   function showPopoverForSelectedElement() {
     if (!elementPopover || !app.editor || !canvasContainer) return
 
     const selectedElements = app.editor.list
-    if (selectedElements.length === 1 && selectedElements[0]) {
-      const firstElement = selectedElements[0]
-      const obj = store.objects.find((o) => o.element.innerId === firstElement.innerId)
-      if (obj?.element && obj.type !== ELEMENT_TYPES.IMAGE) {
-        const bounds = obj.element.getBounds()
-        if (bounds) {
-          const centerX = bounds.x + bounds.width + UI_CONSTANTS.ELEMENT_POPOVER_OFFSET_X
-          const topY = bounds.y
-          const containerRect = canvasContainer.getBoundingClientRect()
-          const clientX = containerRect.left + centerX
-          const clientY = containerRect.top + topY
+    const hasSingleSelection = selectedElements.length === SINGLE_SELECTION_COUNT
+    if (!hasSingleSelection || !selectedElements[0]) return
 
-          const elementProps = getElementProperties(obj)
-          elementPopover.showPopoverAt(clientX, clientY, obj.type, obj.element, elementProps)
-        }
-      }
-    }
+    const selectedElement = selectedElements[0]
+    const canvasObject = store.objects.find(
+      (object) => object.element.innerId === selectedElement.innerId
+    )
+
+    if (!canvasObject?.element) return
+    if (canvasObject.type === ELEMENT_TYPES.IMAGE) return
+
+    const elementBounds = canvasObject.element.getBounds()
+    if (!elementBounds) return
+
+    const containerRect = canvasContainer.getBoundingClientRect()
+    const { clientX, clientY } = calculatePopoverPosition(elementBounds, containerRect)
+    const elementProps = getElementProperties(canvasObject)
+
+    elementPopover.showPopoverAt(
+      clientX,
+      clientY,
+      canvasObject.type,
+      canvasObject.element,
+      elementProps
+    )
   }
 
-  async function handleDrag(e: DragEvent) {
-    if (!tree || !drawingState.isDrawing.value) return
+  function emitDrawingUpdateBounds(
+    currentTool: string,
+    pageBounds: { x: number; y: number; width: number; height: number }
+  ) {
+    throttledEmitDrawingUpdate({
+      toolType: currentTool,
+      bounds: {
+        x: pageBounds.x,
+        y: pageBounds.y,
+        width: pageBounds.width,
+        height: pageBounds.height,
+      },
+    })
+  }
 
-    const tool = store.currentTool
+  async function handleDrag(dragEvent: DragEvent) {
+    if (!canvasTree || !drawingState.isDrawing.value) return
+
+    const currentTool = store.currentTool
     try {
-      const plugin = await pluginRegistry.getByType(tool)
+      const plugin = await pluginRegistry.getByType(currentTool)
       if (!plugin || !plugin.capabilities?.handlesDrag) return
 
-      const bounds = e.getPageBounds()
-      if (bounds) {
-        throttledEmitDrawingUpdate({
-          toolType: tool,
-          bounds: {
-            x: bounds.x,
-            y: bounds.y,
-            width: bounds.width,
-            height: bounds.height,
-          },
-        })
+      const pageBounds = dragEvent.getPageBounds()
+      if (pageBounds) {
+        emitDrawingUpdateBounds(currentTool, pageBounds)
       }
 
-      const toolInstance = await getToolInstance(tool)
+      const toolInstance = await getToolInstance(currentTool)
       if (toolInstance?.updateDrawing) {
-        toolInstance.updateDrawing(e)
+        toolInstance.updateDrawing(dragEvent)
       }
     } catch (error) {
       errorHandler.handleRuntimeError(
         `Failed to handle drag event`,
         error instanceof Error ? error : undefined,
-        { toolType: tool, operation: 'handleDrag' }
+        { toolType: currentTool, operation: 'handleDrag' }
       )
     }
   }
 
-  async function finishDrawing() {
-    const tool = store.currentTool
+  async function finishDrawing(): Promise<boolean> {
+    const currentTool = store.currentTool
     try {
-      const plugin = await pluginRegistry.getByType(tool)
+      const plugin = await pluginRegistry.getByType(currentTool)
       if (!plugin || !plugin.capabilities?.handlesDragEnd) return false
 
       const canFinish = await pluginRegistry.executeHook('beforeDrawingFinish', {
-        toolType: tool,
+        toolType: currentTool,
       })
       if (!canFinish) {
         return false
       }
 
-      const toolInstance = await getToolInstance(tool)
+      const toolInstance = await getToolInstance(currentTool)
       if (toolInstance?.finishDrawing) {
         toolInstance.finishDrawing()
       }
 
       await pluginRegistry.executeHook('afterDrawingFinish', {
-        toolType: tool,
+        toolType: currentTool,
       })
 
       drawingState.resetState()
@@ -128,151 +158,182 @@ export function useCanvasEvents(
       errorHandler.handleRuntimeError(
         `Failed to finish drawing`,
         error instanceof Error ? error : undefined,
-        { toolType: tool, operation: 'finishDrawing' }
+        { toolType: currentTool, operation: 'finishDrawing' }
       )
       return false
     }
   }
 
-  function compareSnapshots(
-    snapshot1: HistorySnapshot,
-    snapshot2: HistorySnapshot | null
-  ): boolean {
-    const normalized1 = {
-      ...snapshot1,
+  function normalizeSnapshotForComparison(snapshot: HistorySnapshot): HistorySnapshot {
+    return {
+      ...snapshot,
       metadata: {
-        ...snapshot1.metadata,
-        exportedAt: '',
+        ...snapshot.metadata,
+        exportedAt: EMPTY_EXPORTED_AT,
       },
     }
-    const normalized2 = snapshot2
-      ? {
-          ...snapshot2,
-          metadata: {
-            ...snapshot2.metadata,
-            exportedAt: '',
-          },
-        }
-      : null
-    return JSON.stringify(normalized1) === JSON.stringify(normalized2)
   }
 
-  function handleObjectDragEnd() {
+  function compareSnapshots(
+    currentSnapshot: HistorySnapshot,
+    previousSnapshot: HistorySnapshot | null
+  ): boolean {
+    const normalizedCurrent = normalizeSnapshotForComparison(currentSnapshot)
+    const normalizedPrevious = previousSnapshot
+      ? normalizeSnapshotForComparison(previousSnapshot)
+      : null
+    return JSON.stringify(normalizedCurrent) === JSON.stringify(normalizedPrevious)
+  }
+
+  function restorePopoverAfterObjectDrag() {
     if (wasPopoverVisibleBeforeDrag.value) {
       showPopoverForSelectedElement()
     }
-
     wasPopoverVisibleBeforeDrag.value = false
+  }
+
+  function handleObjectDragEnd() {
+    restorePopoverAfterObjectDrag()
     drawingState.dragStartPositions.value.clear()
   }
 
-  async function handleDragEnd() {
-    if (!tree) return
+  function shouldCreateSnapshot(currentSnapshot: HistorySnapshot): boolean {
+    const previousSnapshot = historyStore.snapshots[historyStore.currentIndex] ?? null
+    return !compareSnapshots(currentSnapshot, previousSnapshot)
+  }
 
-    if (drawingState.isDrawing.value) {
+  async function handleDragEnd() {
+    if (!canvasTree) return
+
+    const isCurrentlyDrawing = drawingState.isDrawing.value
+    const hasObjectDragPositions = drawingState.dragStartPositions.value.size > 0
+
+    if (isCurrentlyDrawing) {
       await finishDrawing()
-    } else if (drawingState.dragStartPositions.value.size > 0) {
+    } else if (hasObjectDragPositions) {
       handleObjectDragEnd()
     }
 
     const currentSnapshot = store.toSnapshot()
-    const lastSnapshot = historyStore.snapshots[historyStore.currentIndex] ?? null
-
-    // console.log(currentSnapshot, JSON.stringify(lastSnapshot))
-
-    if (!compareSnapshots(currentSnapshot, lastSnapshot)) {
+    if (shouldCreateSnapshot(currentSnapshot)) {
       addSnapshot()
     }
   }
 
-  async function handleTap(e: PointerEvent) {
-    if (!tree) return
+  function handleSelectToolTap() {
+    if (!elementPopover || !app.editor) return
 
-    const tool = store.currentTool
+    const selectedElements = app.editor.list
+    const hasSingleSelection = selectedElements.length === SINGLE_SELECTION_COUNT
 
-    if (tool === TOOL_TYPES.SELECT && elementPopover && app.editor) {
-      const selectedElements = app.editor.list
-      if (selectedElements.length === 1) {
-        showPopoverForSelectedElement()
-      } else {
-        elementPopover.hidePopover()
-      }
+    if (hasSingleSelection) {
+      showPopoverForSelectedElement()
+    } else {
+      elementPopover.hidePopover()
+    }
+  }
+
+  function handleTextToolTap(objectCountBefore: number) {
+    const objectCountAfter = store.objects.length
+    const hasNewTextObject = objectCountAfter > objectCountBefore
+    if (hasNewTextObject) {
+      addSnapshot()
+    }
+  }
+
+  async function handleTap(pointerEvent: PointerEvent) {
+    if (!canvasTree) return
+
+    const currentTool = store.currentTool
+
+    if (currentTool === TOOL_TYPES.SELECT) {
+      handleSelectToolTap()
     }
 
     try {
-      const plugin = await pluginRegistry.getByType(tool)
+      const plugin = await pluginRegistry.getByType(currentTool)
       if (!plugin || !plugin.capabilities?.handlesTap) return
 
       const objectCountBefore = store.objects.length
 
-      const toolInstance = await getToolInstance(tool)
+      const toolInstance = await getToolInstance(currentTool)
       if (toolInstance?.handleTap) {
-        toolInstance.handleTap(e)
+        toolInstance.handleTap(pointerEvent)
       }
 
-      if (tool === TOOL_TYPES.TEXT) {
-        const objectCountAfter = store.objects.length
-        if (objectCountAfter > objectCountBefore) {
-          addSnapshot()
-        }
+      if (currentTool === TOOL_TYPES.TEXT) {
+        handleTextToolTap(objectCountBefore)
       }
     } catch (error) {
       errorHandler.handleRuntimeError(
         `Failed to handle tap event`,
         error instanceof Error ? error : undefined,
-        { toolType: tool, operation: 'handleTap' }
+        { toolType: currentTool, operation: 'handleTap' }
       )
     }
   }
 
-  /**
-   * Saves the initial positions of selected objects before dragging starts.
-   * This allows us to detect if objects actually moved (vs just clicked) and restore popover state after drag.
-   */
-  function saveDragStartPositions() {
-    if (app.mode !== 'normal' || drawingState.isDrawing.value) return
+  function getSelectedObjectIds(): string[] {
+    return app.editor.list
+      .map((editorItem) => {
+        const canvasObject = store.objects.find(
+          (object) => object.element.innerId === editorItem.innerId
+        )
+        return canvasObject?.id
+      })
+      .filter((id): id is string => id !== undefined)
+  }
 
-    const selectedObjectIds = app.editor.list.map((item) => {
-      return store.objects.find((obj) => obj.element.innerId === item.innerId)?.id
-    })
-
-    if (selectedObjectIds.length === 0) return
-
+  function saveObjectDragStartPositions(selectedObjectIds: string[]) {
     drawingState.dragStartPositions.value.clear()
     for (const objectId of selectedObjectIds) {
-      if (!objectId) continue
-      const obj = store.objects.find((o) => o.id === objectId)
-      if (obj?.element) {
+      const canvasObject = store.objects.find((object) => object.id === objectId)
+      if (canvasObject?.element) {
         drawingState.dragStartPositions.value.set(objectId, {
-          x: obj.element.x ?? 0,
-          y: obj.element.y ?? 0,
+          x: canvasObject.element.x ?? DEFAULT_POSITION,
+          y: canvasObject.element.y ?? DEFAULT_POSITION,
         })
       }
     }
+  }
 
-    // Remember popover state to restore it after drag if objects didn't move significantly
-    if (elementPopover?.showPopover.value) {
-      wasPopoverVisibleBeforeDrag.value = true
+  function savePopoverStateBeforeDrag() {
+    if (!elementPopover) return
+
+    const isPopoverVisible = elementPopover.showPopover.value
+    wasPopoverVisibleBeforeDrag.value = isPopoverVisible
+
+    if (isPopoverVisible) {
       elementPopover.hidePopover()
-    } else {
-      wasPopoverVisibleBeforeDrag.value = false
     }
   }
 
-  function initializeDrawingState(point: { x: number; y: number }) {
-    drawingState.startPoint.value = point
-    drawingState.penPathPoints.value = [point]
+  function saveDragStartPositions() {
+    const isNormalMode = app.mode === 'normal'
+    const isCurrentlyDrawing = drawingState.isDrawing.value
+    if (!isNormalMode || isCurrentlyDrawing) return
+
+    const selectedObjectIds = getSelectedObjectIds()
+    if (selectedObjectIds.length === 0) return
+
+    saveObjectDragStartPositions(selectedObjectIds)
+    savePopoverStateBeforeDrag()
+  }
+
+  function initializeDrawingState(startPoint: { x: number; y: number }) {
+    drawingState.startPoint.value = startPoint
+    drawingState.penPathPoints.value = [startPoint]
     drawingState.isDrawing.value = true
   }
 
   async function notifyDrawingStart(
-    tool: string,
-    point: { x: number; y: number },
+    currentTool: string,
+    startPoint: { x: number; y: number },
     toolInstance: ToolInstance | null
   ) {
     const drawingStartContext = {
-      toolType: tool,
-      point,
+      toolType: currentTool,
+      point: startPoint,
     }
 
     pluginEventBus.emit('drawing:start', drawingStartContext)
@@ -284,24 +345,24 @@ export function useCanvasEvents(
     }
   }
 
-  async function handleDragStart(e: DragEvent) {
-    if (!tree) return
+  async function handleDragStart(dragEvent: DragEvent) {
+    if (!canvasTree) return
 
-    const tool = store.currentTool
+    const currentTool = store.currentTool
     try {
-      const plugin = await pluginRegistry.getByType(tool)
+      const plugin = await pluginRegistry.getByType(currentTool)
 
       saveDragStartPositions()
 
       if (!plugin || !plugin.capabilities?.handlesDragStart) return
 
-      const bounds = e.getPageBounds()
-      if (!bounds) return
+      const pageBounds = dragEvent.getPageBounds()
+      if (!pageBounds) return
 
-      const point = { x: bounds.x, y: bounds.y }
+      const startPoint = { x: pageBounds.x, y: pageBounds.y }
       const drawingStartContext = {
-        toolType: tool,
-        point,
+        toolType: currentTool,
+        point: startPoint,
       }
 
       const canStart = await pluginRegistry.executeHook('beforeDrawingStart', drawingStartContext)
@@ -309,20 +370,20 @@ export function useCanvasEvents(
         return
       }
 
-      initializeDrawingState(point)
+      initializeDrawingState(startPoint)
 
-      const toolInstance = await getToolInstance(tool)
-      await notifyDrawingStart(tool, point, toolInstance)
+      const toolInstance = await getToolInstance(currentTool)
+      await notifyDrawingStart(currentTool, startPoint, toolInstance)
     } catch (error) {
       errorHandler.handleRuntimeError(
         `Failed to handle drag start event`,
         error instanceof Error ? error : undefined,
-        { toolType: tool, operation: 'handleDragStart' }
+        { toolType: currentTool, operation: 'handleDragStart' }
       )
     }
   }
 
-  function handleMove(_e: MoveEvent) {
+  function handleMove(_moveEvent: MoveEvent) {
     if (elementPopover?.showPopover.value) {
       elementPopover.hidePopover()
     }
@@ -330,19 +391,25 @@ export function useCanvasEvents(
 
   function handleOpenInnerEditor() {
     const editTarget = app.editor.innerEditor?.editTarget
-    if (editTarget instanceof Text) {
+    const isTextElement = editTarget instanceof Text
+    if (isTextElement) {
       originalTextValue.value = String(editTarget.text ?? '')
     }
   }
 
   function handleCloseInnerEditor() {
     const editTarget = app.editor.innerEditor?.editTarget
-    if (editTarget instanceof Text && originalTextValue.value !== null) {
+    const isTextElement = editTarget instanceof Text
+    const hasOriginalValue = originalTextValue.value !== null
+
+    if (isTextElement && hasOriginalValue) {
       const currentText = String(editTarget.text ?? '')
-      if (currentText !== originalTextValue.value) {
+      const textHasChanged = currentText !== originalTextValue.value
+      if (textHasChanged) {
         addSnapshot()
       }
     }
+
     originalTextValue.value = null
   }
 

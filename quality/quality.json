@@ -27,7 +27,7 @@
           },
           "IconRenderer.vue": {
             "type": "file",
-            "readability": 85
+            "readability": 92
           },
           "MenuDropdown.vue": {
             "type": "file",
@@ -100,11 +100,11 @@
               },
               "useCanvasEvents.ts": {
                 "type": "file",
-                "readability": 86
+                "readability": 91
               },
               "useKeyboardShortcuts.ts": {
                 "type": "file",
-                "readability": 88
+                "readability": 92
               }
             }
           },
@@ -113,7 +113,7 @@
             "children": {
               "useDeleteTool.ts": {
                 "type": "file",
-                "readability": 85
+                "readability": 92
               }
             }
           },
@@ -130,7 +130,11 @@
               },
               "useElementPopover.ts": {
                 "type": "file",
-                "readability": 85
+                "readability": 92
+              },
+              "elementPropertyUpdaters.ts": {
+                "type": "file",
+                "readability": 92
               }
             }
           },
@@ -304,11 +308,11 @@
             "children": {
               "useArrowTool.ts": {
                 "type": "file",
-                "readability": 85
+                "readability": 92
               },
               "useCircleTool.ts": {
                 "type": "file",
-                "readability": 82
+                "readability": 92
               },
               "useExportTool.ts": {
                 "type": "file",
@@ -324,7 +328,7 @@
               },
               "useLineTool.ts": {
                 "type": "file",
-                "readability": 85
+                "readability": 92
               },
               "usePenTool.ts": {
                 "type": "file",
@@ -332,7 +336,7 @@
               },
               "useRectTool.ts": {
                 "type": "file",
-                "readability": 82
+                "readability": 92
               },
               "useTextTool.ts": {
                 "type": "file",

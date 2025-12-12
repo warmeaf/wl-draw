@@ -9,6 +9,8 @@ import { TOOL_TYPES } from '@/constants'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { LeaferElement, Point, Tree } from '@/types'
 
+const ANGLE_SNAP_INTERVAL = Math.PI / 4
+
 export function useLineTool(
   tree: Tree,
   store: ReturnType<typeof useCanvasStore>,
@@ -19,8 +21,12 @@ export function useLineTool(
   function startDrawing() {
     if (!tree || !startPoint.value) return
 
+    const initialX = startPoint.value.x
+    const initialY = startPoint.value.y
+    const initialPath = `M ${initialX} ${initialY} L ${initialX} ${initialY}`
+
     const linePath = new Path({
-      path: `M ${startPoint.value.x} ${startPoint.value.y} L ${startPoint.value.x} ${startPoint.value.y}`,
+      path: initialPath,
       stroke: store.strokeColor,
       strokeWidth: store.strokeWidth,
       dashPattern: undefined,
@@ -31,50 +37,70 @@ export function useLineTool(
     tree.add(linePath)
   }
 
-  function updateDrawing(e: DragEvent) {
-    if (!currentElement.value || !startPoint.value) return
+  function calculateSnappedEndPoint(
+    startX: number,
+    startY: number,
+    currentX: number,
+    currentY: number
+  ): { x: number; y: number } {
+    const deltaX = currentX - startX
+    const deltaY = currentY - startY
+    const absoluteDeltaX = Math.abs(deltaX)
+    const absoluteDeltaY = Math.abs(deltaY)
 
-    const currentPoint = e.getPagePoint()
-    if (!currentPoint) return
+    const isHorizontalDominant = absoluteDeltaX > absoluteDeltaY
+    const isVerticalDominant = absoluteDeltaY > absoluteDeltaX
 
-    let finalEndX = currentPoint.x
-    let finalEndY = currentPoint.y
-
-    if (isShiftPressed.value) {
-      const dx = currentPoint.x - startPoint.value.x
-      const dy = currentPoint.y - startPoint.value.y
-      const absDx = Math.abs(dx)
-      const absDy = Math.abs(dy)
-
-      if (absDx > absDy) {
-        finalEndY = startPoint.value.y
-      } else if (absDy > absDx) {
-        finalEndX = startPoint.value.x
-      } else {
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        const angle = Math.atan2(dy, dx)
-        const snapAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4)
-        finalEndX = startPoint.value.x + distance * Math.cos(snapAngle)
-        finalEndY = startPoint.value.y + distance * Math.sin(snapAngle)
-      }
+    if (isHorizontalDominant) {
+      return { x: currentX, y: startY }
+    }
+    if (isVerticalDominant) {
+      return { x: startX, y: currentY }
     }
 
-    currentElement.value.path = `M ${startPoint.value.x} ${startPoint.value.y} L ${finalEndX} ${finalEndY}`
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+    const currentAngle = Math.atan2(deltaY, deltaX)
+    const snappedAngle = Math.round(currentAngle / ANGLE_SNAP_INTERVAL) * ANGLE_SNAP_INTERVAL
+    return {
+      x: startX + distance * Math.cos(snappedAngle),
+      y: startY + distance * Math.sin(snappedAngle),
+    }
+  }
+
+  function updateDrawing(dragEvent: DragEvent) {
+    if (!currentElement.value || !startPoint.value) return
+
+    const currentPoint = dragEvent.getPagePoint()
+    if (!currentPoint) return
+
+    const startX = startPoint.value.x
+    const startY = startPoint.value.y
+    let endX = currentPoint.x
+    let endY = currentPoint.y
+
+    if (isShiftPressed.value) {
+      const snappedPoint = calculateSnappedEndPoint(startX, startY, currentPoint.x, currentPoint.y)
+      endX = snappedPoint.x
+      endY = snappedPoint.y
+    }
+
+    const updatedPath = `M ${startX} ${startY} L ${endX} ${endY}`
+    currentElement.value.path = updatedPath
   }
 
   function finishDrawing() {
     if (!currentElement.value || !startPoint.value) return
 
     const line = currentElement.value
-    const id = `line-${Date.now()}`
+    const lineId = `line-${Date.now()}`
     store.addObject({
-      id,
+      id: lineId,
       type: 'line',
       element: line,
     })
 
     store.setTool(TOOL_TYPES.SELECT)
-    store.selectObject(id)
+    store.selectObject(lineId)
   }
 
   return {

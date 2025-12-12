@@ -33,7 +33,7 @@ const props = defineProps<{
   absoluteStrokeWidth?: boolean
 }>()
 
-const iconMap: Record<string, Component> = {
+const iconNameToComponentMap: Record<string, Component> = {
   'i-lucide-square': Square,
   'i-lucide-circle': Circle,
   'i-lucide-minus': Minus,
@@ -57,16 +57,16 @@ const iconMap: Record<string, Component> = {
   FileCode,
 }
 
-const iconComponent = computed(() => {
-  const name = props.name.trim()
-  return iconMap[name] || null
+const resolvedIconComponent = computed(() => {
+  const trimmedIconName = props.name.trim()
+  return iconNameToComponentMap[trimmedIconName] ?? null
 })
 </script>
 
 <template>
   <component
-    :is="iconComponent"
-    v-if="iconComponent"
+    :is="resolvedIconComponent"
+    v-if="resolvedIconComponent"
     :class="class"
     :size="size"
     :color="color"

@@ -3,7 +3,6 @@
  */
 
 import { useDebounceFn } from '@vueuse/core'
-import { Line, Text } from 'leafer-ui'
 import { ref } from 'vue'
 import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { TIMING } from '@/constants'
@@ -14,6 +13,7 @@ import {
   type ElementProps,
   elementPropertySetterMap,
 } from './elementPropertySetters'
+import { createElementPropertyUpdaters } from './elementPropertyUpdaters'
 
 type ElementType = 'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image' | null
 
@@ -32,10 +32,10 @@ export function useElementPopover() {
     addSnapshot()
   }, TIMING.HISTORY_SNAPSHOT_THROTTLE)
 
-  const showPopover = ref(false)
+  const isPopoverVisible = ref(false)
 
-  const popoverX = ref(0)
-  const popoverY = ref(0)
+  const popoverPositionX = ref(0)
+  const popoverPositionY = ref(0)
 
   const selectedElementType = ref<ElementType>(null)
   const selectedElement = ref<LeaferElement>(null)
@@ -49,15 +49,15 @@ export function useElementPopover() {
   const selectedElementTextColor = ref<string>(DEFAULT_TEXT_COLOR)
   const selectedElementFontSize = ref<number>(DEFAULT_FONT_SIZE)
 
-  function showPopoverAt(
+  function displayPopoverAt(
     x: number,
     y: number,
     elementType?: ElementType,
     element?: LeaferElement | null,
     elementProps?: ElementProps
   ) {
-    popoverX.value = x
-    popoverY.value = y
+    popoverPositionX.value = x
+    popoverPositionY.value = y
 
     selectedElementType.value = elementType ?? null
     selectedElement.value = element ?? null
@@ -79,96 +79,32 @@ export function useElementPopover() {
       }
     }
 
-    showPopover.value = true
+    isPopoverVisible.value = true
   }
 
-  function hidePopover() {
-    showPopover.value = false
+  function closePopover() {
+    isPopoverVisible.value = false
     selectedElement.value = null
   }
 
-  function updateElementFillColor(color: string) {
-    if (selectedElement.value) {
-      selectedElement.value.fill = color
-      selectedElementFillColor.value = color
-      debouncedAddSnapshot()
-    }
-  }
-
-  function updateElementStrokeColor(color: string) {
-    if (selectedElement.value) {
-      selectedElement.value.stroke = color
-      selectedElementStrokeColor.value = color
-      debouncedAddSnapshot()
-    }
-  }
-
-  function updateElementStrokeWidth(width: number, dashPattern?: number[]) {
-    if (selectedElement.value) {
-      selectedElement.value.strokeWidth = width
-      selectedElementStrokeWidth.value = width
-
-      if (dashPattern !== undefined) {
-        selectedElement.value.dashPattern = dashPattern
-        selectedElementDashPattern.value = dashPattern
-      }
-
-      debouncedAddSnapshot()
-    }
-  }
-
-  function updateElementDashPattern(pattern: number[] | undefined) {
-    if (selectedElement.value) {
-      selectedElement.value.dashPattern = pattern
-      selectedElementDashPattern.value = pattern
-      debouncedAddSnapshot()
-    }
-  }
-
-  function updateElementStartArrow(arrowType: ArrowType) {
-    if (
-      selectedElement.value &&
-      selectedElement.value instanceof Line &&
-      selectedElementType.value === 'arrow'
-    ) {
-      selectedElement.value.startArrow = arrowType
-      selectedElementStartArrow.value = arrowType
-      debouncedAddSnapshot()
-    }
-  }
-
-  function updateElementEndArrow(arrowType: ArrowType) {
-    if (
-      selectedElement.value &&
-      selectedElement.value instanceof Line &&
-      selectedElementType.value === 'arrow'
-    ) {
-      selectedElement.value.endArrow = arrowType
-      selectedElementEndArrow.value = arrowType
-      debouncedAddSnapshot()
-    }
-  }
-
-  function updateElementTextColor(color: string) {
-    if (selectedElement.value && selectedElement.value instanceof Text) {
-      selectedElement.value.fill = color
-      selectedElementTextColor.value = color
-      debouncedAddSnapshot()
-    }
-  }
-
-  function updateElementFontSize(size: number) {
-    if (selectedElement.value && selectedElement.value instanceof Text) {
-      selectedElement.value.fontSize = size
-      selectedElementFontSize.value = size
-      debouncedAddSnapshot()
-    }
-  }
+  const propertyUpdaters = createElementPropertyUpdaters({
+    selectedElement,
+    selectedElementType,
+    selectedElementFillColor,
+    selectedElementStrokeColor,
+    selectedElementStrokeWidth,
+    selectedElementDashPattern,
+    selectedElementStartArrow,
+    selectedElementEndArrow,
+    selectedElementTextColor,
+    selectedElementFontSize,
+    debouncedAddSnapshot,
+  })
 
   return {
-    showPopover,
-    popoverX,
-    popoverY,
+    showPopover: isPopoverVisible,
+    popoverX: popoverPositionX,
+    popoverY: popoverPositionY,
     selectedElementType,
     selectedElement,
 
@@ -181,16 +117,16 @@ export function useElementPopover() {
     selectedElementTextColor,
     selectedElementFontSize,
 
-    showPopoverAt,
-    hidePopover,
+    showPopoverAt: displayPopoverAt,
+    hidePopover: closePopover,
 
-    updateElementFillColor,
-    updateElementStrokeColor,
-    updateElementStrokeWidth,
-    updateElementDashPattern,
-    updateElementStartArrow,
-    updateElementEndArrow,
-    updateElementTextColor,
-    updateElementFontSize,
+    updateElementFillColor: propertyUpdaters.updateElementFillColor,
+    updateElementStrokeColor: propertyUpdaters.updateElementStrokeColor,
+    updateElementStrokeWidth: propertyUpdaters.updateElementStrokeWidth,
+    updateElementDashPattern: propertyUpdaters.updateElementDashPattern,
+    updateElementStartArrow: propertyUpdaters.updateElementStartArrow,
+    updateElementEndArrow: propertyUpdaters.updateElementEndArrow,
+    updateElementTextColor: propertyUpdaters.updateElementTextColor,
+    updateElementFontSize: propertyUpdaters.updateElementFontSize,
   }
 }

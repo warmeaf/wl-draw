@@ -9,6 +9,8 @@ import { TOOL_TYPES } from '@/constants'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { LeaferElement, Point, Tree } from '@/types'
 
+const ANGLE_SNAP_INTERVAL = Math.PI / 4
+
 export function useArrowTool(
   tree: Tree,
   store: ReturnType<typeof useCanvasStore>,
@@ -19,8 +21,11 @@ export function useArrowTool(
   function startDrawing() {
     if (!tree || !startPoint.value) return
 
+    const initialX = startPoint.value.x
+    const initialY = startPoint.value.y
+
     const arrowLine = new Line({
-      points: [startPoint.value.x, startPoint.value.y, startPoint.value.x, startPoint.value.y],
+      points: [initialX, initialY, initialX, initialY],
       stroke: store.strokeColor,
       strokeWidth: store.strokeWidth,
       dashPattern: undefined,
@@ -33,38 +38,57 @@ export function useArrowTool(
     tree.add(arrowLine)
   }
 
-  function updateDrawing(e: DragEvent) {
+  function calculateSnappedEndPoint(
+    startX: number,
+    startY: number,
+    currentX: number,
+    currentY: number
+  ): { x: number; y: number } {
+    const deltaX = currentX - startX
+    const deltaY = currentY - startY
+    const absoluteDeltaX = Math.abs(deltaX)
+    const absoluteDeltaY = Math.abs(deltaY)
+
+    const isHorizontalDominant = absoluteDeltaX > absoluteDeltaY
+    const isVerticalDominant = absoluteDeltaY > absoluteDeltaX
+
+    if (isHorizontalDominant) {
+      return { x: currentX, y: startY }
+    }
+    if (isVerticalDominant) {
+      return { x: startX, y: currentY }
+    }
+
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+    const currentAngle = Math.atan2(deltaY, deltaX)
+    const snappedAngle = Math.round(currentAngle / ANGLE_SNAP_INTERVAL) * ANGLE_SNAP_INTERVAL
+    return {
+      x: startX + distance * Math.cos(snappedAngle),
+      y: startY + distance * Math.sin(snappedAngle),
+    }
+  }
+
+  function updateDrawing(dragEvent: DragEvent) {
     if (!currentElement.value || !startPoint.value) return
 
     const arrowLine = currentElement.value
     if (!(arrowLine instanceof Line)) return
 
-    const currentPoint = e.getPagePoint()
+    const currentPoint = dragEvent.getPagePoint()
     if (!currentPoint) return
 
-    let finalEndX = currentPoint.x
-    let finalEndY = currentPoint.y
+    const startX = startPoint.value.x
+    const startY = startPoint.value.y
+    let endX = currentPoint.x
+    let endY = currentPoint.y
 
     if (isShiftPressed.value) {
-      const dx = currentPoint.x - startPoint.value.x
-      const dy = currentPoint.y - startPoint.value.y
-      const absDx = Math.abs(dx)
-      const absDy = Math.abs(dy)
-
-      if (absDx > absDy) {
-        finalEndY = startPoint.value.y
-      } else if (absDy > absDx) {
-        finalEndX = startPoint.value.x
-      } else {
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        const angle = Math.atan2(dy, dx)
-        const snapAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4)
-        finalEndX = startPoint.value.x + distance * Math.cos(snapAngle)
-        finalEndY = startPoint.value.y + distance * Math.sin(snapAngle)
-      }
+      const snappedPoint = calculateSnappedEndPoint(startX, startY, currentPoint.x, currentPoint.y)
+      endX = snappedPoint.x
+      endY = snappedPoint.y
     }
 
-    arrowLine.points = [startPoint.value.x, startPoint.value.y, finalEndX, finalEndY]
+    arrowLine.points = [startX, startY, endX, endY]
   }
 
   function finishDrawing() {
@@ -73,15 +97,15 @@ export function useArrowTool(
     const arrow = currentElement.value
     if (!(arrow instanceof Line)) return
 
-    const id = `arrow-${Date.now()}`
+    const arrowId = `arrow-${Date.now()}`
     store.addObject({
-      id,
+      id: arrowId,
       type: 'arrow',
       element: arrow,
     })
 
     store.setTool(TOOL_TYPES.SELECT)
-    store.selectObject(id)
+    store.selectObject(arrowId)
   }
 
   return {

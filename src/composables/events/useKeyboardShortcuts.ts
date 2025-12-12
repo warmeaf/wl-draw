@@ -11,12 +11,18 @@ import { useHistory } from '@/plugins/composables/useHistory'
 import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
-import { matchShortcut, parseShortcut } from '@/plugins/shortcut'
+import { matchShortcut, type ParsedShortcut, parseShortcut } from '@/plugins/shortcut'
 import type { ToolInstance } from '@/plugins/types'
 import { useCanvasStore } from '@/stores/canvas'
 import type { ToolType } from '@/types'
 import { isValidToolType } from '@/types'
 import { errorHandler } from '@/utils/errorHandler'
+
+const SPACE_KEY_CODE = 'Space'
+const EXPORT_PLUGIN_IDS = ['export', 'exportJson'] as const
+
+type ShortcutActionType = ToolType | 'zoomIn' | 'zoomOut' | 'undo' | 'redo'
+type ShortcutMapping = Map<string, { pluginId: string; toolType: ShortcutActionType }>
 
 export function useKeyboardShortcuts(
   app: App,
@@ -31,112 +37,174 @@ export function useKeyboardShortcuts(
     pluginEventBus.emit('canvas:zoom', payload)
   }, TIMING.CANVAS_ZOOM_THROTTLE)
 
-  function buildShortcutMap() {
-    const shortcutMap = new Map<
-      string,
-      { pluginId: string; toolType: ToolType | 'zoomIn' | 'zoomOut' | 'undo' | 'redo' }
-    >()
+  function buildShortcutKeyString(parsedShortcut: ParsedShortcut): string {
+    const modifierKeys: string[] = []
+    if (parsedShortcut.ctrl) modifierKeys.push('Ctrl')
+    if (parsedShortcut.shift) modifierKeys.push('Shift')
+    if (parsedShortcut.alt) modifierKeys.push('Alt')
+    if (parsedShortcut.meta) modifierKeys.push('Meta')
+    return modifierKeys.length > 0
+      ? `${modifierKeys.join('+')}+${parsedShortcut.key}`
+      : parsedShortcut.key
+  }
+
+  function isZoomAction(pluginType: string): pluginType is 'zoomIn' | 'zoomOut' {
+    return pluginType === 'zoomIn' || pluginType === 'zoomOut'
+  }
+
+  function isHistoryAction(pluginType: string): pluginType is 'undo' | 'redo' {
+    return pluginType === 'undo' || pluginType === 'redo'
+  }
+
+  function createShortcutMapping(): ShortcutMapping {
+    const shortcutMapping = new Map<string, { pluginId: string; toolType: ShortcutActionType }>()
     const pluginsMetadata = pluginRegistry.getAllPluginMetadata()
 
     for (const metadata of pluginsMetadata) {
-      if (metadata.shortcut) {
-        const parsed = parseShortcut(metadata.shortcut)
-        if (parsed) {
-          const shortcutKey = buildShortcutKey(parsed)
-          if (metadata.type === 'zoomIn' || metadata.type === 'zoomOut') {
-            shortcutMap.set(shortcutKey, {
-              pluginId: metadata.id,
-              toolType: metadata.type as 'zoomIn' | 'zoomOut',
-            })
-          } else if (metadata.type === 'undo' || metadata.type === 'redo') {
-            shortcutMap.set(shortcutKey, {
-              pluginId: metadata.id,
-              toolType: metadata.type as 'undo' | 'redo',
-            })
-          } else if (isValidToolType(metadata.type)) {
-            shortcutMap.set(shortcutKey, {
-              pluginId: metadata.id,
-              toolType: metadata.type,
-            })
-          }
-        }
+      if (!metadata.shortcut) continue
+
+      const parsedShortcut = parseShortcut(metadata.shortcut)
+      if (!parsedShortcut) continue
+
+      const shortcutKeyString = buildShortcutKeyString(parsedShortcut)
+      const shortcutEntry = {
+        pluginId: metadata.id,
+        toolType: metadata.type as ShortcutActionType,
+      }
+
+      if (isZoomAction(metadata.type)) {
+        shortcutMapping.set(shortcutKeyString, shortcutEntry)
+      } else if (isHistoryAction(metadata.type)) {
+        shortcutMapping.set(shortcutKeyString, shortcutEntry)
+      } else if (isValidToolType(metadata.type)) {
+        shortcutMapping.set(shortcutKeyString, shortcutEntry)
       }
     }
 
-    return shortcutMap
+    return shortcutMapping
   }
 
-  function buildShortcutKey(parsed: {
-    key: string
-    ctrl: boolean
-    shift: boolean
-    alt: boolean
-    meta: boolean
-  }): string {
-    const modifiers: string[] = []
-    if (parsed.ctrl) modifiers.push('Ctrl')
-    if (parsed.shift) modifiers.push('Shift')
-    if (parsed.alt) modifiers.push('Alt')
-    if (parsed.meta) modifiers.push('Meta')
-    return modifiers.length > 0 ? `${modifiers.join('+')}+${parsed.key}` : parsed.key
+  const shortcutMapping = ref(createShortcutMapping())
+
+  function handleSpaceKeyDown() {
+    store.enablePanWithSpace()
   }
 
-  const shortcutMap = ref(buildShortcutMap())
+  function handleSpaceKeyUp() {
+    store.disablePanWithSpace()
+  }
 
-  async function handleKeyDown(e: KeyboardEvent) {
-    if (e.code === 'Space') {
-      store.enablePanWithSpace()
+  function handleZoomAction(toolType: 'zoomIn' | 'zoomOut'): boolean {
+    if (toolType === 'zoomIn') {
+      zoomIn()
+      return true
+    }
+    if (toolType === 'zoomOut') {
+      zoomOut()
+      return true
+    }
+    return false
+  }
+
+  function handleHistoryAction(toolType: 'undo' | 'redo'): boolean {
+    if (toolType === 'undo') {
+      undo()
+      return true
+    }
+    if (toolType === 'redo') {
+      redo()
+      return true
+    }
+    return false
+  }
+
+  async function handleExportPluginAction(pluginId: string): Promise<boolean> {
+    try {
+      const plugin = await pluginRegistry.get(pluginId)
+      const isExportPlugin =
+        plugin && EXPORT_PLUGIN_IDS.includes(plugin.id as (typeof EXPORT_PLUGIN_IDS)[number])
+
+      if (!isExportPlugin) {
+        return false
+      }
+
+      const toolInstance = await createToolInstanceForPlugin(pluginId)
+      if (toolInstance?.onActivate) {
+        toolInstance.onActivate()
+      }
+      return true
+    } catch (error) {
+      errorHandler.handleRuntimeError(
+        `Failed to handle export plugin action`,
+        error instanceof Error ? error : undefined,
+        { pluginId, operation: 'handleExportPluginAction' }
+      )
+      return false
+    }
+  }
+
+  function handleToolSwitchAction(toolType: ShortcutActionType): boolean {
+    if (!isValidToolType(toolType)) {
+      return false
+    }
+
+    const isPanTool = toolType === TOOL_TYPES.PAN
+    const shouldPreventPanSwitch = isPanTool && store.isPanningWithSpace
+    if (shouldPreventPanSwitch) {
+      return false
+    }
+
+    store.setTool(toolType)
+    return true
+  }
+
+  async function processMatchedShortcut(
+    pluginId: string,
+    toolType: ShortcutActionType
+  ): Promise<boolean> {
+    if (isZoomAction(toolType)) {
+      return handleZoomAction(toolType)
+    }
+
+    if (isHistoryAction(toolType)) {
+      return handleHistoryAction(toolType)
+    }
+
+    const handledExport = await handleExportPluginAction(pluginId)
+    if (handledExport) {
+      return true
+    }
+
+    return handleToolSwitchAction(toolType)
+  }
+
+  async function handleKeyDown(event: KeyboardEvent) {
+    if (event.code === SPACE_KEY_CODE) {
+      handleSpaceKeyDown()
       return
     }
 
     try {
-      for (const [shortcutKey, { pluginId, toolType }] of shortcutMap.value.entries()) {
-        const parsed = parseShortcut(shortcutKey)
-        if (parsed && matchShortcut(e, parsed)) {
-          if (toolType === 'zoomIn') {
-            zoomIn()
+      for (const [shortcutKeyString, { pluginId, toolType }] of shortcutMapping.value.entries()) {
+        const parsedShortcut = parseShortcut(shortcutKeyString)
+        if (!parsedShortcut) continue
+
+        const isShortcutMatch = matchShortcut(event, parsedShortcut)
+        if (!isShortcutMatch) continue
+
+        try {
+          const wasHandled = await processMatchedShortcut(pluginId, toolType)
+          if (wasHandled) {
             return
           }
-          if (toolType === 'zoomOut') {
-            zoomOut()
-            return
-          }
-
-          if (toolType === 'undo') {
-            undo()
-            return
-          }
-
-          if (toolType === 'redo') {
-            redo()
-            return
-          }
-
-          try {
-            const plugin = await pluginRegistry.get(pluginId)
-            if (plugin && (plugin.id === 'export' || plugin.id === 'exportJson')) {
-              const toolInstance = await createToolInstanceForPlugin(pluginId)
-              if (toolInstance?.onActivate) {
-                toolInstance.onActivate()
-              }
-              return
-            }
-
-            if (
-              isValidToolType(toolType) &&
-              (toolType !== TOOL_TYPES.PAN || !store.isPanningWithSpace)
-            ) {
-              store.setTool(toolType)
-            }
-          } catch (error) {
-            errorHandler.handleRuntimeError(
-              `Failed to handle keyboard shortcut`,
-              error instanceof Error ? error : undefined,
-              { shortcut: shortcutKey, pluginId, toolType, operation: 'handleKeyDown' }
-            )
-          }
-          break
+        } catch (error) {
+          errorHandler.handleRuntimeError(
+            `Failed to handle keyboard shortcut`,
+            error instanceof Error ? error : undefined,
+            { shortcut: shortcutKeyString, pluginId, toolType, operation: 'handleKeyDown' }
+          )
         }
+        break
       }
     } catch (error) {
       errorHandler.handleRuntimeError(
@@ -147,29 +215,30 @@ export function useKeyboardShortcuts(
     }
   }
 
-  function handleKeyUp(e: KeyboardEvent) {
-    if (e.code === 'Space') {
-      store.disablePanWithSpace()
+  function handleKeyUp(event: KeyboardEvent) {
+    if (event.code === SPACE_KEY_CODE) {
+      handleSpaceKeyUp()
     }
   }
 
-  function handleZoom(_e: ZoomEvent) {
-    const zoom = app.tree.scale as number
-    store.setZoom(zoom)
-    throttledEmitCanvasZoom({ zoom })
+  function handleZoom(_event: ZoomEvent) {
+    const currentZoom = app.tree.scale as number
+    store.setZoom(currentZoom)
+    throttledEmitCanvasZoom({ zoom: currentZoom })
+
     if (elementPopover?.showPopover.value) {
       elementPopover.hidePopover()
     }
   }
 
-  const keyDownId = app.on_(KeyEvent.DOWN, handleKeyDown)
-  const keyUpId = app.on_(KeyEvent.UP, handleKeyUp)
-  const zoomId = app.on_(ZoomEvent.ZOOM, handleZoom)
+  const keyDownEventId = app.on_(KeyEvent.DOWN, handleKeyDown)
+  const keyUpEventId = app.on_(KeyEvent.UP, handleKeyUp)
+  const zoomEventId = app.on_(ZoomEvent.ZOOM, handleZoom)
 
   function cleanup() {
-    app.off_(keyDownId)
-    app.off_(keyUpId)
-    app.off_(zoomId)
+    app.off_(keyDownEventId)
+    app.off_(keyUpEventId)
+    app.off_(zoomEventId)
   }
 
   return {

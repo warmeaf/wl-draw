@@ -9,6 +9,10 @@ import { TOOL_TYPES } from '@/constants'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { LeaferElement, Point, Tree } from '@/types'
 
+const MINIMUM_ELLIPSE_SIZE = 5
+const DEFAULT_STROKE_COLOR = '#000000'
+const DEFAULT_STROKE_WIDTH = 0
+
 export function useCircleTool(
   tree: Tree,
   store: ReturnType<typeof useCanvasStore>,
@@ -19,41 +23,83 @@ export function useCircleTool(
   function startDrawing() {
     if (!tree || !startPoint.value) return
 
-    const ellipse = new Ellipse({
+    const initialEllipse = new Ellipse({
       x: startPoint.value.x,
       y: startPoint.value.y,
       width: 0,
       height: 0,
       fill: store.fillColor,
-      strokeWidth: 0,
-      stroke: '#000000',
+      strokeWidth: DEFAULT_STROKE_WIDTH,
+      stroke: DEFAULT_STROKE_COLOR,
       dashPattern: undefined,
       editable: true,
     })
 
-    currentElement.value = ellipse
-    tree.add(ellipse)
+    currentElement.value = initialEllipse
+    tree.add(initialEllipse)
   }
 
-  function updateDrawing(e: DragEvent) {
-    if (!currentElement.value || !startPoint.value) return
-    const bounds = e.getPageBounds()
+  function calculateSquareDimensions(
+    width: number,
+    height: number
+  ): { width: number; height: number } {
+    const maxDimension = Math.max(Math.abs(width), Math.abs(height))
+    const widthSign = width < 0 ? -1 : 1
+    const heightSign = height < 0 ? -1 : 1
+    return {
+      width: widthSign * maxDimension,
+      height: heightSign * maxDimension,
+    }
+  }
 
-    let width = bounds.width
-    let height = bounds.height
+  function updateDrawing(dragEvent: DragEvent) {
+    if (!currentElement.value || !startPoint.value) return
+
+    const dragBounds = dragEvent.getPageBounds()
+    let adjustedWidth = dragBounds.width
+    let adjustedHeight = dragBounds.height
 
     if (isShiftPressed.value) {
-      const size = Math.max(Math.abs(width), Math.abs(height))
-      width = width < 0 ? -size : size
-      height = height < 0 ? -size : size
+      const squareDimensions = calculateSquareDimensions(adjustedWidth, adjustedHeight)
+      adjustedWidth = squareDimensions.width
+      adjustedHeight = squareDimensions.height
     }
 
     currentElement.value.set({
-      x: bounds.x,
-      y: bounds.y,
-      width: Math.abs(width),
-      height: Math.abs(height),
+      x: dragBounds.x,
+      y: dragBounds.y,
+      width: Math.abs(adjustedWidth),
+      height: Math.abs(adjustedHeight),
     })
+  }
+
+  function normalizeNegativeDimensions(ellipse: Ellipse) {
+    const currentWidth = ellipse.width ?? 0
+    const currentHeight = ellipse.height ?? 0
+    const currentX = ellipse.x ?? 0
+    const currentY = ellipse.y ?? 0
+
+    if (currentWidth < 0) {
+      ellipse.x = currentX + currentWidth
+      ellipse.width = Math.abs(currentWidth)
+    }
+    if (currentHeight < 0) {
+      ellipse.y = currentY + currentHeight
+      ellipse.height = Math.abs(currentHeight)
+    }
+  }
+
+  function removeElementIfTooSmall(ellipse: Ellipse): boolean {
+    const finalWidth = ellipse.width ?? 0
+    const finalHeight = ellipse.height ?? 0
+    const isTooSmall = finalWidth < MINIMUM_ELLIPSE_SIZE || finalHeight < MINIMUM_ELLIPSE_SIZE
+
+    if (isTooSmall) {
+      tree.remove(ellipse)
+      currentElement.value = null
+      return true
+    }
+    return false
   }
 
   function finishDrawing() {
@@ -62,38 +108,21 @@ export function useCircleTool(
     const ellipse = currentElement.value
     if (!(ellipse instanceof Ellipse)) return
 
-    const width = ellipse.width ?? 0
-    const height = ellipse.height ?? 0
-    const x = ellipse.x ?? 0
-    const y = ellipse.y ?? 0
+    normalizeNegativeDimensions(ellipse)
 
-    if (width < 0) {
-      ellipse.x = x + width
-      ellipse.width = Math.abs(width)
-    }
-    if (height < 0) {
-      ellipse.y = y + height
-      ellipse.height = Math.abs(height)
-    }
-
-    const finalWidth = ellipse.width ?? 0
-    const finalHeight = ellipse.height ?? 0
-
-    if (finalWidth < 5 || finalHeight < 5) {
-      tree.remove(ellipse)
-      currentElement.value = null
+    if (removeElementIfTooSmall(ellipse)) {
       return
     }
 
-    const id = `circle-${Date.now()}`
+    const circleId = `circle-${Date.now()}`
     store.addObject({
-      id,
+      id: circleId,
       type: 'circle',
       element: ellipse,
     })
 
     store.setTool(TOOL_TYPES.SELECT)
-    store.selectObject(id)
+    store.selectObject(circleId)
   }
 
   return {

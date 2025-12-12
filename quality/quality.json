@@ -4,69 +4,81 @@
     "children": {
       "App.vue": {
         "type": "file",
-        "readability": 92
+        "readability": 95
       },
       "main.ts": {
         "type": "file",
-        "readability": 90
+        "readability": 100
       },
       "style.css": {
         "type": "file",
-        "readability": 96
+        "readability": 100
       },
       "components": {
         "type": "directory",
         "children": {
           "Canvas.vue": {
             "type": "file",
-            "readability": 89
+            "readability": 95
           },
           "ElementStyleConfig.vue": {
             "type": "file",
-            "readability": 76
+            "readability": 92
           },
           "IconRenderer.vue": {
             "type": "file",
-            "readability": 71
+            "readability": 85
           },
           "MenuDropdown.vue": {
             "type": "file",
-            "readability": 87
+            "readability": 90
           },
           "Toolbar.vue": {
             "type": "file",
-            "readability": 100
+            "readability": 98
           },
           "ToolSelector.vue": {
             "type": "file",
-            "readability": 89
+            "readability": 95
           },
           "UndoRedoButtons.vue": {
             "type": "file",
-            "readability": 85
+            "readability": 92
           },
           "ZoomControls.vue": {
             "type": "file",
-            "readability": 81
+            "readability": 93
           },
           "common": {
             "type": "directory",
             "children": {
+              "ArrowConfigButtons.vue": {
+                "type": "file",
+                "readability": 95
+              },
               "ArrowPicker.vue": {
                 "type": "file",
-                "readability": 88
+                "readability": 95
               },
               "ColorPicker.vue": {
                 "type": "file",
-                "readability": 82
+                "readability": 92
+              },
+              "StrokeColorButton.vue": {
+                "type": "file",
+                "readability": 98
               },
               "StrokeConfig.vue": {
                 "type": "file",
-                "readability": 85
+                "readability": 93
+              },
+              "StrokeConfigPopover.vue": {
+                "type": "file",
+                "readability": 96
               },
               "SvgIcon.vue": {
                 "type": "file",
-                "readability": 78
+                "readability": 90
               }
             }
           }
@@ -77,18 +89,22 @@
         "children": {
           "useCanvasTools.ts": {
             "type": "file",
-            "readability": 88
+            "readability": 97
           },
           "events": {
             "type": "directory",
             "children": {
+              "elementPropsUtils.ts": {
+                "type": "file",
+                "readability": 92
+              },
               "useCanvasEvents.ts": {
                 "type": "file",
-                "readability": 82
+                "readability": 86
               },
               "useKeyboardShortcuts.ts": {
                 "type": "file",
-                "readability": 85
+                "readability": 88
               }
             }
           },
@@ -97,20 +113,24 @@
             "children": {
               "useDeleteTool.ts": {
                 "type": "file",
-                "readability": 90
+                "readability": 85
               }
             }
           },
           "state": {
             "type": "directory",
             "children": {
+              "elementPropertySetters.ts": {
+                "type": "file",
+                "readability": 92
+              },
               "useDrawingState.ts": {
                 "type": "file",
-                "readability": 93
+                "readability": 90
               },
               "useElementPopover.ts": {
                 "type": "file",
-                "readability": 80
+                "readability": 85
               }
             }
           },
@@ -119,15 +139,15 @@
             "children": {
               "useCanvasMode.ts": {
                 "type": "file",
-                "readability": 91
+                "readability": 95
               },
               "useToolInstance.ts": {
                 "type": "file",
-                "readability": 84
+                "readability": 90
               },
               "useToolSwitch.ts": {
                 "type": "file",
-                "readability": 81
+                "readability": 92
               }
             }
           }
@@ -138,15 +158,15 @@
         "children": {
           "canvas.ts": {
             "type": "file",
-            "readability": 92
+            "readability": 95
           },
           "export.ts": {
             "type": "file",
-            "readability": 98
+            "readability": 100
           },
           "theme.ts": {
             "type": "file",
-            "readability": 98
+            "readability": 100
           }
         }
       },
@@ -155,27 +175,27 @@
         "children": {
           "elementTypes.ts": {
             "type": "file",
-            "readability": 92
+            "readability": 95
           },
           "index.ts": {
             "type": "file",
-            "readability": 88
+            "readability": 98
           },
           "thresholds.ts": {
             "type": "file",
-            "readability": 98
+            "readability": 100
           },
           "timing.ts": {
             "type": "file",
-            "readability": 98
+            "readability": 100
           },
           "toolTypes.ts": {
             "type": "file",
-            "readability": 92
+            "readability": 95
           },
           "uiConstants.ts": {
             "type": "file",
-            "readability": 90
+            "readability": 98
           }
         }
       },
@@ -184,54 +204,54 @@
         "children": {
           "events.ts": {
             "type": "file",
-            "readability": 92
+            "readability": 95
           },
           "index.ts": {
             "type": "file",
-            "readability": 95
+            "readability": 98
           },
           "registry.ts": {
             "type": "file",
-            "readability": 88
+            "readability": 92
           },
           "shortcut.ts": {
             "type": "file",
-            "readability": 90
+            "readability": 95
           },
           "types.ts": {
             "type": "file",
-            "readability": 93
+            "readability": 98
           },
           "utils.ts": {
             "type": "file",
-            "readability": 94
+            "readability": 96
           },
           "builtin": {
             "type": "directory",
             "children": {
               "arrow.ts": {
                 "type": "file",
-                "readability": 100
+                "readability": 98
               },
               "circle.ts": {
                 "type": "file",
-                "readability": 100
+                "readability": 98
               },
               "export.ts": {
                 "type": "file",
-                "readability": 100
+                "readability": 95
               },
               "exportJson.ts": {
                 "type": "file",
-                "readability": 100
+                "readability": 95
               },
               "historyCache.ts": {
                 "type": "file",
-                "readability": 96
+                "readability": 92
               },
               "image.ts": {
                 "type": "file",
-                "readability": 100
+                "readability": 95
               },
               "index.ts": {
                 "type": "file",
@@ -239,43 +259,43 @@
               },
               "line.ts": {
                 "type": "file",
-                "readability": 92
+                "readability": 95
               },
               "pan.ts": {
                 "type": "file",
-                "readability": 90
+                "readability": 95
               },
               "pen.ts": {
                 "type": "file",
-                "readability": 93
+                "readability": 95
               },
               "rect.ts": {
                 "type": "file",
-                "readability": 92
+                "readability": 95
               },
               "redo.ts": {
                 "type": "file",
-                "readability": 91
+                "readability": 95
               },
               "select.ts": {
                 "type": "file",
-                "readability": 90
+                "readability": 95
               },
               "text.ts": {
                 "type": "file",
-                "readability": 92
+                "readability": 95
               },
               "undo.ts": {
                 "type": "file",
-                "readability": 91
+                "readability": 95
               },
               "zoomIn.ts": {
                 "type": "file",
-                "readability": 91
+                "readability": 95
               },
               "zoomOut.ts": {
                 "type": "file",
-                "readability": 91
+                "readability": 95
               }
             }
           },
@@ -284,11 +304,11 @@
             "children": {
               "useArrowTool.ts": {
                 "type": "file",
-                "readability": 87
+                "readability": 85
               },
               "useCircleTool.ts": {
                 "type": "file",
-                "readability": 83
+                "readability": 82
               },
               "useExportTool.ts": {
                 "type": "file",
@@ -296,31 +316,31 @@
               },
               "useHistory.ts": {
                 "type": "file",
-                "readability": 92
+                "readability": 95
               },
               "useImageTool.ts": {
                 "type": "file",
-                "readability": 85
+                "readability": 95
               },
               "useLineTool.ts": {
                 "type": "file",
-                "readability": 87
+                "readability": 85
               },
               "usePenTool.ts": {
                 "type": "file",
-                "readability": 89
+                "readability": 92
               },
               "useRectTool.ts": {
                 "type": "file",
-                "readability": 83
+                "readability": 82
               },
               "useTextTool.ts": {
                 "type": "file",
-                "readability": 86
+                "readability": 95
               },
               "useZoomTool.ts": {
                 "type": "file",
-                "readability": 88
+                "readability": 95
               }
             }
           },
@@ -329,7 +349,7 @@
             "children": {
               "indexedDB.ts": {
                 "type": "file",
-                "readability": 91
+                "readability": 90
               }
             }
           }
@@ -340,11 +360,11 @@
         "children": {
           "canvas.ts": {
             "type": "file",
-            "readability": 85
+            "readability": 95
           },
           "history.ts": {
             "type": "file",
-            "readability": 92
+            "readability": 98
           }
         }
       },
@@ -353,19 +373,19 @@
         "children": {
           "elementTypes.ts": {
             "type": "file",
-            "readability": 92
+            "readability": 95
           },
           "history.ts": {
             "type": "file",
-            "readability": 88
+            "readability": 95
           },
           "index.ts": {
             "type": "file",
-            "readability": 90
+            "readability": 95
           },
           "toolTypes.ts": {
             "type": "file",
-            "readability": 92
+            "readability": 95
           }
         }
       },
@@ -378,11 +398,11 @@
           },
           "stroke.ts": {
             "type": "file",
-            "readability": 90
+            "readability": 98
           },
           "typeGuards.ts": {
             "type": "file",
-            "readability": 92
+            "readability": 96
           }
         }
       }

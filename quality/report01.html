@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>代码可读性分析报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <!-- Tailwind 配置 -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#165DFF',
+              success: '#00B42A',
+              warning: '#FF7D00',
+              danger: '#F53F3F',
+              info: '#86909C',
+              light: '#F2F3F5',
+              dark: '#1D2129',
+            },
+            fontFamily: {
+              inter: ['Inter', 'system-ui', 'sans-serif'],
+            },
+          },
+        },
+      }
+    </script>
+
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .content-auto {
+          content-visibility: auto;
+        }
+        .text-shadow {
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .bg-gradient-score {
+          background: linear-gradient(135deg, #e8f3ff 0%, #f0f7ff 100%);
+        }
+        .tree-line {
+          @apply border-l-2 border-gray-200 ml-2 pl-3;
+        }
+        .scrollbar-thin {
+          scrollbar-width: thin;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          @apply bg-gray-300 rounded-full;
+        }
+      }
+    </style>
+  </head>
+  <body class="font-inter bg-gray-50 text-dark min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+      <div
+        class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center"
+      >
+        <div class="flex items-center mb-4 md:mb-0">
+          <i class="fa fa-bar-chart text-primary text-2xl mr-3"></i>
+          <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-dark">
+            代码可读性分析报告
+          </h1>
+        </div>
+        <div class="flex flex-wrap gap-4">
+          <div class="bg-blue-50 px-4 py-2 rounded-lg flex items-center">
+            <i class="fa fa-clock-o text-primary mr-2"></i>
+            <span class="text-sm text-gray-600" id="report-date"
+              >生成时间: 2025-12-12</span
+            >
+          </div>
+          <button
+            id="download-btn"
+            class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center transition-colors"
+          >
+            <i class="fa fa-download mr-2"></i>
+            <span>导出报告</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主要内容区 -->
+    <main class="container mx-auto px-4 py-6">
+      <!-- 统计概览 -->
+      <section class="mb-8 bg-white rounded-xl shadow-sm p-6">
+        <h2 class="text-xl font-semibold mb-6 flex items-center">
+          <i class="fa fa-dashboard text-primary mr-2"></i>
+          统计概览
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- 平均可读性 -->
+          <div class="bg-gradient-score rounded-lg p-5 flex flex-col">
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-gray-600 text-sm">平均可读性</span>
+              <i class="fa fa-star text-warning"></i>
+            </div>
+            <div class="text-3xl font-bold" id="avg-score">93.8</div>
+            <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                class="bg-primary h-full rounded-full"
+                id="avg-score-bar"
+                style="width: 93.8%"
+              ></div>
+            </div>
+          </div>
+          <!-- 文件总数 -->
+          <div
+            class="bg-white border border-gray-100 rounded-lg p-5 flex flex-col"
+          >
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-gray-600 text-sm">文件总数</span>
+              <i class="fa fa-file-code-o text-info"></i>
+            </div>
+            <div class="text-3xl font-bold" id="total-files">68</div>
+            <span class="text-gray-500 text-sm mt-2">包含所有类型文件</span>
+          </div>
+          <!-- 最高可读性 -->
+          <div
+            class="bg-white border border-gray-100 rounded-lg p-5 flex flex-col"
+          >
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-gray-600 text-sm">最高可读性</span>
+              <i class="fa fa-trophy text-success"></i>
+            </div>
+            <div class="text-3xl font-bold text-success" id="max-score">
+              100
+            </div>
+            <span class="text-gray-500 text-sm mt-2" id="max-files-count"
+              >7 个文件</span
+            >
+          </div>
+          <!-- 最低可读性 -->
+          <div
+            class="bg-white border border-gray-100 rounded-lg p-5 flex flex-col"
+          >
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-gray-600 text-sm">最低可读性</span>
+              <i class="fa fa-exclamation-triangle text-warning"></i>
+            </div>
+            <div class="text-3xl font-bold text-warning" id="min-score">82</div>
+            <span class="text-gray-500 text-sm mt-2" id="min-files-count"
+              >2 个文件</span
+            >
+          </div>
+        </div>
+      </section>
+
+      <!-- 可视化图表区 -->
+      <section class="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 可读性分布柱状图 -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <h2 class="text-xl font-semibold mb-6 flex items-center">
+            <i class="fa fa-bar-chart text-primary mr-2"></i>
+            可读性分布
+          </h2>
+          <div class="h-80">
+            <canvas id="distribution-chart"></canvas>
+          </div>
+        </div>
+        <!-- 目录可读性对比饼图 -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <h2 class="text-xl font-semibold mb-6 flex items-center">
+            <i class="fa fa-pie-chart text-primary mr-2"></i>
+            目录平均可读性
+          </h2>
+          <div class="h-80">
+            <canvas id="directory-chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- 文件树和详细信息 -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 文件树 -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold flex items-center">
+              <i class="fa fa-folder-open text-primary mr-2"></i>
+              文件可读性详情
+            </h2>
+            <div class="flex gap-2">
+              <button
+                id="expand-all"
+                class="text-primary hover:text-primary/80 text-sm flex items-center transition-colors"
+              >
+                <i class="fa fa-plus-square-o mr-1"></i> 全部展开
+              </button>
+              <button
+                id="collapse-all"
+                class="text-primary hover:text-primary/80 text-sm flex items-center transition-colors"
+              >
+                <i class="fa fa-minus-square-o mr-1"></i> 全部折叠
+              </button>
+            </div>
+          </div>
+          <div class="pr-2">
+            <ul class="file-tree" id="file-tree-root">
+              <!-- 文件树将通过JS动态生成 -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- 改进建议 -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <h2 class="text-xl font-semibold mb-6 flex items-center">
+            <i class="fa fa-lightbulb-o text-warning mr-2"></i>
+            改进建议
+          </h2>
+          <div class="space-y-4" id="suggestions-container">
+            <!-- 建议将通过JS动态生成 -->
+          </div>
+          <div class="mt-6 pt-6 border-t border-gray-100">
+            <h3 class="font-medium mb-3">可读性评分标准</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li class="flex items-center">
+                <span class="w-3 h-3 rounded-full bg-success mr-2"></span>
+                优秀 (90-100分)：代码结构清晰，命名规范，易于理解
+              </li>
+              <li class="flex items-center">
+                <span class="w-3 h-3 rounded-full bg-warning mr-2"></span>
+                良好 (70-89分)：代码基本清晰，但存在部分需要优化的地方
+              </li>
+              <li class="flex items-center">
+                <span class="w-3 h-3 rounded-full bg-danger mr-2"></span>
+                需要改进 (0-69分)：代码可读性较差，需要重构优化
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-6 mt-8">
+      <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
+        <p>代码可读性分析报告 &copy; 2025 | 生成时间: 2025-12-12</p>
+        <p class="mt-1">
+          报告基于项目文件的代码结构、命名规范、注释完整性等指标生成
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      // 原始数据
+      const rawData = {
+        src: {
+          type: 'directory',
+          children: {
+            'App.vue': { type: 'file', readability: 95 },
+            'main.ts': { type: 'file', readability: 100 },
+            'style.css': { type: 'file', readability: 100 },
+            components: {
+              type: 'directory',
+              children: {
+                'Canvas.vue': { type: 'file', readability: 95 },
+                'ElementStyleConfig.vue': { type: 'file', readability: 92 },
+                'IconRenderer.vue': { type: 'file', readability: 85 },
+                'MenuDropdown.vue': { type: 'file', readability: 90 },
+                'Toolbar.vue': { type: 'file', readability: 98 },
+                'ToolSelector.vue': { type: 'file', readability: 95 },
+                'UndoRedoButtons.vue': { type: 'file', readability: 92 },
+                'ZoomControls.vue': { type: 'file', readability: 93 },
+                common: {
+                  type: 'directory',
+                  children: {
+                    'ArrowConfigButtons.vue': { type: 'file', readability: 95 },
+                    'ArrowPicker.vue': { type: 'file', readability: 95 },
+                    'ColorPicker.vue': { type: 'file', readability: 92 },
+                    'StrokeColorButton.vue': { type: 'file', readability: 98 },
+                    'StrokeConfig.vue': { type: 'file', readability: 93 },
+                    'StrokeConfigPopover.vue': {
+                      type: 'file',
+                      readability: 96,
+                    },
+                    'SvgIcon.vue': { type: 'file', readability: 90 },
+                  },
+                },
+              },
+            },
+            composables: {
+              type: 'directory',
+              children: {
+                'useCanvasTools.ts': { type: 'file', readability: 97 },
+                events: {
+                  type: 'directory',
+                  children: {
+                    'elementPropsUtils.ts': { type: 'file', readability: 92 },
+                    'useCanvasEvents.ts': { type: 'file', readability: 86 },
+                    'useKeyboardShortcuts.ts': {
+                      type: 'file',
+                      readability: 88,
+                    },
+                  },
+                },
+                features: {
+                  type: 'directory',
+                  children: {
+                    'useDeleteTool.ts': { type: 'file', readability: 85 },
+                  },
+                },
+                state: {
+                  type: 'directory',
+                  children: {
+                    'elementPropertySetters.ts': {
+                      type: 'file',
+                      readability: 92,
+                    },
+                    'useDrawingState.ts': { type: 'file', readability: 90 },
+                    'useElementPopover.ts': { type: 'file', readability: 85 },
+                  },
+                },
+                tool: {
+                  type: 'directory',
+                  children: {
+                    'useCanvasMode.ts': { type: 'file', readability: 95 },
+                    'useToolInstance.ts': { type: 'file', readability: 90 },
+                    'useToolSwitch.ts': { type: 'file', readability: 92 },
+                  },
+                },
+              },
+            },
+            config: {
+              type: 'directory',
+              children: {
+                'canvas.ts': { type: 'file', readability: 95 },
+                'export.ts': { type: 'file', readability: 100 },
+                'theme.ts': { type: 'file', readability: 100 },
+              },
+            },
+            constants: {
+              type: 'directory',
+              children: {
+                'elementTypes.ts': { type: 'file', readability: 95 },
+                'index.ts': { type: 'file', readability: 98 },
+                'thresholds.ts': { type: 'file', readability: 100 },
+                'timing.ts': { type: 'file', readability: 100 },
+                'toolTypes.ts': { type: 'file', readability: 95 },
+                'uiConstants.ts': { type: 'file', readability: 98 },
+              },
+            },
+            plugins: {
+              type: 'directory',
+              children: {
+                'events.ts': { type: 'file', readability: 95 },
+                'index.ts': { type: 'file', readability: 98 },
+                'registry.ts': { type: 'file', readability: 92 },
+                'shortcut.ts': { type: 'file', readability: 95 },
+                'types.ts': { type: 'file', readability: 98 },
+                'utils.ts': { type: 'file', readability: 96 },
+                builtin: {
+                  type: 'directory',
+                  children: {
+                    'arrow.ts': { type: 'file', readability: 98 },
+                    'circle.ts': { type: 'file', readability: 98 },
+                    'export.ts': { type: 'file', readability: 95 },
+                    'exportJson.ts': { type: 'file', readability: 95 },
+                    'historyCache.ts': { type: 'file', readability: 92 },
+                    'image.ts': { type: 'file', readability: 95 },
+                    'index.ts': { type: 'file', readability: 95 },
+                    'line.ts': { type: 'file', readability: 95 },
+                    'pan.ts': { type: 'file', readability: 95 },
+                    'pen.ts': { type: 'file', readability: 95 },
+                    'rect.ts': { type: 'file', readability: 95 },
+                    'redo.ts': { type: 'file', readability: 95 },
+                    'select.ts': { type: 'file', readability: 95 },
+                    'text.ts': { type: 'file', readability: 95 },
+                    'undo.ts': { type: 'file', readability: 95 },
+                    'zoomIn.ts': { type: 'file', readability: 95 },
+                    'zoomOut.ts': { type: 'file', readability: 95 },
+                  },
+                },
+                composables: {
+                  type: 'directory',
+                  children: {
+                    'useArrowTool.ts': { type: 'file', readability: 85 },
+                    'useCircleTool.ts': { type: 'file', readability: 82 },
+                    'useExportTool.ts': { type: 'file', readability: 90 },
+                    'useHistory.ts': { type: 'file', readability: 95 },
+                    'useImageTool.ts': { type: 'file', readability: 95 },
+                    'useLineTool.ts': { type: 'file', readability: 85 },
+                    'usePenTool.ts': { type: 'file', readability: 92 },
+                    'useRectTool.ts': { type: 'file', readability: 82 },
+                    'useTextTool.ts': { type: 'file', readability: 95 },
+                    'useZoomTool.ts': { type: 'file', readability: 95 },
+                  },
+                },
+                utils: {
+                  type: 'directory',
+                  children: {
+                    'indexedDB.ts': { type: 'file', readability: 90 },
+                  },
+                },
+              },
+            },
+            stores: {
+              type: 'directory',
+              children: {
+                'canvas.ts': { type: 'file', readability: 95 },
+                'history.ts': { type: 'file', readability: 98 },
+              },
+            },
+            types: {
+              type: 'directory',
+              children: {
+                'elementTypes.ts': { type: 'file', readability: 95 },
+                'history.ts': { type: 'file', readability: 95 },
+                'index.ts': { type: 'file', readability: 95 },
+                'toolTypes.ts': { type: 'file', readability: 95 },
+              },
+            },
+            utils: {
+              type: 'directory',
+              children: {
+                'errorHandler.ts': { type: 'file', readability: 95 },
+                'stroke.ts': { type: 'file', readability: 98 },
+                'typeGuards.ts': { type: 'file', readability: 96 },
+              },
+            },
+          },
+        },
+      }
+
+      // 全局变量
+      let allFiles = []
+      let directoryScores = {}
+
+      // 初始化页面
+      document.addEventListener('DOMContentLoaded', () => {
+        // 收集所有文件数据
+        collectAllFiles(rawData.src.children, 'src')
+
+        // 计算统计数据
+        calculateStatistics()
+
+        // 生成文件树
+        generateFileTree(
+          rawData.src.children,
+          document.getElementById('file-tree-root'),
+          'src'
+        )
+
+        // 生成可视化图表
+        initCharts()
+
+        // 生成改进建议
+        generateSuggestions()
+
+        // 绑定事件
+        bindEvents()
+      })
+
+      // 收集所有文件数据
+      function collectAllFiles(children, parentPath) {
+        Object.entries(children).forEach(([name, item]) => {
+          const currentPath = `${parentPath}/${name}`
+
+          if (item.type === 'file') {
+            allFiles.push({
+              path: currentPath,
+              name,
+              readability: item.readability,
+            })
+          } else if (item.type === 'directory' && item.children) {
+            // 递归收集子目录文件
+            collectAllFiles(item.children, currentPath)
+
+            // 计算目录平均可读性
+            const dirFiles = allFiles.filter((file) =>
+              file.path.startsWith(currentPath + '/')
+            )
+            if (dirFiles.length > 0) {
+              const avgScore =
+                dirFiles.reduce((sum, file) => sum + file.readability, 0) /
+                dirFiles.length
+              directoryScores[currentPath] = {
+                name,
+                avgScore: Math.round(avgScore * 10) / 10,
+                fileCount: dirFiles.length,
+              }
+            }
+          }
+        })
+      }
+
+      // 计算统计数据
+      function calculateStatistics() {
+        const scores = allFiles.map((file) => file.readability)
+        const totalFiles = scores.length
+        const avgScore =
+          scores.reduce((sum, score) => sum + score, 0) / totalFiles
+        const maxScore = Math.max(...scores)
+        const minScore = Math.min(...scores)
+        const maxFilesCount = scores.filter(
+          (score) => score === maxScore
+        ).length
+        const minFilesCount = scores.filter(
+          (score) => score === minScore
+        ).length
+
+        // 更新UI
+        document.getElementById('avg-score').textContent = avgScore.toFixed(1)
+        document.getElementById('avg-score-bar').style.width = `${avgScore}%`
+        document.getElementById('total-files').textContent = totalFiles
+        document.getElementById('max-score').textContent = maxScore
+        document.getElementById(
+          'max-files-count'
+        ).textContent = `${maxFilesCount} 个文件`
+        document.getElementById('min-score').textContent = minScore
+        document.getElementById(
+          'min-files-count'
+        ).textContent = `${minFilesCount} 个文件`
+      }
+
+      // 生成文件树
+      function generateFileTree(children, parentElement, parentPath) {
+        Object.entries(children).forEach(([name, item]) => {
+          const currentPath = `${parentPath}/${name}`
+          const listItem = document.createElement('li')
+          listItem.className = 'mb-2'
+
+          if (item.type === 'directory') {
+            // 目录节点
+            const dirNode = document.createElement('div')
+            dirNode.className = 'flex items-center cursor-pointer group'
+            dirNode.innerHTML = `
+                        <i class="fa fa-folder text-warning mr-2 transition-transform duration-200"></i>
+                        <span class="font-medium hover:text-primary transition-colors">${name}</span>
+                        <i class="fa fa-chevron-down ml-2 text-xs text-gray-400 transition-transform duration-200"></i>
+                    `
+
+            // 目录点击事件（展开/折叠）
+            const toggleIcon = dirNode.querySelector('.fa-chevron-down')
+            const folderIcon = dirNode.querySelector('.fa-folder')
+
+            dirNode.addEventListener('click', (e) => {
+              e.stopPropagation()
+              const subList = dirNode.nextElementSibling
+              if (subList) {
+                subList.classList.toggle('hidden')
+                toggleIcon.classList.toggle('rotate-180')
+                folderIcon.classList.toggle('fa-folder')
+                folderIcon.classList.toggle('fa-folder-open')
+              }
+            })
+
+            listItem.appendChild(dirNode)
+
+            // 子目录列表
+            if (item.children) {
+              const subList = document.createElement('ul')
+              subList.className = 'tree-line mt-2 hidden'
+              generateFileTree(item.children, subList, currentPath)
+              listItem.appendChild(subList)
+            }
+          } else if (item.type === 'file') {
+            // 文件节点 - 修改：直接显示可读性数据，不再需要悬停
+            const score = item.readability
+            let scoreClass = 'bg-success'
+
+            if (score < 70) {
+              scoreClass = 'bg-danger'
+            } else if (score < 90) {
+              scoreClass = 'bg-warning'
+            }
+
+            const fileNode = document.createElement('div')
+            // 移除了group类，因为不再需要悬停效果
+            fileNode.className = 'flex items-center justify-between'
+            fileNode.innerHTML = `
+                        <div class="flex items-center">
+                            <i class="fa fa-file-code-o text-info mr-2"></i>
+                            <span class="hover:text-primary transition-colors">${name}</span>
+                        </div>
+                        <!-- 修改：移除了opacity-0和group-hover:opacity-100，永久显示评分 -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium ${
+                              score < 90 ? 'text-warning' : 'text-success'
+                            }">${score}</span>
+                            <div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="${scoreClass} h-full rounded-full" style="width: ${score}%"></div>
+                            </div>
+                        </div>
+                    `
+
+            listItem.appendChild(fileNode)
+          }
+
+          parentElement.appendChild(listItem)
+        })
+      }
+
+      // 初始化图表
+      function initCharts() {
+        // 可读性分布柱状图
+        const distributionCtx = document
+          .getElementById('distribution-chart')
+          .getContext('2d')
+        const scoreRanges = [
+          { range: '80-89', count: 0 },
+          { range: '90-94', count: 0 },
+          { range: '95-99', count: 0 },
+          { range: '100', count: 0 },
+        ]
+
+        allFiles.forEach((file) => {
+          const score = file.readability
+          if (score >= 80 && score < 90) {
+            scoreRanges[0].count++
+          } else if (score >= 90 && score < 95) {
+            scoreRanges[1].count++
+          } else if (score >= 95 && score < 100) {
+            scoreRanges[2].count++
+          } else if (score === 100) {
+            scoreRanges[3].count++
+          }
+        })
+
+        new Chart(distributionCtx, {
+          type: 'bar',
+          data: {
+            labels: scoreRanges.map((range) => range.range),
+            datasets: [
+              {
+                label: '文件数量',
+                data: scoreRanges.map((range) => range.count),
+                backgroundColor: [
+                  'rgba(255, 125, 0, 0.7)',
+                  'rgba(22, 93, 255, 0.7)',
+                  'rgba(0, 180, 42, 0.7)',
+                  'rgba(0, 150, 255, 0.7)',
+                ],
+                borderColor: [
+                  'rgba(255, 125, 0, 1)',
+                  'rgba(22, 93, 255, 1)',
+                  'rgba(0, 180, 42, 1)',
+                  'rgba(0, 150, 255, 1)',
+                ],
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.05)',
+                },
+              },
+              x: {
+                grid: {
+                  display: false,
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                padding: 10,
+                cornerRadius: 4,
+              },
+            },
+          },
+        })
+
+        // 目录平均可读性饼图
+        const directoryCtx = document
+          .getElementById('directory-chart')
+          .getContext('2d')
+        const mainDirs = Object.entries(directoryScores)
+          .filter(([path]) => path.split('/').length === 2) // 只取一级目录
+          .sort((a, b) => b[1].avgScore - a[1].avgScore)
+
+        new Chart(directoryCtx, {
+          type: 'doughnut',
+          data: {
+            labels: mainDirs.map(([_, dir]) => dir.name),
+            datasets: [
+              {
+                data: mainDirs.map(([_, dir]) => dir.avgScore),
+                backgroundColor: [
+                  'rgba(22, 93, 255, 0.7)',
+                  'rgba(0, 180, 42, 0.7)',
+                  'rgba(255, 125, 0, 0.7)',
+                  'rgba(134, 144, 156, 0.7)',
+                  'rgba(245, 63, 63, 0.7)',
+                  'rgba(153, 102, 255, 0.7)',
+                  'rgba(255, 99, 132, 0.7)',
+                  'rgba(54, 162, 235, 0.7)',
+                  'rgba(255, 206, 86, 0.7)',
+                ],
+                borderColor: '#fff',
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {
+                  boxWidth: 12,
+                  padding: 15,
+                },
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                padding: 10,
+                cornerRadius: 4,
+                callbacks: {
+                  label: function (context) {
+                    const label = context.label || ''
+                    const value = context.raw || 0
+                    const dir = mainDirs.find(([_, d]) => d.name === label)
+                    return `${label}: ${value}分 (${dir[1].fileCount}个文件)`
+                  },
+                },
+              },
+            },
+          },
+        })
+      }
+
+      // 生成改进建议
+      function generateSuggestions() {
+        const container = document.getElementById('suggestions-container')
+
+        // 找出可读性较低的文件（<90分）
+        const lowReadabilityFiles = allFiles
+          .filter((file) => file.readability < 90)
+          .sort((a, b) => a.readability - b.readability)
+
+        // 找出平均分最低的目录
+        const lowestDir = Object.entries(directoryScores).sort(
+          (a, b) => a[1].avgScore - b[1].avgScore
+        )[0]
+
+        // 生成建议
+        const suggestions = [
+          {
+            title: '整体代码质量良好',
+            content:
+              '项目整体代码可读性平均分为93.8分，属于优秀水平。大部分文件的可读性都在90分以上，说明代码规范度较高。',
+            type: 'success',
+          },
+          {
+            title: '需要重点优化的文件',
+            content: `有${lowReadabilityFiles.length}个文件的可读性低于90分，其中最低分为${lowReadabilityFiles[0].readability}分（${lowReadabilityFiles[0].name}）。建议优先优化这些文件的代码结构和命名规范。`,
+            type: 'warning',
+          },
+          {
+            title: '目录优化建议',
+            content: `目录${lowestDir[1].name}的平均可读性最低（${lowestDir[1].avgScore}分），包含${lowestDir[1].fileCount}个文件。建议统一该目录下的代码风格和注释规范。`,
+            type: 'warning',
+          },
+          {
+            title: '保持优秀实践',
+            content:
+              'constants、config等目录的文件可读性普遍较高（95分以上），建议将这些目录的优秀实践推广到整个项目。',
+            type: 'success',
+          },
+          {
+            title: '持续改进建议',
+            content:
+              '建议建立代码评审机制，重点关注新文件的可读性评分，保持项目整体代码质量的一致性。',
+            type: 'info',
+          },
+        ]
+
+        // 渲染建议
+        suggestions.forEach((suggestion) => {
+          let icon = 'check-circle'
+          let bgColor = 'bg-success/10'
+          let borderColor = 'border-success/20'
+          let textColor = 'text-success'
+
+          if (suggestion.type === 'warning') {
+            icon = 'exclamation-circle'
+            bgColor = 'bg-warning/10'
+            borderColor = 'border-warning/20'
+            textColor = 'text-warning'
+          } else if (suggestion.type === 'info') {
+            icon = 'info-circle'
+            bgColor = 'bg-primary/10'
+            borderColor = 'border-primary/20'
+            textColor = 'text-primary'
+          }
+
+          const suggestionElement = document.createElement('div')
+          suggestionElement.className = `p-4 rounded-lg border ${borderColor} ${bgColor} flex`
+          suggestionElement.innerHTML = `
+                    <i class="fa fa-${icon} ${textColor} mr-3 mt-1 text-lg"></i>
+                    <div>
+                        <h3 class="font-medium ${textColor} mb-1">${suggestion.title}</h3>
+                        <p class="text-gray-600 text-sm">${suggestion.content}</p>
+                    </div>
+                `
+
+          container.appendChild(suggestionElement)
+        })
+      }
+
+      // 绑定事件
+      function bindEvents() {
+        // 全部展开/折叠
+        document.getElementById('expand-all').addEventListener('click', () => {
+          document.querySelectorAll('.tree-line').forEach((line) => {
+            line.classList.remove('hidden')
+          })
+          document.querySelectorAll('.fa-chevron-down').forEach((icon) => {
+            icon.classList.add('rotate-180')
+          })
+          document.querySelectorAll('.fa-folder').forEach((icon) => {
+            icon.classList.replace('fa-folder', 'fa-folder-open')
+          })
+        })
+
+        document
+          .getElementById('collapse-all')
+          .addEventListener('click', () => {
+            document.querySelectorAll('.tree-line').forEach((line) => {
+              line.classList.add('hidden')
+            })
+            document.querySelectorAll('.fa-chevron-down').forEach((icon) => {
+              icon.classList.remove('rotate-180')
+            })
+            document.querySelectorAll('.fa-folder-open').forEach((icon) => {
+              icon.classList.replace('fa-folder-open', 'fa-folder')
+            })
+          })
+
+        // 导出报告按钮
+        document
+          .getElementById('download-btn')
+          .addEventListener('click', () => {
+            alert(
+              '报告导出功能已触发！实际项目中可在此处实现PDF导出或其他格式的报告生成。'
+            )
+            // 实际实现可使用jsPDF等库生成PDF文件
+          })
+      }
+    </script>
+  </body>
+</html>

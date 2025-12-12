@@ -1,13 +1,13 @@
 {
   "name": "wl-draw",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "packageManager": "pnpm@8.15.3",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "typecheck": "vue-tsc --noEmit",
+    "typecheck": "vue-tsc -b",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -41,6 +41,7 @@
     "@vueuse/core": "^14.0.0",
     "leafer-ui": "^1.10.1",
     "leafer-x-easy-snap": "^1.11.0",
+    "lucide-vue-next": "^0.560.0",
     "naive-ui": "^2.43.2",
     "pinia": "^3.0.4",
     "vue": "^3.5.25"

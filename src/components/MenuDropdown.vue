@@ -83,7 +83,7 @@ function renderLabel(option: DropdownOption & { shortcut?: string; iconComponent
         ? option.label()
         : ''
   const iconContent = option.iconComponent
-    ? h(IconRenderer, { name: option.iconComponent, class: 'text-sm' })
+    ? h(IconRenderer, { name: option.iconComponent, size: 14 })
     : null
 
   return h(
@@ -112,27 +112,40 @@ function renderLabel(option: DropdownOption & { shortcut?: string; iconComponent
   )
 }
 
-async function handleExportImage(format: 'png' | 'jpg') {
+const EXPORT_OPTION_KEYS = {
+  PNG: 'export-png',
+  JPG: 'export-jpg',
+  JSON: 'export-json',
+  GITHUB: 'github',
+} as const
+
+const GITHUB_URL = 'https://github.com/warmeaf/wl-draw/'
+
+async function exportImage(format: 'png' | 'jpg') {
   if (exportTool.value) {
     await exportTool.value.exportCanvas(format)
   }
 }
 
-function handleExportJSON() {
+function exportJSON() {
   if (exportTool.value) {
     exportTool.value.exportCanvasAsJSON()
   }
 }
 
+function openGitHub() {
+  window.open(GITHUB_URL, '_blank')
+}
+
 function handleSelect(key: string) {
-  if (key === 'export-png') {
-    handleExportImage('png')
-  } else if (key === 'export-jpg') {
-    handleExportImage('jpg')
-  } else if (key === 'export-json') {
-    handleExportJSON()
-  } else if (key === 'github') {
-    window.open('https://github.com/warmeaf/wl-draw/', '_blank')
+  if (key === EXPORT_OPTION_KEYS.PNG) {
+    exportImage('png')
+  } else if (key === EXPORT_OPTION_KEYS.JPG) {
+    exportImage('jpg')
+  } else if (key === EXPORT_OPTION_KEYS.JSON) {
+    exportJSON()
+  } else if (key === EXPORT_OPTION_KEYS.GITHUB) {
+    openGitHub()
   }
 }
 </script>
@@ -152,7 +165,7 @@ function handleSelect(key: string) {
     >
       <n-button size="small" circle quaternary>
         <template #icon>
-          <i-lucide-menu class="text-sm" />
+          <IconRenderer name="i-lucide-menu" class="text-sm" />
         </template>
       </n-button>
     </n-dropdown>

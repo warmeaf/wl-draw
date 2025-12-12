@@ -6,6 +6,9 @@ import { useZoomTool } from '@/plugins/composables/useZoomTool'
 import { pluginRegistry } from '@/plugins/registry'
 import { useCanvasStore } from '@/stores/canvas'
 
+const ZOOM_IN_TYPE = 'zoomIn'
+const ZOOM_OUT_TYPE = 'zoomOut'
+
 const elementPopover = inject<ReturnType<typeof useElementPopover>>(
   'elementPopover',
   useElementPopover()
@@ -16,8 +19,8 @@ const { zoomIn, zoomOut, resetZoom } = useZoomTool(elementPopover)
 
 const zoomPercent = computed(() => Math.round(store.zoom * 100))
 
-const zoomOutPlugin = computed(() => {
-  const metadata = pluginRegistry.getPluginMetadata('zoomOut')
+function getZoomPluginMetadata(pluginType: string) {
+  const metadata = pluginRegistry.getPluginMetadata(pluginType)
   if (!metadata?.ui) return null
   return {
     type: metadata.type,
@@ -25,23 +28,15 @@ const zoomOutPlugin = computed(() => {
     shortcut: metadata.shortcut,
     iconName: metadata.ui.iconComponent,
   }
-})
+}
 
-const zoomInPlugin = computed(() => {
-  const metadata = pluginRegistry.getPluginMetadata('zoomIn')
-  if (!metadata?.ui) return null
-  return {
-    type: metadata.type,
-    label: metadata.ui.label,
-    shortcut: metadata.shortcut,
-    iconName: metadata.ui.iconComponent,
-  }
-})
+const zoomOutPlugin = computed(() => getZoomPluginMetadata(ZOOM_OUT_TYPE))
+const zoomInPlugin = computed(() => getZoomPluginMetadata(ZOOM_IN_TYPE))
 
-function handleZoomAction(type: string) {
-  if (type === 'zoomIn') {
+function handleZoomAction(zoomType: string) {
+  if (zoomType === ZOOM_IN_TYPE) {
     zoomIn(canvasConfig.zoom.step)
-  } else if (type === 'zoomOut') {
+  } else if (zoomType === ZOOM_OUT_TYPE) {
     zoomOut(canvasConfig.zoom.step)
   }
 }
@@ -60,7 +55,7 @@ function handleZoomAction(type: string) {
           @click="handleZoomAction(zoomOutPlugin.type)"
         >
           <template #icon>
-            <IconRenderer :name="zoomOutPlugin.iconName" class="text-sm" />
+            <IconRenderer :name="zoomOutPlugin.iconName" :size="14" />
           </template>
         </n-button>
       </template>
@@ -90,7 +85,7 @@ function handleZoomAction(type: string) {
           @click="handleZoomAction(zoomInPlugin.type)"
         >
           <template #icon>
-            <IconRenderer :name="zoomInPlugin.iconName" class="text-sm" />
+            <IconRenderer :name="zoomInPlugin.iconName" :size="14" />
           </template>
         </n-button>
       </template>

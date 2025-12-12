@@ -31,7 +31,7 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const selectedElementStrokeType = computed<StrokeType>(() => {
+const currentStrokeType = computed<StrokeType>(() => {
   return props.dashPattern ? 'dashed' : 'solid'
 })
 
@@ -39,166 +39,114 @@ const isFillableElement = computed(() => {
   return props.elementType === 'rect' || props.elementType === 'circle'
 })
 
-const handleStrokeTypeChange = (type: StrokeType) => {
+const isStrokeOnlyElement = computed(() => {
+  return props.elementType === 'line' || props.elementType === 'pen'
+})
+
+const isArrowElement = computed(() => {
+  return props.elementType === 'arrow'
+})
+
+const isTextElement = computed(() => {
+  return props.elementType === 'text'
+})
+
+function updateStrokeType(type: StrokeType) {
   emit('update:strokeType', type)
 }
 
-const handleFillColorUpdate = (color: string) => {
+function updateFillColor(color: string) {
   emit('update:fillColor', color)
 }
 
-const handleStrokeColorUpdate = (color: string) => {
+function updateStrokeColor(color: string) {
   emit('update:strokeColor', color)
 }
 
-const handleStrokeWidthUpdate = (width: number) => {
+function updateStrokeWidth(width: number) {
   emit('update:strokeWidth', width)
 }
 
-const handleStartArrowUpdate = (arrowType: ArrowType) => {
+function updateStartArrow(arrowType: ArrowType) {
   emit('update:startArrow', arrowType)
 }
 
-const handleEndArrowUpdate = (arrowType: ArrowType) => {
+function updateEndArrow(arrowType: ArrowType) {
   emit('update:endArrow', arrowType)
 }
 
-const handleTextColorUpdate = (color: string) => {
+function updateTextColor(color: string) {
   emit('update:textColor', color)
 }
 
-const handleFontSizeUpdate = (size: number) => {
+function updateFontSize(size: number) {
   emit('update:fontSize', size)
 }
 
-const handleFontSizeChange = (value: number | null) => {
+function handleFontSizeInput(value: number | null) {
   if (value === null) return
-  const clampedValue = Math.max(8, Math.min(200, value))
-  handleFontSizeUpdate(clampedValue)
+  const minFontSize = 8
+  const maxFontSize = 200
+  const clampedValue = Math.max(minFontSize, Math.min(maxFontSize, value))
+  updateFontSize(clampedValue)
 }
 </script>
 
 <template>
   <template v-if="isFillableElement">
-    <ColorPicker
-      size="small"
-      :value="fillColor"
-      @update:value="handleFillColorUpdate"
+    <ColorPicker size="small" :value="fillColor" @update:value="updateFillColor" />
+    <StrokeConfigPopover
+      :stroke-width="strokeWidth"
+      :stroke-color="strokeColor"
+      :stroke-type="currentStrokeType"
+      @update:stroke-width="updateStrokeWidth"
+      @update:stroke-color="updateStrokeColor"
+      @update:stroke-type="updateStrokeType"
+    >
+      <template #trigger>
+        <StrokeColorButton :stroke-color="strokeColor" />
+      </template>
+    </StrokeConfigPopover>
+  </template>
+  <template v-else-if="isStrokeOnlyElement">
+    <StrokeConfigPopover
+      :stroke-width="strokeWidth"
+      :stroke-color="strokeColor"
+      :stroke-type="currentStrokeType"
+      @update:stroke-width="updateStrokeWidth"
+      @update:stroke-color="updateStrokeColor"
+      @update:stroke-type="updateStrokeType"
+    >
+      <template #trigger>
+        <StrokeColorButton :stroke-color="strokeColor" />
+      </template>
+    </StrokeConfigPopover>
+  </template>
+  <template v-else-if="isArrowElement">
+    <StrokeConfigPopover
+      :stroke-width="strokeWidth"
+      :stroke-color="strokeColor"
+      :stroke-type="currentStrokeType"
+      @update:stroke-width="updateStrokeWidth"
+      @update:stroke-color="updateStrokeColor"
+      @update:stroke-type="updateStrokeType"
+    >
+      <template #trigger>
+        <StrokeColorButton :stroke-color="strokeColor" />
+      </template>
+    </StrokeConfigPopover>
+    <ArrowConfigButtons
+      :start-arrow="startArrow"
+      :end-arrow="endArrow"
+      @update:start-arrow="updateStartArrow"
+      @update:end-arrow="updateEndArrow"
     />
-    <n-popover :show-arrow="false" placement="bottom-start" trigger="click">
-      <template #trigger>
-        <n-button quaternary size="small" circle>
-          <template #icon>
-            <div
-              class="flex w-[18px] h-[18px] rounded-full items-center justify-center before:content-[''] before:w-2.5 before:h-2.5 before:rounded-full before:bg-white"
-              :style="{
-                backgroundColor: strokeColor,
-              }"
-            />
-          </template>
-        </n-button>
-      </template>
-      <StrokeConfig
-        :stroke-width="strokeWidth"
-        :stroke-color="strokeColor"
-        :stroke-type="selectedElementStrokeType"
-        @update:stroke-width="handleStrokeWidthUpdate"
-        @update:stroke-color="handleStrokeColorUpdate"
-        @update:stroke-type="handleStrokeTypeChange"
-      />
-    </n-popover>
   </template>
-  <template v-else-if="elementType === 'line' || elementType === 'pen'">
-    <n-popover :show-arrow="false" placement="bottom-start" trigger="click">
-      <template #trigger>
-        <n-button quaternary size="small" circle>
-          <template #icon>
-            <div
-              class="flex w-[18px] h-[18px] rounded-full items-center justify-center before:content-[''] before:w-2.5 before:h-2.5 before:rounded-full before:bg-white"
-              :style="{
-                backgroundColor: strokeColor,
-              }"
-            />
-          </template>
-        </n-button>
-      </template>
-      <StrokeConfig
-        :stroke-width="strokeWidth"
-        :stroke-color="strokeColor"
-        :stroke-type="selectedElementStrokeType"
-        @update:stroke-width="handleStrokeWidthUpdate"
-        @update:stroke-color="handleStrokeColorUpdate"
-        @update:stroke-type="handleStrokeTypeChange"
-      />
-    </n-popover>
-  </template>
-  <template v-else-if="elementType === 'arrow'">
-    <n-popover :show-arrow="false" placement="bottom-start" trigger="click">
-      <template #trigger>
-        <n-button quaternary size="small" circle>
-          <template #icon>
-            <div
-              class="flex w-[18px] h-[18px] rounded-full items-center justify-center before:content-[''] before:w-2.5 before:h-2.5 before:rounded-full before:bg-white"
-              :style="{
-                backgroundColor: strokeColor,
-              }"
-            />
-          </template>
-        </n-button>
-      </template>
-      <StrokeConfig
-        :stroke-width="strokeWidth"
-        :stroke-color="strokeColor"
-        :stroke-type="selectedElementStrokeType"
-        @update:stroke-width="handleStrokeWidthUpdate"
-        @update:stroke-color="handleStrokeColorUpdate"
-        @update:stroke-type="handleStrokeTypeChange"
-      />
-    </n-popover>
-    <n-popover :show-arrow="false" placement="bottom-start" trigger="click">
-      <template #trigger>
-        <n-button
-          quaternary
-          size="small"
-          circle
-        >
-          <template #icon>
-            <SvgIcon :type="startArrow ?? 'none'" direction="left" size="18" />
-          </template>
-        </n-button>
-      </template>
-      <ArrowPicker
-        :value="startArrow ?? 'none'"
-        direction="left"
-        :other-arrow="endArrow ?? 'arrow'"
-        @update:value="handleStartArrowUpdate"
-      />
-    </n-popover>
-    <n-popover :show-arrow="false" placement="bottom-start" trigger="click">
-      <template #trigger>
-        <n-button
-          quaternary
-          size="small"
-          circle
-        >
-          <template #icon>
-            <SvgIcon :type="endArrow ?? 'arrow'" direction="right" size="18" />
-          </template>
-        </n-button>
-      </template>
-      <ArrowPicker
-        :value="endArrow ?? 'arrow'"
-        direction="right"
-        :other-arrow="startArrow ?? 'none'"
-        @update:value="handleEndArrowUpdate"
-      />
-    </n-popover>
-  </template>
-  <template v-else-if="elementType === 'text'">
+  <template v-else-if="isTextElement">
     <ColorPicker
       size="small"
       :value="textColor ?? '#000000'"
-      @update:value="handleTextColorUpdate"
+      @update:value="updateTextColor"
     />
     <n-popover :show-arrow="false" placement="bottom-start" trigger="click">
       <template #trigger>
@@ -219,7 +167,7 @@ const handleFontSizeChange = (value: number | null) => {
           size="small"
           class="w-[90px]"
           placeholder=""
-          @update:value="handleFontSizeChange"
+          @update:value="handleFontSizeInput"
         />
       </div>
     </n-popover>

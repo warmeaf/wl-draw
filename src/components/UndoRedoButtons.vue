@@ -15,11 +15,11 @@ const redoPlugin = computed(() => pluginRegistry.getPluginMetadata('redo'))
 const undoUi = computed(() => undoPlugin.value?.ui)
 const redoUi = computed(() => redoPlugin.value?.ui)
 
-function handleUndo() {
+function performUndo() {
   undo()
 }
 
-function handleRedo() {
+function performRedo() {
   redo()
 }
 </script>
@@ -35,15 +35,15 @@ function handleRedo() {
           circle
           quaternary
           :disabled="!canUndo"
-          @click="handleUndo"
+          @click="performUndo"
         >
           <template #icon>
             <IconRenderer
               v-if="undoUi"
               :name="undoUi.iconComponent"
-              class="text-sm"
+              :size="14"
             />
-            <i-lucide-undo-2 v-else class="text-sm" />
+            <IconRenderer v-else name="i-lucide-undo-2" :size="14" />
           </template>
         </n-button>
       </template>
@@ -62,15 +62,15 @@ function handleRedo() {
           circle
           quaternary
           :disabled="!canRedo"
-          @click="handleRedo"
+          @click="performRedo"
         >
           <template #icon>
             <IconRenderer
               v-if="redoUi"
               :name="redoUi.iconComponent"
-              class="text-sm"
+              :size="14"
             />
-            <i-lucide-redo-2 v-else class="text-sm" />
+            <IconRenderer v-else name="i-lucide-redo-2" :size="14" />
           </template>
         </n-button>
       </template>

@@ -15,120 +15,211 @@ const props = withDefaults(defineProps<Props>(), {
   direction: 'right',
 })
 
-const style = computed(() => {
-  if (props.direction === 'left' && props.type === 'angle-side') {
-    return {
-      transform: 'rotate(180deg)',
+type ArrowShapeConfig =
+  | {
+      type: 'polyline'
+      data: string
     }
-  }
-  if (props.direction === 'left') {
-    return {
-      transform: props.direction === 'left' ? 'scaleX(-1)' : undefined,
+  | {
+      type: 'path'
+      data: string
+      fill?: boolean
     }
+  | {
+      type: 'circle'
+      data: { cx: number; cy: number; r: number }
+      fill?: boolean
+    }
+  | {
+      type: 'rect'
+      data: { x: number; y: number; width: number; height: number }
+      fill?: boolean
+    }
+  | {
+      type: 'line'
+      data: { x1: number; y1: number; x2: number; y2: number }
+      strokeWidth?: number
+    }
+
+interface ArrowSvgConfig {
+  line: { x1: number; y1: number; x2: number; y2: number }
+  shape?: ArrowShapeConfig
+  requiresRotation?: boolean
+}
+
+const arrowConfigs: Record<ArrowType, ArrowSvgConfig> = {
+  none: {
+    line: { x1: 4, y1: 12, x2: 44, y2: 12 },
+  },
+  angle: {
+    line: { x1: 4, y1: 12, x2: 30, y2: 12 },
+    shape: {
+      type: 'polyline',
+      data: '22 2 30 12 22 22',
+    },
+  },
+  'angle-side': {
+    line: { x1: 4, y1: 12, x2: 30, y2: 12 },
+    shape: {
+      type: 'line',
+      data: { x1: 22, y1: 2, x2: 30, y2: 12 },
+    },
+    requiresRotation: true,
+  },
+  arrow: {
+    line: { x1: 4, y1: 12, x2: 24, y2: 12 },
+    shape: {
+      type: 'path',
+      data: 'M20 2 L24 12 L20 22 L36 12 Z',
+      fill: true,
+    },
+  },
+  triangle: {
+    line: { x1: 4, y1: 12, x2: 20, y2: 12 },
+    shape: {
+      type: 'path',
+      data: 'M20 2 L36 12 L20 22 Z',
+      fill: true,
+    },
+  },
+  'triangle-flip': {
+    line: { x1: 4, y1: 12, x2: 36, y2: 12 },
+    shape: {
+      type: 'path',
+      data: 'M36 2 L20 12 L36 22 Z',
+      fill: true,
+    },
+  },
+  circle: {
+    line: { x1: 4, y1: 12, x2: 24, y2: 12 },
+    shape: {
+      type: 'circle',
+      data: { cx: 32, cy: 12, r: 9 },
+      fill: true,
+    },
+  },
+  'circle-line': {
+    line: { x1: 4, y1: 12, x2: 22, y2: 12 },
+    shape: {
+      type: 'circle',
+      data: { cx: 32, cy: 12, r: 9 },
+      fill: false,
+    },
+  },
+  square: {
+    line: { x1: 4, y1: 12, x2: 22, y2: 12 },
+    shape: {
+      type: 'rect',
+      data: { x: 22, y: 3, width: 18, height: 18 },
+      fill: true,
+    },
+  },
+  'square-line': {
+    line: { x1: 4, y1: 12, x2: 22, y2: 12 },
+    shape: {
+      type: 'rect',
+      data: { x: 22, y: 3, width: 18, height: 18 },
+      fill: false,
+    },
+  },
+  diamond: {
+    line: { x1: 4, y1: 12, x2: 20, y2: 12 },
+    shape: {
+      type: 'path',
+      data: 'M20 12 L30 2 L40 12 L30 22 Z',
+      fill: true,
+    },
+  },
+  'diamond-line': {
+    line: { x1: 4, y1: 12, x2: 20, y2: 12 },
+    shape: {
+      type: 'path',
+      data: 'M20 12 L30 2 L40 12 L30 22 Z',
+      fill: false,
+    },
+  },
+  mark: {
+    line: { x1: 4, y1: 12, x2: 30, y2: 12 },
+    shape: {
+      type: 'line',
+      data: { x1: 30, y1: 2, x2: 30, y2: 22 },
+      strokeWidth: 3.5,
+    },
+  },
+}
+
+const currentConfig = computed(() => arrowConfigs[props.type])
+
+const transformStyle = computed(() => {
+  const isLeftDirection = props.direction === 'left'
+  const requiresRotation = currentConfig.value.requiresRotation
+
+  if (isLeftDirection && requiresRotation) {
+    return { transform: 'rotate(180deg)' }
   }
+  if (isLeftDirection) {
+    return { transform: 'scaleX(-1)' }
+  }
+  return {}
 })
 </script>
 
 <template>
   <svg
     viewBox="0 0 48 24"
-    :width="props.size"
-    :height="props.size"
+    :width="size"
+    :height="size"
     fill="none"
-    :stroke="props.color"
+    :stroke="color"
     stroke-width="3"
     stroke-linecap="round"
     stroke-linejoin="round"
     xmlns="http://www.w3.org/2000/svg"
     preserveAspectRatio="xMidYMid meet"
-    :style="style"
+    :style="transformStyle"
   >
-    <!-- None -->
-    <template v-if="type === 'none'">
-      <line x1="4" y1="12" x2="44" y2="12" />
-    </template>
-
-    <!-- Angle -->
-    <template v-else-if="type === 'angle'">
-      <line x1="4" y1="12" x2="30" y2="12" />
-      <polyline points="22 2 30 12 22 22" />
-    </template>
-
-    <!-- Angle Side -->
-    <template v-else-if="type === 'angle-side'">
-      <line x1="4" y1="12" x2="30" y2="12" /> 
-      <line x1="22" y1="2" x2="30" y2="12" />
-    </template>
-
-    <!-- Arrow -->
-    <template v-else-if="type === 'arrow'">
-      <line x1="4" y1="12" x2="24" y2="12" />
-      <path d="M20 2 L24 12 L20 22 L36 12 Z" :fill="props.color" stroke="none" />
-    </template>
-
-    <!-- Triangle -->
-    <template v-else-if="type === 'triangle'">
-      <line x1="4" y1="12" x2="20" y2="12" />
-      <path d="M20 2 L36 12 L20 22 Z" :fill="props.color" stroke="none" />
-    </template>
-
-    <!-- Triangle Flip -->
-    <template v-else-if="type === 'triangle-flip'">
-      <line x1="4" y1="12" x2="36" y2="12" />
-      <path d="M36 2 L20 12 L36 22 Z" :fill="props.color" stroke="none" />
-    </template>
-
-    <!-- Circle -->
-    <template v-else-if="type === 'circle'">
-      <line x1="4" y1="12" x2="24" y2="12" />
-      <circle cx="32" cy="12" r="9" :fill="props.color" stroke="none" />
-    </template>
-
-    <!-- Circle Line -->
-    <template v-else-if="type === 'circle-line'">
-      <line x1="4" y1="12" x2="22" y2="12" />
-      <circle cx="32" cy="12" r="9" />
-    </template>
-
-    <!-- Square -->
-    <template v-else-if="type === 'square'">
-      <line x1="4" y1="12" x2="22" y2="12" />
-      <rect
-        x="22"
-        y="3"
-        width="18"
-        height="18"
-        :fill="props.color"
-        stroke="none"
+    <line
+      :x1="currentConfig.line.x1"
+      :y1="currentConfig.line.y1"
+      :x2="currentConfig.line.x2"
+      :y2="currentConfig.line.y2"
+    />
+    <template v-if="currentConfig.shape">
+      <polyline
+        v-if="currentConfig.shape.type === 'polyline'"
+        :points="currentConfig.shape.data"
       />
-    </template>
-
-    <!-- Square Line -->
-    <template v-else-if="type === 'square-line'">
-      <line x1="4" y1="12" x2="22" y2="12" />
-      <rect x="22" y="3" width="18" height="18" />
-    </template>
-
-    <!-- Diamond -->
-    <template v-else-if="type === 'diamond'">
-      <line x1="4" y1="12" x2="20" y2="12" />
       <path
-        d="M20 12 L30 2 L40 12 L30 22 Z"
-        :fill="props.color"
-        stroke="none"
+        v-else-if="currentConfig.shape.type === 'path'"
+        :d="currentConfig.shape.data"
+        :fill="currentConfig.shape.fill ? color : 'none'"
+        :stroke="currentConfig.shape.fill ? 'none' : undefined"
       />
-    </template>
-
-    <!-- Diamond Line -->
-    <template v-else-if="type === 'diamond-line'">
-      <line x1="4" y1="12" x2="20" y2="12" />
-      <path d="M20 12 L30 2 L40 12 L30 22 Z" />
-    </template>
-
-    <!-- Mark -->
-    <template v-else-if="type === 'mark'">
-      <line x1="4" y1="12" x2="30" y2="12" />
-      <line x1="30" y1="2" x2="30" y2="22" stroke-width="3.5" />
+      <circle
+        v-else-if="currentConfig.shape.type === 'circle'"
+        :cx="currentConfig.shape.data.cx"
+        :cy="currentConfig.shape.data.cy"
+        :r="currentConfig.shape.data.r"
+        :fill="currentConfig.shape.fill ? color : 'none'"
+        :stroke="currentConfig.shape.fill ? 'none' : undefined"
+      />
+      <rect
+        v-else-if="currentConfig.shape.type === 'rect'"
+        :x="currentConfig.shape.data.x"
+        :y="currentConfig.shape.data.y"
+        :width="currentConfig.shape.data.width"
+        :height="currentConfig.shape.data.height"
+        :fill="currentConfig.shape.fill ? color : 'none'"
+        :stroke="currentConfig.shape.fill ? 'none' : undefined"
+      />
+      <line
+        v-else-if="currentConfig.shape.type === 'line'"
+        :x1="currentConfig.shape.data.x1"
+        :y1="currentConfig.shape.data.y1"
+        :x2="currentConfig.shape.data.x2"
+        :y2="currentConfig.shape.data.y2"
+        :stroke-width="currentConfig.shape.strokeWidth"
+      />
     </template>
   </svg>
 </template>

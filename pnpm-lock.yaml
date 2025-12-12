@@ -32,6 +32,9 @@ dependencies:
   leafer-x-easy-snap:
     specifier: ^1.11.0
     version: 1.11.0
+  lucide-vue-next:
+    specifier: ^0.560.0
+    version: 0.560.0(vue@3.5.25)
   naive-ui:
     specifier: ^2.43.2
     version: 2.43.2(vue@3.5.25)
@@ -3278,6 +3281,14 @@ packages:
     resolution: {integrity: sha512-B5Y16Jr9LB9dHVkh6ZevG+vAbOsNOYCX+sXvFWFu7B3Iz5mijW3zdbMyhsh8ANd2mSWBYdJgnqi+mL7/LrOPYg==}
     engines: {node: 20 || >=22}
     dev: true
+
+  /lucide-vue-next@0.560.0(vue@3.5.25):
+    resolution: {integrity: sha512-vVUVEollzn33iloTKn0GqH7lyifvmXWCU2kRYz6ePt0QeJU8hXbWHC11vgv/4QaXEA1dEdWzlMh+Ckb0V30QDA==}
+    peerDependencies:
+      vue: '>=3.0.1'
+    dependencies:
+      vue: 3.5.25(typescript@5.9.3)
+    dev: false
 
   /magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}

@@ -1,0 +1,391 @@
+{
+  "src": {
+    "type": "directory",
+    "children": {
+      "App.vue": {
+        "type": "file",
+        "readability": 92
+      },
+      "main.ts": {
+        "type": "file",
+        "readability": 90
+      },
+      "style.css": {
+        "type": "file",
+        "readability": 96
+      },
+      "components": {
+        "type": "directory",
+        "children": {
+          "Canvas.vue": {
+            "type": "file",
+            "readability": 89
+          },
+          "ElementStyleConfig.vue": {
+            "type": "file",
+            "readability": 76
+          },
+          "IconRenderer.vue": {
+            "type": "file",
+            "readability": 71
+          },
+          "MenuDropdown.vue": {
+            "type": "file",
+            "readability": 87
+          },
+          "Toolbar.vue": {
+            "type": "file",
+            "readability": 100
+          },
+          "ToolSelector.vue": {
+            "type": "file",
+            "readability": 89
+          },
+          "UndoRedoButtons.vue": {
+            "type": "file",
+            "readability": 85
+          },
+          "ZoomControls.vue": {
+            "type": "file",
+            "readability": 81
+          },
+          "common": {
+            "type": "directory",
+            "children": {
+              "ArrowPicker.vue": {
+                "type": "file",
+                "readability": 88
+              },
+              "ColorPicker.vue": {
+                "type": "file",
+                "readability": 82
+              },
+              "StrokeConfig.vue": {
+                "type": "file",
+                "readability": 85
+              },
+              "SvgIcon.vue": {
+                "type": "file",
+                "readability": 78
+              }
+            }
+          }
+        }
+      },
+      "composables": {
+        "type": "directory",
+        "children": {
+          "useCanvasTools.ts": {
+            "type": "file",
+            "readability": 88
+          },
+          "events": {
+            "type": "directory",
+            "children": {
+              "useCanvasEvents.ts": {
+                "type": "file",
+                "readability": 82
+              },
+              "useKeyboardShortcuts.ts": {
+                "type": "file",
+                "readability": 85
+              }
+            }
+          },
+          "features": {
+            "type": "directory",
+            "children": {
+              "useDeleteTool.ts": {
+                "type": "file",
+                "readability": 90
+              }
+            }
+          },
+          "state": {
+            "type": "directory",
+            "children": {
+              "useDrawingState.ts": {
+                "type": "file",
+                "readability": 93
+              },
+              "useElementPopover.ts": {
+                "type": "file",
+                "readability": 80
+              }
+            }
+          },
+          "tool": {
+            "type": "directory",
+            "children": {
+              "useCanvasMode.ts": {
+                "type": "file",
+                "readability": 91
+              },
+              "useToolInstance.ts": {
+                "type": "file",
+                "readability": 84
+              },
+              "useToolSwitch.ts": {
+                "type": "file",
+                "readability": 81
+              }
+            }
+          }
+        }
+      },
+      "config": {
+        "type": "directory",
+        "children": {
+          "canvas.ts": {
+            "type": "file",
+            "readability": 92
+          },
+          "export.ts": {
+            "type": "file",
+            "readability": 98
+          },
+          "theme.ts": {
+            "type": "file",
+            "readability": 98
+          }
+        }
+      },
+      "constants": {
+        "type": "directory",
+        "children": {
+          "elementTypes.ts": {
+            "type": "file",
+            "readability": 92
+          },
+          "index.ts": {
+            "type": "file",
+            "readability": 88
+          },
+          "thresholds.ts": {
+            "type": "file",
+            "readability": 98
+          },
+          "timing.ts": {
+            "type": "file",
+            "readability": 98
+          },
+          "toolTypes.ts": {
+            "type": "file",
+            "readability": 92
+          },
+          "uiConstants.ts": {
+            "type": "file",
+            "readability": 90
+          }
+        }
+      },
+      "plugins": {
+        "type": "directory",
+        "children": {
+          "events.ts": {
+            "type": "file",
+            "readability": 92
+          },
+          "index.ts": {
+            "type": "file",
+            "readability": 95
+          },
+          "registry.ts": {
+            "type": "file",
+            "readability": 88
+          },
+          "shortcut.ts": {
+            "type": "file",
+            "readability": 90
+          },
+          "types.ts": {
+            "type": "file",
+            "readability": 93
+          },
+          "utils.ts": {
+            "type": "file",
+            "readability": 94
+          },
+          "builtin": {
+            "type": "directory",
+            "children": {
+              "arrow.ts": {
+                "type": "file",
+                "readability": 100
+              },
+              "circle.ts": {
+                "type": "file",
+                "readability": 100
+              },
+              "export.ts": {
+                "type": "file",
+                "readability": 100
+              },
+              "exportJson.ts": {
+                "type": "file",
+                "readability": 100
+              },
+              "historyCache.ts": {
+                "type": "file",
+                "readability": 96
+              },
+              "image.ts": {
+                "type": "file",
+                "readability": 100
+              },
+              "index.ts": {
+                "type": "file",
+                "readability": 95
+              },
+              "line.ts": {
+                "type": "file",
+                "readability": 92
+              },
+              "pan.ts": {
+                "type": "file",
+                "readability": 90
+              },
+              "pen.ts": {
+                "type": "file",
+                "readability": 93
+              },
+              "rect.ts": {
+                "type": "file",
+                "readability": 92
+              },
+              "redo.ts": {
+                "type": "file",
+                "readability": 91
+              },
+              "select.ts": {
+                "type": "file",
+                "readability": 90
+              },
+              "text.ts": {
+                "type": "file",
+                "readability": 92
+              },
+              "undo.ts": {
+                "type": "file",
+                "readability": 91
+              },
+              "zoomIn.ts": {
+                "type": "file",
+                "readability": 91
+              },
+              "zoomOut.ts": {
+                "type": "file",
+                "readability": 91
+              }
+            }
+          },
+          "composables": {
+            "type": "directory",
+            "children": {
+              "useArrowTool.ts": {
+                "type": "file",
+                "readability": 87
+              },
+              "useCircleTool.ts": {
+                "type": "file",
+                "readability": 83
+              },
+              "useExportTool.ts": {
+                "type": "file",
+                "readability": 90
+              },
+              "useHistory.ts": {
+                "type": "file",
+                "readability": 92
+              },
+              "useImageTool.ts": {
+                "type": "file",
+                "readability": 85
+              },
+              "useLineTool.ts": {
+                "type": "file",
+                "readability": 87
+              },
+              "usePenTool.ts": {
+                "type": "file",
+                "readability": 89
+              },
+              "useRectTool.ts": {
+                "type": "file",
+                "readability": 83
+              },
+              "useTextTool.ts": {
+                "type": "file",
+                "readability": 86
+              },
+              "useZoomTool.ts": {
+                "type": "file",
+                "readability": 88
+              }
+            }
+          },
+          "utils": {
+            "type": "directory",
+            "children": {
+              "indexedDB.ts": {
+                "type": "file",
+                "readability": 91
+              }
+            }
+          }
+        }
+      },
+      "stores": {
+        "type": "directory",
+        "children": {
+          "canvas.ts": {
+            "type": "file",
+            "readability": 85
+          },
+          "history.ts": {
+            "type": "file",
+            "readability": 92
+          }
+        }
+      },
+      "types": {
+        "type": "directory",
+        "children": {
+          "elementTypes.ts": {
+            "type": "file",
+            "readability": 92
+          },
+          "history.ts": {
+            "type": "file",
+            "readability": 88
+          },
+          "index.ts": {
+            "type": "file",
+            "readability": 90
+          },
+          "toolTypes.ts": {
+            "type": "file",
+            "readability": 92
+          }
+        }
+      },
+      "utils": {
+        "type": "directory",
+        "children": {
+          "errorHandler.ts": {
+            "type": "file",
+            "readability": 95
+          },
+          "stroke.ts": {
+            "type": "file",
+            "readability": 90
+          },
+          "typeGuards.ts": {
+            "type": "file",
+            "readability": 92
+          }
+        }
+      }
+    }
+  }
+}

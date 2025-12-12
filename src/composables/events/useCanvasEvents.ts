@@ -5,20 +5,19 @@
 import { InnerEditorEvent } from '@leafer-in/editor'
 import { useThrottleFn } from '@vueuse/core'
 import type { App } from 'leafer-ui'
-import { DragEvent, Line, MoveEvent, PointerEvent, Text } from 'leafer-ui'
+import { DragEvent, MoveEvent, PointerEvent, Text } from 'leafer-ui'
 import { ref } from 'vue'
-import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { ELEMENT_TYPES, TIMING, TOOL_TYPES, UI_CONSTANTS } from '@/constants'
 import { useHistory } from '@/plugins/composables/useHistory'
 import { pluginEventBus } from '@/plugins/events'
 import { pluginRegistry } from '@/plugins/registry'
 import type { ToolInstance } from '@/plugins/types'
-import { type CanvasObject, useCanvasStore } from '@/stores/canvas'
+import { useCanvasStore } from '@/stores/canvas'
 import { useHistoryStore } from '@/stores/history'
 import type { HistorySnapshot } from '@/types/history'
 import { errorHandler } from '@/utils/errorHandler'
-import { getLineArrowType, getTextFillColor } from '@/utils/typeGuards'
 import type { DrawingState } from '../tool/useToolInstance'
+import { getElementProperties } from './elementPropsUtils'
 
 export function useCanvasEvents(
   app: App,
@@ -60,26 +59,8 @@ export function useCanvasEvents(
           const clientX = containerRect.left + centerX
           const clientY = containerRect.top + topY
 
-          const {
-            fillColor,
-            strokeColor,
-            strokeWidth,
-            dashPattern,
-            startArrow,
-            endArrow,
-            textColor,
-            fontSize,
-          } = getElementProps(obj)
-          elementPopover.showPopoverAt(clientX, clientY, obj.type, obj.element, {
-            fillColor,
-            strokeColor,
-            strokeWidth,
-            dashPattern,
-            startArrow,
-            endArrow,
-            textColor,
-            fontSize,
-          })
+          const elementProps = getElementProperties(obj)
+          elementPopover.showPopoverAt(clientX, clientY, obj.type, obj.element, elementProps)
         }
       }
     }
@@ -241,64 +222,6 @@ export function useCanvasEvents(
         error instanceof Error ? error : undefined,
         { toolType: tool, operation: 'handleTap' }
       )
-    }
-  }
-
-  function getTextElementProps(text: Text) {
-    return {
-      textColor: getTextFillColor(text),
-      fontSize: text.fontSize ?? 16,
-    }
-  }
-
-  function getStandardElementProps(obj: CanvasObject) {
-    const strokeColor = typeof obj.element.stroke === 'string' ? obj.element.stroke : '#000000'
-    const strokeWidth = typeof obj.element.strokeWidth === 'number' ? obj.element.strokeWidth : 0
-    const dashPattern =
-      Array.isArray(obj.element.dashPattern) &&
-      obj.element.dashPattern.every((item) => typeof item === 'number')
-        ? (obj.element.dashPattern as number[])
-        : undefined
-
-    let startArrow: ArrowType = 'none'
-    let endArrow: ArrowType = UI_CONSTANTS.DEFAULT_END_ARROW
-
-    if (obj.type === ELEMENT_TYPES.ARROW && obj.element instanceof Line) {
-      startArrow = getLineArrowType(obj.element, 'startArrow')
-      endArrow = getLineArrowType(obj.element, 'endArrow')
-    }
-
-    return {
-      strokeColor,
-      strokeWidth,
-      dashPattern,
-      startArrow,
-      endArrow,
-    }
-  }
-
-  function getElementProps(obj: CanvasObject) {
-    const fillColor = typeof obj.element.fill === 'string' ? obj.element.fill : '#ffffff'
-
-    if (obj.type === ELEMENT_TYPES.TEXT && obj.element instanceof Text) {
-      const textProps = getTextElementProps(obj.element)
-      return {
-        fillColor,
-        strokeColor: '',
-        strokeWidth: 0,
-        dashPattern: undefined,
-        startArrow: 'none' as ArrowType,
-        endArrow: UI_CONSTANTS.DEFAULT_END_ARROW,
-        ...textProps,
-      }
-    }
-
-    const standardProps = getStandardElementProps(obj)
-    return {
-      fillColor,
-      ...standardProps,
-      textColor: undefined,
-      fontSize: undefined,
     }
   }
 

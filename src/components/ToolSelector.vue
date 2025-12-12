@@ -57,7 +57,7 @@ function handleToolClick(toolType: ToolType) {
             @click="handleToolClick(tool.type)"
           >
             <template #icon>
-              <IconRenderer :name="tool.iconName" class="text-sm" />
+              <IconRenderer :name="tool.iconName" :size="16" />
             </template>
           </n-button>
         </template>

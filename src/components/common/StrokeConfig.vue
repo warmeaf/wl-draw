@@ -26,17 +26,17 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 const size = ref<Size>('small')
 
-function handleStrokeTypeChange(type: StrokeType) {
+function updateStrokeType(type: StrokeType) {
   emit('update:strokeType', type)
 }
 
-function handleWidthChange(value: number | null) {
+function updateStrokeWidth(value: number | null) {
   if (value === null) return
   const clampedValue = Math.max(props.minWidth, Math.min(props.maxWidth, value))
   emit('update:strokeWidth', clampedValue)
 }
 
-function handleColorUpdate(color: string) {
+function updateStrokeColor(color: string) {
   emit('update:strokeColor', color)
 }
 </script>
@@ -48,7 +48,7 @@ function handleColorUpdate(color: string) {
         quaternary
         :tertiary="props.strokeType === 'solid'"
         :size="size"
-        @click="handleStrokeTypeChange('solid')"
+        @click="updateStrokeType('solid')"
       >
         <template #icon>
           <svg
@@ -73,7 +73,7 @@ function handleColorUpdate(color: string) {
         quaternary
         :tertiary="props.strokeType === 'dashed'"
         :size="size"
-        @click="handleStrokeTypeChange('dashed')"
+        @click="updateStrokeType('dashed')"
       >
         <template #icon>
           <svg
@@ -108,13 +108,13 @@ function handleColorUpdate(color: string) {
         :size="size"
         class="w-[90px]"
         placeholder=""
-        @update:value="handleWidthChange"
+        @update:value="updateStrokeWidth"
       />
       <ColorPicker
         size="small"
         :value="props.strokeColor"
         :circle="false"
-        @update:value="handleColorUpdate"
+        @update:value="updateStrokeColor"
       />
     </div>
   </div>

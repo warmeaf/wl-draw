@@ -18,26 +18,27 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-const handleColorUpdate = (color: string) => {
+function updateColor(color: string) {
   emit('update:value', color)
 }
 
-const showColorPicker = ref(false)
-const handleClick = () => {
-  showColorPicker.value = true
+const isColorPickerVisible = ref(false)
+
+function openColorPicker() {
+  isColorPickerVisible.value = true
 }
 </script>
 
 <template>
-  <n-button quaternary size="small" :circle="props.circle" @click="handleClick">
+  <n-button quaternary size="small" :circle="props.circle" @click="openColorPicker">
     <template #icon>
       <n-color-picker
         :size="props.size"
         :value="props.value"
         class="h-[18px]! w-[18px]!"
         :class="{ circle: props.circle }"
-        v-model:show="showColorPicker"
-        @update:value="handleColorUpdate"
+        v-model:show="isColorPickerVisible"
+        @update:value="updateColor"
       >
         <template v-for="(_, name) in $slots" #[name]="slotData">
           <slot :name="name" v-bind="slotData || {}"></slot>

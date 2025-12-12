@@ -9,125 +9,21 @@ import type { ArrowType } from '@/components/common/ArrowPicker.vue'
 import { TIMING } from '@/constants'
 import { useHistory } from '@/plugins/composables/useHistory'
 import type { LeaferElement } from '@/types'
+import {
+  type ElementPropertyRefs,
+  type ElementProps,
+  elementPropertySetterMap,
+} from './elementPropertySetters'
 
 type ElementType = 'rect' | 'circle' | 'line' | 'arrow' | 'pen' | 'text' | 'image' | null
 
-interface ElementProps {
-  fillColor?: string
-  strokeColor?: string
-  strokeWidth?: number
-  dashPattern?: number[] | undefined
-  startArrow?: ArrowType
-  endArrow?: ArrowType
-  textColor?: string
-  fontSize?: number
-}
-
-interface ElementPropertySetter {
-  setProperties(
-    props: ElementProps | undefined,
-    fillColorRef: { value: string },
-    strokeColorRef: { value: string },
-    strokeWidthRef: { value: number },
-    dashPatternRef: { value: number[] | undefined },
-    startArrowRef?: { value: ArrowType },
-    endArrowRef?: { value: ArrowType },
-    textColorRef?: { value: string },
-    fontSizeRef?: { value: number }
-  ): void
-}
-
-class FillableElementPropertySetter implements ElementPropertySetter {
-  setProperties(
-    props: ElementProps | undefined,
-    fillColorRef: { value: string },
-    strokeColorRef: { value: string },
-    strokeWidthRef: { value: number },
-    dashPatternRef: { value: number[] | undefined },
-    _startArrowRef?: { value: ArrowType },
-    _endArrowRef?: { value: ArrowType },
-    _textColorRef?: { value: string },
-    _fontSizeRef?: { value: number }
-  ): void {
-    fillColorRef.value = props?.fillColor ?? '#ffffff'
-    strokeColorRef.value = props?.strokeColor ?? '#000000'
-    strokeWidthRef.value = props?.strokeWidth ?? 0
-    dashPatternRef.value = props?.dashPattern ?? undefined
-  }
-}
-
-class StrokeOnlyElementPropertySetter implements ElementPropertySetter {
-  setProperties(
-    props: ElementProps | undefined,
-    _fillColorRef: { value: string },
-    strokeColorRef: { value: string },
-    strokeWidthRef: { value: number },
-    dashPatternRef: { value: number[] | undefined },
-    _startArrowRef?: { value: ArrowType },
-    _endArrowRef?: { value: ArrowType },
-    _textColorRef?: { value: string },
-    _fontSizeRef?: { value: number }
-  ): void {
-    strokeColorRef.value = props?.strokeColor ?? '#000000'
-    strokeWidthRef.value = props?.strokeWidth ?? 0
-    dashPatternRef.value = props?.dashPattern ?? undefined
-  }
-}
-
-class ArrowElementPropertySetter implements ElementPropertySetter {
-  setProperties(
-    props: ElementProps | undefined,
-    _fillColorRef: { value: string },
-    strokeColorRef: { value: string },
-    strokeWidthRef: { value: number },
-    dashPatternRef: { value: number[] | undefined },
-    startArrowRef: { value: ArrowType },
-    endArrowRef: { value: ArrowType },
-    _textColorRef?: { value: string },
-    _fontSizeRef?: { value: number }
-  ): void {
-    strokeColorRef.value = props?.strokeColor ?? '#000000'
-    strokeWidthRef.value = props?.strokeWidth ?? 0
-    dashPatternRef.value = props?.dashPattern ?? undefined
-    startArrowRef.value = props?.startArrow ?? 'none'
-    endArrowRef.value = props?.endArrow ?? 'arrow'
-  }
-}
-
-class TextElementPropertySetter implements ElementPropertySetter {
-  setProperties(
-    props: ElementProps | undefined,
-    _fillColorRef: { value: string },
-    _strokeColorRef: { value: string },
-    _strokeWidthRef: { value: number },
-    _dashPatternRef: { value: number[] | undefined },
-    _startArrowRef?: { value: ArrowType },
-    _endArrowRef?: { value: ArrowType },
-    textColorRef?: { value: string },
-    fontSizeRef?: { value: number }
-  ): void {
-    if (textColorRef) {
-      textColorRef.value = props?.textColor ?? '#000000'
-    }
-    if (fontSizeRef) {
-      fontSizeRef.value = props?.fontSize ?? 16
-    }
-  }
-}
-
-const fillableElementPropertySetter = new FillableElementPropertySetter()
-const strokeOnlyElementPropertySetter = new StrokeOnlyElementPropertySetter()
-const arrowElementPropertySetter = new ArrowElementPropertySetter()
-const textElementPropertySetter = new TextElementPropertySetter()
-
-const elementPropertySetterMap: Record<string, ElementPropertySetter> = {
-  rect: fillableElementPropertySetter,
-  circle: fillableElementPropertySetter,
-  line: strokeOnlyElementPropertySetter,
-  pen: strokeOnlyElementPropertySetter,
-  arrow: arrowElementPropertySetter,
-  text: textElementPropertySetter,
-}
+const DEFAULT_FILL_COLOR = '#ffffff'
+const DEFAULT_STROKE_COLOR = '#000000'
+const DEFAULT_STROKE_WIDTH = 0
+const DEFAULT_START_ARROW: ArrowType = 'none'
+const DEFAULT_END_ARROW: ArrowType = 'arrow'
+const DEFAULT_TEXT_COLOR = '#000000'
+const DEFAULT_FONT_SIZE = 16
 
 export function useElementPopover() {
   const { addSnapshot } = useHistory()
@@ -144,21 +40,21 @@ export function useElementPopover() {
   const selectedElementType = ref<ElementType>(null)
   const selectedElement = ref<LeaferElement>(null)
 
-  const selectedElementFillColor = ref<string>('#ffffff')
-  const selectedElementStrokeColor = ref<string>('#000000')
-  const selectedElementStrokeWidth = ref<number>(0)
+  const selectedElementFillColor = ref<string>(DEFAULT_FILL_COLOR)
+  const selectedElementStrokeColor = ref<string>(DEFAULT_STROKE_COLOR)
+  const selectedElementStrokeWidth = ref<number>(DEFAULT_STROKE_WIDTH)
   const selectedElementDashPattern = ref<number[] | undefined>(undefined)
-  const selectedElementStartArrow = ref<ArrowType>('none')
-  const selectedElementEndArrow = ref<ArrowType>('arrow')
-  const selectedElementTextColor = ref<string>('#000000')
-  const selectedElementFontSize = ref<number>(16)
+  const selectedElementStartArrow = ref<ArrowType>(DEFAULT_START_ARROW)
+  const selectedElementEndArrow = ref<ArrowType>(DEFAULT_END_ARROW)
+  const selectedElementTextColor = ref<string>(DEFAULT_TEXT_COLOR)
+  const selectedElementFontSize = ref<number>(DEFAULT_FONT_SIZE)
 
   function showPopoverAt(
     x: number,
     y: number,
     elementType?: ElementType,
     element?: LeaferElement | null,
-    props?: ElementProps
+    elementProps?: ElementProps
   ) {
     popoverX.value = x
     popoverY.value = y
@@ -169,17 +65,17 @@ export function useElementPopover() {
     if (elementType) {
       const propertySetter = elementPropertySetterMap[elementType]
       if (propertySetter) {
-        propertySetter.setProperties(
-          props,
-          selectedElementFillColor,
-          selectedElementStrokeColor,
-          selectedElementStrokeWidth,
-          selectedElementDashPattern,
-          selectedElementStartArrow,
-          selectedElementEndArrow,
-          selectedElementTextColor,
-          selectedElementFontSize
-        )
+        const propertyRefs: ElementPropertyRefs = {
+          fillColor: selectedElementFillColor,
+          strokeColor: selectedElementStrokeColor,
+          strokeWidth: selectedElementStrokeWidth,
+          dashPattern: selectedElementDashPattern,
+          startArrow: selectedElementStartArrow,
+          endArrow: selectedElementEndArrow,
+          textColor: selectedElementTextColor,
+          fontSize: selectedElementFontSize,
+        }
+        propertySetter.setProperties(elementProps, propertyRefs)
       }
     }
 

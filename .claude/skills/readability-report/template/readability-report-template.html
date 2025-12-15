@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>可读性分析报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind Config -->
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              bg: '#0B0F19', // Deep dark slate
+              surface: '#111827', // Slightly lighter
+              surfaceHighlight: '#1F2937',
+              primary: '#3B82F6', // Cyber Blue
+              primaryDim: 'rgba(59, 130, 246, 0.1)',
+              success: '#10B981', // Neon Emerald
+              warning: '#F59E0B', // Signal Amber
+              danger: '#EF4444', // Crimson
+              textMain: '#E5E7EB', // Off-white
+              textMuted: '#9CA3AF', // Muted gray
+              border: '#374151', // Border gray
+            },
+            fontFamily: {
+              sans: [
+                '"Space Grotesk"',
+                '"PingFang SC"',
+                '"Microsoft YaHei"',
+                'sans-serif',
+              ],
+              mono: [
+                '"JetBrains Mono"',
+                '"PingFang SC"',
+                '"Microsoft YaHei"',
+                'monospace',
+              ],
+            },
+            boxShadow: {
+              glow: '0 0 15px rgba(59, 130, 246, 0.2)',
+              'glow-success': '0 0 15px rgba(16, 185, 129, 0.2)',
+              'glow-danger': '0 0 15px rgba(239, 68, 68, 0.2)',
+            },
+          },
+        },
+      }
+    </script>
+
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .text-glow {
+          text-shadow: 0 0 10px currentColor;
+        }
+      }
+
+      body {
+        @apply bg-bg text-textMain font-sans overflow-x-hidden min-h-screen;
+        background-image: linear-gradient(
+            rgba(11, 15, 25, 0.93),
+            rgba(11, 15, 25, 0.93)
+          ),
+          linear-gradient(to right, #1f2937 1px, transparent 1px),
+          linear-gradient(to bottom, #1f2937 1px, transparent 1px);
+        background-size: 100% 100%, 40px 40px, 40px 40px;
+      }
+
+      /* Tech Borders */
+      .tech-border {
+        position: relative;
+        @apply border border-border bg-surface/40 backdrop-blur-sm transition-colors duration-300;
+      }
+
+      .tech-border::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: -1px;
+        width: 10px;
+        height: 10px;
+        border-top: 2px solid #3b82f6;
+        border-left: 2px solid #3b82f6;
+        transition: all 0.3s ease;
+      }
+
+      .tech-border::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        right: -1px;
+        width: 10px;
+        height: 10px;
+        border-bottom: 2px solid #3b82f6;
+        border-right: 2px solid #3b82f6;
+        transition: all 0.3s ease;
+      }
+
+      .tech-border:hover {
+        @apply bg-surface/60 border-primary/50;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+      }
+
+      /* Scanline Effect */
+      .scanline {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: rgba(59, 130, 246, 0.5);
+        opacity: 0.6;
+        animation: scan 6s linear infinite;
+        pointer-events: none;
+        z-index: 9999;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+      }
+
+      @keyframes scan {
+        0% {
+          top: -10%;
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          top: 110%;
+          opacity: 0;
+        }
+      }
+
+      /* Tree Lines */
+      .tree-line {
+        @apply border-l border-border ml-[11px] pl-4;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        @apply bg-bg;
+      }
+      ::-webkit-scrollbar-thumb {
+        @apply bg-surfaceHighlight border border-border rounded-sm;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        @apply bg-primary/40;
+      }
+
+      /* Animations */
+      .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      @keyframes fadeInUp {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="selection:bg-primary selection:text-white">
+    <div class="scanline"></div>
+
+    <!-- Header / Status Bar -->
+    <header
+      class="border-b border-border bg-surface/80 backdrop-blur-md sticky top-0 z-50"
+    >
+      <div
+        class="container mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center"
+      >
+        <div class="flex items-center gap-4">
+          <div
+            class="flex items-center justify-center w-10 h-10 border border-primary/30 bg-primary/10 rounded-sm"
+          >
+            <i class="fa fa-terminal text-primary text-xl"></i>
+          </div>
+          <div>
+            <div
+              class="text-[10px] font-mono text-primary tracking-widest uppercase mb-0.5"
+            >
+              系统分析
+            </div>
+            <h1 class="text-xl font-bold text-white tracking-tight">
+              代码可读性报告<span class="text-primary animate-pulse">_</span>
+            </h1>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-6 mt-4 md:mt-0 font-mono text-xs">
+          <div
+            class="flex items-center px-3 py-1 border border-border rounded-sm bg-surfaceHighlight/50"
+          >
+            <i class="fa fa-clock-o text-primary mr-2"></i>
+            <span id="report-date" class="text-textMain">日期: 2025-12-12</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+      <!-- Dashboard Grid -->
+      <section
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+      >
+        <!-- Average Score Module -->
+        <div
+          class="tech-border p-6 rounded-sm fade-in-up"
+          style="animation-delay: 0.1s"
+        >
+          <div class="flex justify-between items-start mb-4">
+            <span class="text-xs font-mono text-primary tracking-widest"
+              >平均得分</span
+            >
+            <i class="fa fa-crosshairs text-primary/40"></i>
+          </div>
+          <div class="flex items-baseline gap-2 mb-2">
+            <div
+              class="text-4xl font-bold font-mono text-white tracking-tighter"
+              id="avg-score"
+            >
+              --
+            </div>
+            <span class="text-xs text-textMuted">/ 100</span>
+          </div>
+          <div
+            class="h-1 bg-surfaceHighlight w-full rounded-full overflow-hidden"
+          >
+            <div
+              id="avg-score-bar"
+              class="h-full bg-primary shadow-glow transition-all duration-1000 ease-out"
+              style="width: 0%"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Total Files Module -->
+        <div
+          class="tech-border p-6 rounded-sm fade-in-up"
+          style="animation-delay: 0.2s"
+        >
+          <div class="flex justify-between items-start mb-4">
+            <span class="text-xs font-mono text-info tracking-widest"
+              >文件总数</span
+            >
+            <i class="fa fa-file-code-o text-info/40"></i>
+          </div>
+          <div
+            class="text-4xl font-bold font-mono text-white tracking-tighter mb-1"
+            id="total-files"
+          >
+            --
+          </div>
+          <div class="text-xs text-textMuted font-mono">> 扫描完成</div>
+        </div>
+
+        <!-- Max Score Module -->
+        <div
+          class="tech-border p-6 rounded-sm fade-in-up"
+          style="animation-delay: 0.3s"
+        >
+          <div class="flex justify-between items-start mb-4">
+            <span class="text-xs font-mono text-success tracking-widest"
+              >最佳表现</span
+            >
+            <i class="fa fa-level-up text-success/40"></i>
+          </div>
+          <div
+            class="text-4xl font-bold font-mono text-success tracking-tighter text-shadow-glow mb-1"
+            id="max-score"
+          >
+            --
+          </div>
+          <div class="text-xs text-textMuted font-mono" id="max-files-count">
+            -- 个文件
+          </div>
+        </div>
+
+        <!-- Min Score Module -->
+        <div
+          class="tech-border p-6 rounded-sm fade-in-up"
+          style="animation-delay: 0.4s"
+        >
+          <div class="flex justify-between items-start mb-4">
+            <span class="text-xs font-mono text-warning tracking-widest"
+              >最差表现</span
+            >
+            <i class="fa fa-warning text-warning/40"></i>
+          </div>
+          <div
+            class="text-4xl font-bold font-mono text-warning tracking-tighter mb-1"
+            id="min-score"
+          >
+            --
+          </div>
+          <div class="text-xs text-textMuted font-mono" id="min-files-count">
+            -- 个文件
+          </div>
+        </div>
+      </section>
+
+      <!-- Charts Section -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div
+          class="tech-border p-6 rounded-sm fade-in-up"
+          style="animation-delay: 0.5s"
+        >
+          <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+            <span class="text-primary">></span> 分布分析
+          </h2>
+          <div class="h-64">
+            <canvas id="distribution-chart"></canvas>
+          </div>
+        </div>
+        <div
+          class="tech-border p-6 rounded-sm fade-in-up"
+          style="animation-delay: 0.6s"
+        >
+          <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+            <span class="text-primary">></span> 目录指标
+          </h2>
+          <div class="h-64">
+            <canvas id="directory-chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- File Tree Section -->
+      <section
+        class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-in-up"
+        style="animation-delay: 0.7s"
+      >
+        <!-- Main Tree -->
+        <div class="lg:col-span-2 tech-border p-6 rounded-sm min-h-[500px]">
+          <div
+            class="flex justify-between items-center mb-6 pb-4 border-b border-border border-dashed"
+          >
+            <h2 class="text-lg font-bold flex items-center gap-2">
+              <span class="text-primary">></span> 文件系统树
+            </h2>
+            <div class="flex gap-3 font-mono text-xs">
+              <button
+                id="expand-all"
+                class="text-textMuted hover:text-primary transition-colors flex items-center gap-1 group"
+              >
+                [
+                <i class="fa fa-plus-square-o group-hover:text-white"></i>
+                展开 ]
+              </button>
+              <button
+                id="collapse-all"
+                class="text-textMuted hover:text-primary transition-colors flex items-center gap-1 group"
+              >
+                [
+                <i class="fa fa-minus-square-o group-hover:text-white"></i>
+                折叠 ]
+              </button>
+            </div>
+          </div>
+          <div class="font-mono text-sm overflow-x-auto">
+            <ul class="file-tree" id="file-tree-root">
+              <!-- Tree Generated via JS -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Legend / Info -->
+        <div class="tech-border p-6 rounded-sm h-fit">
+          <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+            <span class="text-primary">></span> 评分标准
+          </h2>
+          <div class="space-y-4 font-mono text-xs">
+            <div
+              class="p-3 border border-success/30 bg-success/5 rounded-sm flex items-center gap-3"
+            >
+              <div class="w-3 h-3 bg-success shadow-glow-success"></div>
+              <div>
+                <div class="font-bold text-success">优秀 [90-100]</div>
+                <div class="text-textMuted mt-1">代码结构严格遵守标准。</div>
+              </div>
+            </div>
+            <div
+              class="p-3 border border-warning/30 bg-warning/5 rounded-sm flex items-center gap-3"
+            >
+              <div class="w-3 h-3 bg-warning"></div>
+              <div>
+                <div class="font-bold text-warning">待优化 [70-89]</div>
+                <div class="text-textMuted mt-1">建议进行少量重构。</div>
+              </div>
+            </div>
+            <div
+              class="p-3 border border-danger/30 bg-danger/5 rounded-sm flex items-center gap-3"
+            >
+              <div class="w-3 h-3 bg-danger shadow-glow-danger"></div>
+              <div>
+                <div class="font-bold text-danger">严重 [0-69]</div>
+                <div class="text-textMuted mt-1">需要立即干预。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-border bg-surface mt-12 py-8">
+      <div
+        class="container mx-auto px-4 text-center font-mono text-xs text-textMuted"
+      >
+        <p>系统.可读性分析 &copy; 2025</p>
+        <p class="mt-2 opacity-50">结束。</p>
+      </div>
+    </footer>
+
+    <script>
+      // 保持原始数据不变
+      const rawData = {
+        src: {
+          type: 'directory',
+          children: {
+            'App.vue': {
+              type: 'file',
+              readability: 95,
+            },
+            'main.ts': {
+              type: 'file',
+              readability: 100,
+            },
+            'style.css': {
+              type: 'file',
+              readability: 100,
+            },
+            components: {
+              type: 'directory',
+              children: {
+                'Canvas.vue': {
+                  type: 'file',
+                  readability: 95,
+                },
+                'ElementStyleConfig.vue': {
+                  type: 'file',
+                  readability: 92,
+                },
+                'IconRenderer.vue': {
+                  type: 'file',
+                  readability: 92,
+                },
+                'MenuDropdown.vue': {
+                  type: 'file',
+                  readability: 90,
+                },
+                'Toolbar.vue': {
+                  type: 'file',
+                  readability: 98,
+                },
+                'ToolSelector.vue': {
+                  type: 'file',
+                  readability: 95,
+                },
+                'UndoRedoButtons.vue': {
+                  type: 'file',
+                  readability: 92,
+                },
+                'ZoomControls.vue': {
+                  type: 'file',
+                  readability: 93,
+                },
+                common: {
+                  type: 'directory',
+                  children: {
+                    'ArrowConfigButtons.vue': {
+                      type: 'file',
+                      readability: 95,
+                    },
+                    'ArrowPicker.vue': {
+                      type: 'file',
+                      readability: 95,
+                    },
+                    'ColorPicker.vue': {
+                      type: 'file',
+                      readability: 92,
+                    },
+                    'StrokeColorButton.vue': {
+                      type: 'file',
+                      readability: 98,
+                    },
+                    'StrokeConfig.vue': {
+                      type: 'file',
+                      readability: 93,
+                    },
+                    'StrokeConfigPopover.vue': {
+                      type: 'file',
+                      readability: 96,
+                    },
+                    'SvgIcon.vue': {
+                      type: 'file',
+                      readability: 90,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }
+
+      // Globals
+      let allFiles = []
+      let directoryScores = {}
+
+      // Init
+      document.addEventListener('DOMContentLoaded', () => {
+        // Collect
+        collectAllFiles(rawData.src.children, 'src')
+        // Calculate
+        calculateStatistics()
+        // Render Tree
+        generateFileTree(
+          rawData.src.children,
+          document.getElementById('file-tree-root'),
+          'src'
+        )
+        // Charts
+        initCharts()
+        // Events
+        bindEvents()
+      })
+
+      // Collect Logic
+      function collectAllFiles(children, parentPath) {
+        Object.entries(children).forEach(([name, item]) => {
+          const currentPath = `${parentPath}/${name}`
+          if (item.type === 'file') {
+            allFiles.push({
+              path: currentPath,
+              name,
+              readability: item.readability,
+            })
+          } else if (item.type === 'directory' && item.children) {
+            collectAllFiles(item.children, currentPath)
+            const dirFiles = allFiles.filter((file) =>
+              file.path.startsWith(currentPath + '/')
+            )
+            if (dirFiles.length > 0) {
+              const avgScore =
+                dirFiles.reduce((sum, file) => sum + file.readability, 0) /
+                dirFiles.length
+              directoryScores[currentPath] = {
+                name,
+                avgScore: Math.round(avgScore * 10) / 10,
+                fileCount: dirFiles.length,
+              }
+            }
+          }
+        })
+      }
+
+      // Stats Logic
+      function calculateStatistics() {
+        const scores = allFiles.map((file) => file.readability)
+        const totalFiles = scores.length
+        const avgScore =
+          scores.reduce((sum, score) => sum + score, 0) / totalFiles
+        const maxScore = Math.max(...scores)
+        const minScore = Math.min(...scores)
+        const maxFilesCount = scores.filter(
+          (score) => score === maxScore
+        ).length
+        const minFilesCount = scores.filter(
+          (score) => score === minScore
+        ).length
+
+        // Update UI with animation triggers if needed
+        document.getElementById('avg-score').textContent = avgScore.toFixed(1)
+        setTimeout(() => {
+          document.getElementById('avg-score-bar').style.width = `${avgScore}%`
+        }, 300)
+
+        document.getElementById('total-files').textContent = totalFiles
+        document.getElementById('max-score').textContent = maxScore
+        document.getElementById(
+          'max-files-count'
+        ).textContent = `// 发现 ${maxFilesCount} 个文件`
+        document.getElementById('min-score').textContent = minScore
+        document.getElementById(
+          'min-files-count'
+        ).textContent = `// 标记 ${minFilesCount} 个文件`
+      }
+
+      // File Tree Render (Updated for New UI)
+      function generateFileTree(children, parentElement, parentPath) {
+        Object.entries(children).forEach(([name, item]) => {
+          const currentPath = `${parentPath}/${name}`
+          const listItem = document.createElement('li')
+          listItem.className = 'mb-1'
+
+          if (item.type === 'directory') {
+            // Directory Node
+            const dirNode = document.createElement('div')
+            dirNode.className =
+              'flex items-center cursor-pointer group hover:bg-surfaceHighlight/30 py-1 rounded px-2 transition-colors'
+            dirNode.innerHTML = `
+                <span class="text-primary/50 mr-2 w-4 text-center toggle-icon">[+]</span>
+                <i class="fa fa-folder-o text-warning mr-2 group-hover:text-warning/80"></i>
+                <span class="text-textMain group-hover:text-primary transition-colors">${name}</span>
+            `
+
+            const toggleIcon = dirNode.querySelector('.toggle-icon')
+            const folderIcon = dirNode.querySelector('.fa-folder-o')
+
+            dirNode.addEventListener('click', (e) => {
+              e.stopPropagation()
+              const subList = dirNode.nextElementSibling
+              if (subList) {
+                const isHidden = subList.classList.toggle('hidden')
+                toggleIcon.textContent = isHidden ? '[+]' : '[-]'
+                folderIcon.className = isHidden
+                  ? 'fa fa-folder-o text-warning mr-2 group-hover:text-warning/80'
+                  : 'fa fa-folder-open-o text-warning mr-2 group-hover:text-warning/80'
+              }
+            })
+
+            listItem.appendChild(dirNode)
+
+            if (item.children) {
+              const subList = document.createElement('ul')
+              subList.className =
+                'tree-line mt-1 hidden border-dashed border-border'
+              generateFileTree(item.children, subList, currentPath)
+              listItem.appendChild(subList)
+            }
+          } else if (item.type === 'file') {
+            // File Node
+            const score = item.readability
+            let scoreColor = 'text-success'
+            let scoreBg = 'bg-success'
+
+            if (score < 70) {
+              scoreColor = 'text-danger'
+              scoreBg = 'bg-danger'
+            } else if (score < 90) {
+              scoreColor = 'text-warning'
+              scoreBg = 'bg-warning'
+            }
+
+            const fileNode = document.createElement('div')
+            fileNode.className =
+              'flex items-center justify-between py-1 px-2 hover:bg-surfaceHighlight/30 rounded group transition-colors'
+            fileNode.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fa fa-file-code-o text-textMuted mr-3 text-xs opacity-50"></i>
+                    <span class="text-textMuted group-hover:text-textMain transition-colors">${name}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-16 h-1 bg-surfaceHighlight rounded-full overflow-hidden">
+                        <div class="${scoreBg} h-full rounded-full opacity-60 group-hover:opacity-100" style="width: ${score}%"></div>
+                    </div>
+                    <span class="text-xs font-mono font-bold ${scoreColor} w-8 text-right">${score}</span>
+                </div>
+            `
+            listItem.appendChild(fileNode)
+          }
+
+          parentElement.appendChild(listItem)
+        })
+      }
+
+      // Chart Config (Dark Mode)
+      function initCharts() {
+        Chart.defaults.color = '#9CA3AF'
+        Chart.defaults.font.family = '"JetBrains Mono", monospace'
+
+        // Distribution Chart
+        const distributionCtx = document
+          .getElementById('distribution-chart')
+          .getContext('2d')
+        const scoreRanges = [
+          { range: '80-89', count: 0 },
+          { range: '90-94', count: 0 },
+          { range: '95-99', count: 0 },
+          { range: '100', count: 0 },
+        ]
+
+        allFiles.forEach((file) => {
+          const score = file.readability
+          if (score >= 80 && score < 90) {
+            scoreRanges[0].count++
+          } else if (score >= 90 && score < 95) {
+            scoreRanges[1].count++
+          } else if (score >= 95 && score < 100) {
+            scoreRanges[2].count++
+          } else if (score === 100) {
+            scoreRanges[3].count++
+          }
+        })
+
+        new Chart(distributionCtx, {
+          type: 'bar',
+          data: {
+            labels: scoreRanges.map((range) => range.range),
+            datasets: [
+              {
+                label: '文件',
+                data: scoreRanges.map((range) => range.count),
+                backgroundColor: [
+                  'rgba(245, 158, 11, 0.6)',
+                  'rgba(59, 130, 246, 0.6)',
+                  'rgba(16, 185, 129, 0.6)',
+                  'rgba(16, 185, 129, 0.8)',
+                ],
+                borderColor: ['#F59E0B', '#3B82F6', '#10B981', '#10B981'],
+                borderWidth: 1,
+                barThickness: 40,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(55, 65, 81, 0.3)',
+                  drawBorder: false,
+                },
+                ticks: { color: '#9CA3AF' },
+              },
+              x: {
+                grid: { display: false },
+                ticks: { color: '#9CA3AF' },
+              },
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#374151',
+                borderWidth: 1,
+                padding: 10,
+                displayColors: false,
+                callbacks: {
+                  title: (items) => `分数范围: ${items[0].label}`,
+                },
+              },
+            },
+          },
+        })
+
+        // Directory Chart
+        const directoryCtx = document
+          .getElementById('directory-chart')
+          .getContext('2d')
+        const mainDirs = Object.entries(directoryScores)
+          .filter(([path]) => path.split('/').length === 2)
+          .sort((a, b) => b[1].avgScore - a[1].avgScore)
+
+        new Chart(directoryCtx, {
+          type: 'doughnut',
+          data: {
+            labels: mainDirs.map(([_, dir]) => dir.name),
+            datasets: [
+              {
+                data: mainDirs.map(([_, dir]) => dir.avgScore),
+                backgroundColor: [
+                  'rgba(59, 130, 246, 0.7)',
+                  'rgba(16, 185, 129, 0.7)',
+                  'rgba(245, 158, 11, 0.7)',
+                  'rgba(156, 163, 175, 0.7)',
+                  'rgba(239, 68, 68, 0.7)',
+                  'rgba(139, 92, 246, 0.7)',
+                  'rgba(236, 72, 153, 0.7)',
+                  'rgba(14, 165, 233, 0.7)',
+                  'rgba(250, 204, 21, 0.7)',
+                ],
+                borderColor: '#111827',
+                borderWidth: 4,
+                hoverOffset: 10,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {
+                  boxWidth: 10,
+                  padding: 15,
+                  usePointStyle: true,
+                  font: { size: 11 },
+                },
+              },
+              tooltip: {
+                backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                padding: 12,
+                borderColor: '#374151',
+                borderWidth: 1,
+                callbacks: {
+                  label: function (context) {
+                    const label = context.label || ''
+                    const value = context.raw || 0
+                    const dir = mainDirs.find(([_, d]) => d.name === label)
+                    return `${label}: ${value} (${dir[1].fileCount} 个文件)`
+                  },
+                },
+              },
+            },
+          },
+        })
+      }
+
+      function bindEvents() {
+        document.getElementById('expand-all').addEventListener('click', () => {
+          document.querySelectorAll('.tree-line').forEach((line) => {
+            line.classList.remove('hidden')
+          })
+          document
+            .querySelectorAll('.toggle-icon')
+            .forEach((icon) => (icon.textContent = '[-]'))
+          document.querySelectorAll('.fa-folder-o').forEach((icon) => {
+            icon.className =
+              'fa fa-folder-open-o text-warning mr-2 group-hover:text-warning/80'
+          })
+        })
+
+        document
+          .getElementById('collapse-all')
+          .addEventListener('click', () => {
+            document.querySelectorAll('.tree-line').forEach((line) => {
+              line.classList.add('hidden')
+            })
+            document
+              .querySelectorAll('.toggle-icon')
+              .forEach((icon) => (icon.textContent = '[+]'))
+            document.querySelectorAll('.fa-folder-open-o').forEach((icon) => {
+              icon.className =
+                'fa fa-folder-o text-warning mr-2 group-hover:text-warning/80'
+            })
+          })
+      }
+    </script>
+  </body>
+</html>

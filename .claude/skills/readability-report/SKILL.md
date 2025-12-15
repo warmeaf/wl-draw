@@ -1,45 +1,40 @@
 ---
-name: frontend-design
-description: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, artifacts, posters, or applications (examples include websites, landing pages, dashboards, React components, HTML/CSS layouts, or when styling/beautifying any web UI). Generates creative, polished code and UI design that avoids generic AI aesthetics.
+name: readability-report
+description: Generate a readability report. Utilize this capability when users request generating a readability report for project source code. Output a single-page HTML file named readability-report.html as the readability report, which integrates Node.js scripts and HTML templates.
 license: Complete terms in LICENSE.txt
 ---
 
-This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
+## 报告生成步骤
 
-The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
+1. **确定路径和输出目录**
 
-## Design Thinking
+   - 确定源码文件夹路径（通常为 `src/`）
+   - 确定报告输出文件夹：默认为项目根目录下的 `.readability/`
+   - 如果输出文件夹不存在，则创建该目录
 
-Before coding, understand the context and commit to a BOLD aesthetic direction:
+2. **初始化文件结构数据**
 
-- **Purpose**: What problem does this interface solve? Who uses it?
-- **Tone**: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
-- **Constraints**: Technical requirements (framework, performance, accessibility).
-- **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
+   - 执行脚本：`node .claude/skills/readability-report/script/generate-file-structure.js <源码文件夹路径> .readability/readability.json`
+   - 脚本会在输出文件夹（`.readability/`）下生成 `readability.json` 文件
+   - 该 JSON 文件包含源码目录结构，每个代码文件的 `readability` 字段初始值为 `0`
 
-**CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work - the key is intentionality, not intensity.
+3. **评估代码可读性**
 
-Then implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
+   - 读取 `.claude/skills/readability-report/code-readability.md` 作为可读性评估标准
+   - 读取 `.readability/readability.json` 获取所有代码文件列表
+   - 对于 JSON 中的每个代码文件：
+     - 读取文件内容
+     - 根据 `code-readability.md` 的标准，运用 AI 能力评估其可读性
+     - 将评估结果（0-100 的分数）更新到该文件对应的 `readability` 字段
+   - 将更新后的数据写回 `readability.json`
 
-- Production-grade and functional
-- Visually striking and memorable
-- Cohesive with a clear aesthetic point-of-view
-- Meticulously refined in every detail
+4. **生成 HTML 报告**
 
-## Frontend Aesthetics Guidelines
+   - 读取模板文件：`.claude/skills/readability-report/template/readability-report-template.html`
+   - 读取最终的 `readability.json` 数据
+   - 在模板文件中找到 `rawData` 变量（通常在 JavaScript 代码中）
+   - 将 `readability.json` 的内容赋值给 `rawData` 变量
+   - 将更新后的模板内容保存为 `.readability/readability-report.html`
 
-Focus on:
-
-- **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font.
-- **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
-- **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise.
-- **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
-- **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
-
-NEVER use generic AI-generated aesthetics like overused font families (Inter, Roboto, Arial, system fonts), cliched color schemes (particularly purple gradients on white backgrounds), predictable layouts and component patterns, and cookie-cutter design that lacks context-specific character.
-
-Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices (Space Grotesk, for example) across generations.
-
-**IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
-
-Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+5. **完成**
+   - 最终报告文件位于：`.readability/readability-report.html`

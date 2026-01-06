@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>工程化.质量分析 // 报告.01</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+            rel="stylesheet"
+        />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+
+        <!-- Tailwind Config -->
+        <script>
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            bg: "#0B0F19",
+                            surface: "#111827",
+                            surfaceHighlight: "#1F2937",
+                            primary: "#3B82F6",
+                            primaryDim: "rgba(59, 130, 246, 0.1)",
+                            success: "#10B981",
+                            warning: "#F59E0B",
+                            danger: "#EF4444",
+                            textMain: "#E5E7EB",
+                            textMuted: "#9CA3AF",
+                            border: "#374151",
+                        },
+                        fontFamily: {
+                            sans: [
+                                '"Space Grotesk"',
+                                '"PingFang SC"',
+                                '"Microsoft YaHei"',
+                                "sans-serif",
+                            ],
+                            mono: [
+                                '"JetBrains Mono"',
+                                '"PingFang SC"',
+                                '"Microsoft YaHei"',
+                                "monospace",
+                            ],
+                        },
+                        boxShadow: {
+                            glow: "0 0 15px rgba(59, 130, 246, 0.2)",
+                            "glow-success": "0 0 15px rgba(16, 185, 129, 0.2)",
+                            "glow-danger": "0 0 15px rgba(239, 68, 68, 0.2)",
+                        },
+                    },
+                },
+            };
+        </script>
+
+        <style type="text/tailwindcss">
+            @layer utilities {
+                .text-glow {
+                    text-shadow: 0 0 10px currentColor;
+                }
+            }
+
+            body {
+                @apply bg-bg text-textMain font-sans overflow-x-hidden min-h-screen;
+                background-image:
+                    linear-gradient(
+                        rgba(11, 15, 25, 0.93),
+                        rgba(11, 15, 25, 0.93)
+                    ),
+                    linear-gradient(to right, #1f2937 1px, transparent 1px),
+                    linear-gradient(to bottom, #1f2937 1px, transparent 1px);
+                background-size:
+                    100% 100%,
+                    40px 40px,
+                    40px 40px;
+            }
+
+            /* Tech Borders */
+            .tech-border {
+                position: relative;
+                @apply border border-border bg-surface/40 backdrop-blur-sm transition-colors duration-300;
+            }
+
+            .tech-border::before {
+                content: "";
+                position: absolute;
+                top: -1px;
+                left: -1px;
+                width: 10px;
+                height: 10px;
+                border-top: 2px solid #3b82f6;
+                border-left: 2px solid #3b82f6;
+                transition: all 0.3s ease;
+            }
+
+            .tech-border::after {
+                content: "";
+                position: absolute;
+                bottom: -1px;
+                right: -1px;
+                width: 10px;
+                height: 10px;
+                border-bottom: 2px solid #3b82f6;
+                border-right: 2px solid #3b82f6;
+                transition: all 0.3s ease;
+            }
+
+            .tech-border:hover {
+                @apply bg-surface/60 border-primary/50;
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+            }
+
+            /* Custom Scrollbar */
+            ::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+            ::-webkit-scrollbar-track {
+                @apply bg-bg;
+            }
+            ::-webkit-scrollbar-thumb {
+                @apply bg-surfaceHighlight border border-border rounded-sm;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                @apply bg-primary/40;
+            }
+
+            /* Animations */
+            .fade-in-up {
+                animation: fadeInUp 0.6s ease-out forwards;
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            @keyframes fadeInUp {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .config-item {
+                @apply p-4 border border-border/50 bg-surfaceHighlight/30 rounded-sm transition-all duration-300;
+            }
+
+            .config-item:hover {
+                @apply bg-surfaceHighlight/50 border-primary/30;
+            }
+
+            .status-badge {
+                @apply px-2 py-1 rounded text-xs font-mono font-bold;
+            }
+
+            .status-badge.success {
+                @apply bg-success/20 text-success border border-success/30;
+            }
+
+            .status-badge.warning {
+                @apply bg-warning/20 text-warning border border-warning/30;
+            }
+
+            .status-badge.danger {
+                @apply bg-danger/20 text-danger border border-danger/30;
+            }
+        </style>
+    </head>
+    <body class="selection:bg-primary selection:text-white">
+        <!-- Header / Status Bar -->
+        <header
+            class="border-b border-border bg-surface/80 backdrop-blur-md sticky top-0 z-50"
+        >
+            <div
+                class="container mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center"
+            >
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex items-center justify-center w-10 h-10 border border-primary/30 bg-primary/10 rounded-sm"
+                    >
+                        <i class="fa fa-cogs text-primary text-xl"></i>
+                    </div>
+                    <div>
+                        <div
+                            class="text-[10px] font-mono text-primary tracking-widest uppercase mb-0.5"
+                        >
+                            工程化分析
+                        </div>
+                        <h1 class="text-xl font-bold text-white tracking-tight">
+                            工程化质量报告<span
+                                class="text-primary animate-pulse"
+                                >_</span
+                            >
+                        </h1>
+                    </div>
+                </div>
+
+                <div
+                    class="flex items-center gap-6 mt-4 md:mt-0 font-mono text-xs"
+                >
+                    <div class="flex items-center text-textMuted">
+                        <span
+                            class="w-2 h-2 rounded-full bg-success mr-2 shadow-glow-success"
+                        ></span>
+                        系统: 在线
+                    </div>
+                    <div
+                        class="flex items-center px-3 py-1 border border-border rounded-sm bg-surfaceHighlight/50"
+                    >
+                        <i class="fa fa-clock-o text-primary mr-2"></i>
+                        <span id="report-date" class="text-textMain"
+                            >日期: --</span
+                        >
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 py-8">
+            <!-- Dashboard Grid -->
+            <section
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+            >
+                <!-- Overall Score Module -->
+                <div
+                    class="tech-border p-6 rounded-sm fade-in-up"
+                    style="animation-delay: 0.1s"
+                >
+                    <div class="flex justify-between items-start mb-4">
+                        <span
+                            class="text-xs font-mono text-primary tracking-widest"
+                            >工程化得分</span
+                        >
+                        <i class="fa fa-tachometer text-primary/40"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2 mb-2">
+                        <div
+                            class="text-4xl font-bold font-mono text-white tracking-tighter"
+                            id="overall-score"
+                        >
+                            --
+                        </div>
+                        <span class="text-xs text-textMuted">/ 100</span>
+                    </div>
+                    <div
+                        class="h-1 bg-surfaceHighlight w-full rounded-full overflow-hidden"
+                    >
+                        <div
+                            id="overall-score-bar"
+                            class="h-full bg-primary shadow-glow transition-all duration-1000 ease-out"
+                            style="width: 0%"
+                        ></div>
+                    </div>
+                </div>
+
+                <!-- Category Scores -->
+                <div
+                    class="tech-border p-6 rounded-sm fade-in-up"
+                    style="animation-delay: 0.2s"
+                >
+                    <div class="flex justify-between items-start mb-4">
+                        <span
+                            class="text-xs font-mono text-primary tracking-widest"
+                            >类别评分</span
+                        >
+                        <i class="fa fa-bar-chart text-primary/40"></i>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-textMuted font-mono">
+                                <i class="fa fa-code mr-2"></i>代码质量
+                            </span>
+                            <span class="text-success font-bold">100</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-textMuted font-mono">
+                                <i class="fa fa-git mr-2"></i>Git 工作流
+                            </span>
+                            <span class="text-success font-bold">100</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-textMuted font-mono">
+                                <i class="fa fa-cubes mr-2"></i>版本管理
+                            </span>
+                            <span class="text-success font-bold">100</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-textMuted font-mono">
+                                <i class="fa fa-file-text-o mr-2"></i>文档质量
+                            </span>
+                            <span class="text-success font-bold">95</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div
+                    class="tech-border p-6 rounded-sm fade-in-up"
+                    style="animation-delay: 0.3s"
+                >
+                    <div class="flex justify-between items-start mb-4">
+                        <span
+                            class="text-xs font-mono text-primary tracking-widest"
+                            >配置统计</span
+                        >
+                        <i class="fa fa-list-ul text-primary/40"></i>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-textMuted font-mono">
+                                配置项总数
+                            </span>
+                            <span id="total-configs" class="text-white font-bold">--</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-textMuted">
+                                <span
+                                    class="w-2 h-2 rounded-full bg-success inline-block mr-2"
+                                ></span>
+                                完整配置
+                            </span>
+                            <span id="complete-count" class="text-success font-bold">--</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-textMuted">
+                                <span
+                                    class="w-2 h-2 rounded-full bg-warning inline-block mr-2"
+                                ></span>
+                                部分配置
+                            </span>
+                            <span id="partial-count" class="text-warning font-bold">--</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-textMuted">
+                                <span
+                                    class="w-2 h-2 rounded-full bg-danger inline-block mr-2"
+                                ></span>
+                                缺失配置
+                            </span>
+                            <span id="missing-count" class="text-danger font-bold">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tech Stack -->
+                <div
+                    class="tech-border p-6 rounded-sm fade-in-up"
+                    style="animation-delay: 0.4s"
+                >
+                    <div class="flex justify-between items-start mb-4">
+                        <span
+                            class="text-xs font-mono text-primary tracking-widest"
+                            >技术栈</span
+                        >
+                        <i class="fa fa-cubes text-primary/40"></i>
+                    </div>
+                    <div class="space-y-2 font-mono text-xs">
+                        <div class="text-textMain">
+                            <span class="text-primary">></span> Vue 3.5+
+                        </div>
+                        <div class="text-textMain">
+                            <span class="text-primary">></span> TypeScript 5.9+
+                        </div>
+                        <div class="text-textMain">
+                            <span class="text-primary">></span> Vite (rolldown)
+                        </div>
+                        <div class="text-textMain">
+                            <span class="text-primary">></span> Leafer UI 1.10+
+                        </div>
+                        <div class="text-textMain">
+                            <span class="text-primary">></span> Biome 2.3.7
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="grid grid-cols-1 gap-6 mb-8">
+                <div
+                    class="tech-border p-6 rounded-sm fade-in-up"
+                    style="animation-delay: 0.5s"
+                >
+                    <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+                        <span class="text-primary">></span> 类别分布
+                    </h2>
+                    <div class="h-64">
+                        <canvas id="category-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration Details Section -->
+            <section
+                class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-in-up"
+                style="animation-delay: 0.7s"
+            >
+                <!-- Main Config List -->
+                <div class="lg:col-span-2 tech-border p-6 rounded-sm">
+                    <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+                        <span class="text-primary">></span> 配置详情
+                    </h2>
+                    <div class="space-y-4" id="config-list">
+                        <!-- Config Items Generated via JS -->
+                    </div>
+                </div>
+
+                <!-- Legend / Summary -->
+                <div class="tech-border p-6 rounded-sm h-fit">
+                    <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+                        <span class="text-primary">></span> 评分标准
+                    </h2>
+                    <div class="space-y-4 font-mono text-xs">
+                        <div
+                            class="p-3 border border-success/30 bg-success/5 rounded-sm flex items-center gap-3"
+                        >
+                            <div
+                                class="w-3 h-3 bg-success shadow-glow-success"
+                            ></div>
+                            <div>
+                                <div class="font-bold text-success">
+                                    完整 [90-100分]
+                                </div>
+                                <div class="text-textMuted mt-1">
+                                    配置文件存在且规则完善
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="p-3 border border-warning/30 bg-warning/5 rounded-sm flex items-center gap-3"
+                        >
+                            <div class="w-3 h-3 bg-warning"></div>
+                            <div>
+                                <div class="font-bold text-warning">
+                                    部分 [50-89分]
+                                </div>
+                                <div class="text-textMuted mt-1">
+                                    配置存在但不完整
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="p-3 border border-danger/30 bg-danger/5 rounded-sm flex items-center gap-3"
+                        >
+                            <div
+                                class="w-3 h-3 bg-danger shadow-glow-danger"
+                            ></div>
+                            <div>
+                                <div class="font-bold text-danger">
+                                    缺失 [0-49分]
+                                </div>
+                                <div class="text-textMuted mt-1">
+                                    未配置该项功能
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-border border-dashed">
+                        <div
+                            class="text-xs text-textMuted font-mono opacity-60"
+                        >
+                            <div>PROJECT: wl-draw</div>
+                            <div>FRAMEWORK: Vue 3 + TypeScript</div>
+                            <div>BUNDLER: Vite (rolldown)</div>
+                            <div class="mt-2">STATUS: EXCELLENT</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Summary Section -->
+            <section class="mt-8 fade-in-up" style="animation-delay: 0.8s">
+                <div class="tech-border p-6 rounded-sm">
+                    <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+                        <span class="text-primary">></span> 总结与建议
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3
+                                class="text-sm font-bold text-success mb-3 flex items-center gap-2"
+                            >
+                                <i class="fa fa-thumbs-up"></i> 优势
+                            </h3>
+                            <ul
+                                class="text-sm text-textMuted space-y-2 font-mono"
+                            >
+                                <li class="flex items-start gap-2">
+                                    <span class="text-primary">></span>
+                                    <span
+                                        >采用现代化工具链（Biome 替代
+                                        ESLint+Prettier）</span
+                                    >
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-primary">></span>
+                                    <span
+                                        >完整的 Git 工作流配置（Husky +
+                                        lint-staged + Commitlint）</span
+                                    >
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-primary">></span>
+                                    <span>严格的 TypeScript 类型检查配置</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-primary">></span>
+                                    <span>包管理器和 Node.js 版本锁定</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-primary">></span>
+                                    <span>完善的测试配置（Vitest）</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-primary">></span>
+                                    <span>使用 rolldown-vite 构建工具</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3
+                                class="text-sm font-bold text-warning mb-3 flex items-center gap-2"
+                            >
+                                <i class="fa fa-lightbulb-o"></i> 改进建议
+                            </h3>
+                            <ul
+                                class="text-sm text-textMuted space-y-2 font-mono"
+                            >
+                                <li class="flex items-start gap-2">
+                                    <span class="text-warning">!</span>
+                                    <span
+                                        >当前配置已非常完善，建议保持现状</span
+                                    >
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-warning">!</span>
+                                    <span>可考虑添加 CI/CD 自动化检查</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-warning">!</span>
+                                    <span
+                                        >可添加依赖安全审计配置（如
+                                        Dependabot）</span
+                                    >
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-warning">!</span>
+                                    <span
+                                        >建议添加 CONTRIBUTING.md 和
+                                        CHANGELOG.md</span
+                                    >
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="border-t border-border bg-surface mt-12 py-8">
+            <div
+                class="container mx-auto px-4 text-center font-mono text-xs text-textMuted"
+            >
+                <p>工程化.质量分析 &copy; 2025 // 由自动扫描仪生成</p>
+                <p class="mt-2 opacity-50">结束。</p>
+            </div>
+        </footer>
+
+        <script>
+            // 工程化配置数据
+            const engineeringData = {
+                categories: [
+                    {
+                        name: "代码质量",
+                        icon: "fa-code",
+                        configs: [
+                            {
+                                name: "语法校验",
+                                tool: "Biome",
+                                status: "complete",
+                                score: 100,
+                                files: ["biome.json"],
+                                description:
+                                    "使用 Biome 2.3.7 进行代码检查，配置完整",
+                            },
+                            {
+                                name: "代码格式化",
+                                tool: "Biome",
+                                status: "complete",
+                                score: 100,
+                                files: ["biome.json"],
+                                description:
+                                    "Biome 内置格式化功能，统一代码风格",
+                            },
+                        ],
+                    },
+                    {
+                        name: "Git 工作流",
+                        icon: "fa-git",
+                        configs: [
+                            {
+                                name: "提交规范",
+                                tool: "Commitlint",
+                                status: "complete",
+                                score: 100,
+                                files: ["commitlint.config.mjs"],
+                                description:
+                                    "Conventional Commits 规范，10种提交类型",
+                            },
+                            {
+                                name: "Pre-commit Hook",
+                                tool: "Husky",
+                                status: "complete",
+                                score: 100,
+                                files: [".husky/pre-commit"],
+                                description: "提交前自动运行 lint-staged",
+                            },
+                            {
+                                name: "Commit-msg Hook",
+                                tool: "Husky",
+                                status: "complete",
+                                score: 100,
+                                files: [".husky/commit-msg"],
+                                description: "提交信息验证",
+                            },
+                            {
+                                name: "暂存文件检查",
+                                tool: "lint-staged",
+                                status: "complete",
+                                score: 100,
+                                files: ["package.json"],
+                                description: "自动格式化暂存文件",
+                            },
+                        ],
+                    },
+                    {
+                        name: "版本管理",
+                        icon: "fa-cubes",
+                        configs: [
+                            {
+                                name: "Node.js 版本锁定",
+                                tool: ".nvmrc",
+                                status: "complete",
+                                score: 100,
+                                files: [".nvmrc"],
+                                description: "锁定 Node.js v24.4.1",
+                            },
+                            {
+                                name: "包管理器约束",
+                                tool: "engines + packageManager + preinstall",
+                                status: "complete",
+                                score: 100,
+                                files: ["package.json"],
+                                description: "强制使用 pnpm >=8.0.0",
+                            },
+                        ],
+                    },
+                    {
+                        name: "文档质量",
+                        icon: "fa-file-text-o",
+                        configs: [
+                            {
+                                name: "README.md",
+                                tool: "Documentation",
+                                status: "complete",
+                                score: 95,
+                                files: ["README.md"],
+                                description:
+                                    "结构完整、内容详实，包含架构设计说明",
+                            },
+                        ],
+                    },
+                ],
+            };
+
+            // 全局变量
+            let allConfigs = [];
+            let stats = {
+                total: 0,
+                complete: 0,
+                partial: 0,
+                missing: 0,
+                totalScore: 0,
+            };
+
+            // 初始化
+            document.addEventListener("DOMContentLoaded", () => {
+                // 设置日期
+                const now = new Date();
+                document.getElementById("report-date").textContent =
+                    `日期: ${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+                // 收集配置数据
+                collectConfigs();
+                // 计算统计
+                calculateStats();
+                // 渲染配置列表
+                renderConfigList();
+                // 渲染图表
+                initCharts();
+            });
+
+            // 收集配置数据
+            function collectConfigs() {
+                engineeringData.categories.forEach((category) => {
+                    category.configs.forEach((config) => {
+                        allConfigs.push({
+                            ...config,
+                            category: category.name,
+                            categoryIcon: category.icon,
+                        });
+                    });
+                });
+            }
+
+            // 计算统计
+            function calculateStats() {
+                stats.total = allConfigs.length;
+                stats.totalScore = allConfigs.reduce(
+                    (sum, c) => sum + c.score,
+                    0,
+                );
+
+                allConfigs.forEach((config) => {
+                    if (config.status === "complete") stats.complete++;
+                    else if (config.status === "partial") stats.partial++;
+                    else stats.missing++;
+                });
+
+                const overallScore = (stats.totalScore / stats.total).toFixed(
+                    1,
+                );
+
+                // 更新 UI
+                document.getElementById("overall-score").textContent =
+                    overallScore;
+                setTimeout(() => {
+                    document.getElementById("overall-score-bar").style.width =
+                        `${overallScore}%`;
+                }, 300);
+
+                // 更新统计数字
+                document.getElementById("total-configs").textContent = stats.total;
+                document.getElementById("complete-count").textContent = stats.complete;
+                document.getElementById("partial-count").textContent = stats.partial;
+                document.getElementById("missing-count").textContent = stats.missing;
+            }
+
+            // 渲染配置列表
+            function renderConfigList() {
+                const container = document.getElementById("config-list");
+                let html = "";
+
+                engineeringData.categories.forEach((category) => {
+                    html += `
+            <div class="mb-6">
+              <h3 class="text-sm font-bold text-primary mb-3 flex items-center gap-2">
+                <i class="fa ${category.icon}"></i>
+                ${category.name}
+              </h3>
+                <div class="space-y-2">
+          `;
+
+                    category.configs.forEach((config) => {
+                        const statusClass =
+                            config.status === "complete"
+                                ? "success"
+                                : config.status === "partial"
+                                  ? "warning"
+                                  : "danger";
+                        const statusText =
+                            config.status === "complete"
+                                ? "完整"
+                                : config.status === "partial"
+                                  ? "部分"
+                                  : "缺失";
+                        const scoreColor =
+                            config.score >= 90
+                                ? "text-success"
+                                : config.score >= 50
+                                  ? "text-warning"
+                                  : "text-danger";
+
+                        html += `
+              <div class="config-item">
+                <div class="flex items-start justify-between mb-2">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="text-textMain font-bold text-sm">${config.name}</span>
+                      <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="text-xs text-textMuted font-mono">${config.tool}</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-lg font-bold font-mono ${scoreColor}">${config.score}</div>
+                    <div class="text-xs text-textMuted">/ 100</div>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <div class="text-textMuted">
+                    <i class="fa fa-file-code-o mr-1"></i>
+                    ${Array.isArray(config.files) ? config.files.join(", ") : config.files}
+                  </div>
+                  <div class="text-textMuted">${config.description}</div>
+                </div>
+              </div>
+            `;
+                    });
+
+                    html += `
+                </div>
+              </div>
+            `;
+                });
+
+                container.innerHTML = html;
+            }
+
+            // 初始化图表
+            function initCharts() {
+                Chart.defaults.color = "#9CA3AF";
+                Chart.defaults.font.family = '"JetBrains Mono", monospace';
+
+                // 类别分布图
+                const categoryCtx = document
+                    .getElementById("category-chart")
+                    .getContext("2d");
+                const categoryData = engineeringData.categories.map((cat) => ({
+                    name: cat.name,
+                    count: cat.configs.length,
+                    avgScore: (
+                        cat.configs.reduce((sum, c) => sum + c.score, 0) /
+                        cat.configs.length
+                    ).toFixed(1),
+                }));
+
+                new Chart(categoryCtx, {
+                    type: "bar",
+                    data: {
+                        labels: categoryData.map((d) => d.name),
+                        datasets: [
+                            {
+                                label: "平均分",
+                                data: categoryData.map((d) => d.avgScore),
+                                backgroundColor: "rgba(59, 130, 246, 0.6)",
+                                borderColor: "#3B82F6",
+                                borderWidth: 1,
+                                barThickness: 40,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: {
+                                    color: "rgba(55, 65, 81, 0.3)",
+                                    drawBorder: false,
+                                },
+                                ticks: { color: "#9CA3AF" },
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: "#9CA3AF" },
+                            },
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: "rgba(17, 24, 39, 0.9)",
+                                titleColor: "#fff",
+                                bodyColor: "#fff",
+                                borderColor: "#374151",
+                                borderWidth: 1,
+                                padding: 10,
+                                displayColors: false,
+                                callbacks: {
+                                    title: (items) => items[0].label,
+                                    body: (item) => `平均分: ${item.raw} / 100`,
+                                },
+                            },
+                        },
+                    },
+                });
+            }
+        </script>
+    </body>
+</html>

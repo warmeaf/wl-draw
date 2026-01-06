@@ -115,38 +115,6 @@
         box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
       }
 
-      /* Scanline Effect */
-      .scanline {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: rgba(59, 130, 246, 0.5);
-        opacity: 0.6;
-        animation: scan 6s linear infinite;
-        pointer-events: none;
-        z-index: 9999;
-        box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
-      }
-
-      @keyframes scan {
-        0% {
-          top: -10%;
-          opacity: 0;
-        }
-        10% {
-          opacity: 1;
-        }
-        90% {
-          opacity: 1;
-        }
-        100% {
-          top: 110%;
-          opacity: 0;
-        }
-      }
-
       /* Tree Lines */
       .tree-line {
         @apply border-l border-border ml-[11px] pl-4;
@@ -183,7 +151,6 @@
     </style>
   </head>
   <body class="selection:bg-primary selection:text-white">
-    <div class="scanline"></div>
 
     <!-- Header / Status Bar -->
     <header

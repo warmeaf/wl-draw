@@ -90,9 +90,9 @@ license: Complete terms in LICENSE.txt
 
 ### Phase 3: 生成报告
 
-1. 创建输出目录 `.engineering/`，如果不存在
+1. 创建输出目录 `.cqm/engineering/`，如果不存在
 2. 基于模板生成 HTML 报告
-3. 输出文件：`.engineering/engineering-report.html`
+3. 输出文件：`.cqm/engineering/engineering-report.html`
 
 ## 报告规范
 

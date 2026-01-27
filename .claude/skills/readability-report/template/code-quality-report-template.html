@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>可读性分析报告</title>
+    <title>质量分析报告</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
@@ -172,7 +172,7 @@
               系统分析
             </div>
             <h1 class="text-xl font-bold text-white tracking-tight">
-              代码可读性报告<span class="text-primary animate-pulse">_</span>
+              代码质量报告<span class="text-primary animate-pulse">_</span>
             </h1>
           </div>
         </div>
@@ -396,7 +396,7 @@
       <div
         class="container mx-auto px-4 text-center font-mono text-xs text-textMuted"
       >
-        <p>系统.可读性分析 &copy; 2025</p>
+        <p>系统.质量分析 &copy; 2025</p>
         <p class="mt-2 opacity-50">结束。</p>
       </div>
     </footer>
@@ -409,81 +409,81 @@
           children: {
             'App.vue': {
               type: 'file',
-              readability: 95,
+              code_quality: 95,
             },
             'main.ts': {
               type: 'file',
-              readability: 100,
+              code_quality: 100,
             },
             'style.css': {
               type: 'file',
-              readability: 100,
+              code_quality: 100,
             },
             components: {
               type: 'directory',
               children: {
                 'Canvas.vue': {
                   type: 'file',
-                  readability: 95,
+                  code_quality: 95,
                 },
                 'ElementStyleConfig.vue': {
                   type: 'file',
-                  readability: 92,
+                  code_quality: 92,
                 },
                 'IconRenderer.vue': {
                   type: 'file',
-                  readability: 92,
+                  code_quality: 92,
                 },
                 'MenuDropdown.vue': {
                   type: 'file',
-                  readability: 90,
+                  code_quality: 90,
                 },
                 'Toolbar.vue': {
                   type: 'file',
-                  readability: 98,
+                  code_quality: 98,
                 },
                 'ToolSelector.vue': {
                   type: 'file',
-                  readability: 95,
+                  code_quality: 95,
                 },
                 'UndoRedoButtons.vue': {
                   type: 'file',
-                  readability: 92,
+                  code_quality: 92,
                 },
                 'ZoomControls.vue': {
                   type: 'file',
-                  readability: 93,
+                  code_quality: 93,
                 },
                 common: {
                   type: 'directory',
                   children: {
                     'ArrowConfigButtons.vue': {
                       type: 'file',
-                      readability: 95,
+                      code_quality: 95,
                     },
                     'ArrowPicker.vue': {
                       type: 'file',
-                      readability: 95,
+                      code_quality: 95,
                     },
                     'ColorPicker.vue': {
                       type: 'file',
-                      readability: 92,
+                      code_quality: 92,
                     },
                     'StrokeColorButton.vue': {
                       type: 'file',
-                      readability: 98,
+                      code_quality: 98,
                     },
                     'StrokeConfig.vue': {
                       type: 'file',
-                      readability: 93,
+                      code_quality: 93,
                     },
                     'StrokeConfigPopover.vue': {
                       type: 'file',
-                      readability: 96,
+                      code_quality: 96,
                     },
                     'SvgIcon.vue': {
                       type: 'file',
-                      readability: 90,
+                      code_quality: 90,
                     },
                   },
                 },
@@ -523,7 +523,7 @@
             allFiles.push({
               path: currentPath,
               name,
-              readability: item.readability,
+              code_quality: item.code_quality,
             })
           } else if (item.type === 'directory' && item.children) {
             collectAllFiles(item.children, currentPath)
@@ -532,7 +532,7 @@
             )
             if (dirFiles.length > 0) {
               const avgScore =
-                dirFiles.reduce((sum, file) => sum + file.readability, 0) /
+                dirFiles.reduce((sum, file) => sum + file.code_quality, 0) /
                 dirFiles.length
               directoryScores[currentPath] = {
                 name,
@@ -546,7 +546,7 @@
 
       // Stats Logic
       function calculateStatistics() {
-        const scores = allFiles.map((file) => file.readability)
+        const scores = allFiles.map((file) => file.code_quality)
         const totalFiles = scores.length
         const avgScore =
           scores.reduce((sum, score) => sum + score, 0) / totalFiles
@@ -620,7 +620,7 @@
             }
           } else if (item.type === 'file') {
             // File Node
-            const score = item.readability
+            const score = item.code_quality
             let scoreColor = 'text-success'
             let scoreBg = 'bg-success'
 
@@ -671,7 +671,7 @@
         ]
 
         allFiles.forEach((file) => {
-          const score = file.readability
+          const score = file.code_quality
           if (score >= 80 && score < 90) {
             scoreRanges[0].count++
           } else if (score >= 90 && score < 95) {

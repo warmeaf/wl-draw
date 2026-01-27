@@ -1,47 +1,45 @@
 ---
-name: readability-report
-description: 生成可读性报告。当用户请求为项目源代码生成可读性报告时，使用此功能。输出名为 readability-report.html 的单页 HTML 文件作为可读性报告，该报告集成了 Node.js 脚本和 HTML 模板。
+name: code-quality-report
+description: 生成代码质量报告。当用户请求为项目源代码生成质量报告时，使用此功能。输出名为 code-quality-report.html 的单页 HTML 文件作为质量报告，该报告集成了 Node.js 脚本和 HTML 模板。
 license: Complete terms in LICENSE.txt
 ---
 
-# 生成代码可读性报告
+# 生成代码质量报告
 
-## 依赖的 Skill
+## 质量判断和优化标准
 
-- 依赖`code-readability`Skill 作为可读性判断和优化标准
-- 生成报告前检查依赖 Skill 是否存在，如果不存在则询问是否安装该 Skill 依赖：npx skills add baz-scm/awesome-reviewers，如果用户同意则继续，如果用户不同意则退出
+- 依赖`\reference\code-simplifier.md`作为质量判断和优化标准
 
 ## 生成步骤
 
 1. **确定路径和输出目录**
    - 确定源码文件夹路径（通常为`src/`）
-   - 确定报告输出文件夹：默认为项目根目录下的`.cqm/readability/``
+   - 确定报告输出文件夹：默认为项目根目录下的`.cqm/code-quality-report/``
    - 如果输出文件夹不存在，则创建该目录
 
 2. **初始化文件结构数据**
-   - 执行脚本 node 脚本`generate-file-structure.js`，第一个参数是`源码文件夹路径`，第二个参数是`${报告输出文件夹}/readability.json`
-   - 脚本会在输出文件夹下生成 `readability.json` 文件
-   - 该 JSON 文件包含源码目录结构，每个代码文件的`readability`字段初始值为`0`
+   - 执行脚本 node 脚本`generate-file-structure.js`，第一个参数是`源码文件夹路径`，第二个参数是`${报告输出文件夹}/code-quality-report.json`
+   - 脚本会在输出文件夹下生成 `code-quality-report.json` 文件
+   - 该 JSON 文件包含源码目录结构，每个代码文件的`code_quality`字段初始值为`0`
 
-3. **评估代码可读性**
-   - 基于`code-readability`Skill 作为可读性评估标准
-   - 读取`${报告输出文件夹}/readability.json`获取所有代码文件列表
+3. **评估代码质量**
+   - 读取`${报告输出文件夹}/code-quality-report.json`获取所有代码文件列表
    - 对于 JSON 中的每个代码文件：
      - 读取文件内容
-     - 根据`code-readability`Skill 的标准，运用 AI 能力评估其可读性
-     - 每个代码文件的可读性都是独立的，可并行处理
-     - 将评估结果（0-100 的分数）更新到该文件对应的 `readability` 字段
-   - 将更新后的数据写回 `readability.json`
+     - 根据判断标准，运用 AI 能力评估其质量
+     - 每个代码文件的质量指标都是独立的，可并行处理
+     - 将评估结果（0-100 的分数）更新到该文件对应的 `code_quality` 字段
+     - 将更新后的数据写回 `code-quality-report.json`
 
 4. **生成 HTML 报告**
-   - 读取模板文件：`readability-report-template.html`
-   - 读取最终的`readability.json`数据
+   - 读取模板文件：`code-quality-report-template.html`
+   - 读取最终的`code-quality-report.json`数据
    - 在模板文件中找到`rawData`变量（通常在 JavaScript 代码中）
-   - 将`readability.json`的内容赋值给`rawData`变量
-   - 将更新后的模板内容保存为`${报告输出文件夹}/readability-report.html`
+   - 将`code-quality-report.json`的内容赋值给`rawData`变量
+   - 将更新后的模板内容保存为`${报告输出文件夹}/code-quality-report.html`
 
 5. **完成**
-   - 最终报告文件位于`${报告输出文件夹}/readability-report.html`
-   - 如果模板文件`readability-report-template.html`中有更改则还原
+   - 最终报告文件位于`${报告输出文件夹}/code-quality-report.html`
+   - 如果模板文件`code-quality-report-template.html`中有更改则还原
 
-最后如果存在得分低于 90 分的文件，则询问是否进行优化，优化时使用`code-readability`Skill
+最后如果存在得分低于 90 分的文件，则询问是否进行优化

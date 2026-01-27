@@ -30,7 +30,7 @@ function generateFileStructure(dirPath) {
       } else if (file.isFile()) {
         dirNode.children[file.name] = {
           type: 'file',
-          readability: 0,
+          code_quality: 0,
         }
       }
     }

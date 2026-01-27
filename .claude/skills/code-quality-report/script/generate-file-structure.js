@@ -31,6 +31,7 @@ function generateFileStructure(dirPath) {
         dirNode.children[file.name] = {
           type: 'file',
           code_quality: 0,
+          description: '这是一个代码质量分析描述',
         }
       }
     }

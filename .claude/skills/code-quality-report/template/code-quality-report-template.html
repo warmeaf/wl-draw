@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
@@ -71,13 +71,14 @@
 
       body {
         @apply bg-bg text-textMain font-sans overflow-x-hidden min-h-screen;
-        background-image: linear-gradient(
-            rgba(11, 15, 25, 0.93),
-            rgba(11, 15, 25, 0.93)
-          ),
+        background-image:
+          linear-gradient(rgba(11, 15, 25, 0.93), rgba(11, 15, 25, 0.93)),
           linear-gradient(to right, #1f2937 1px, transparent 1px),
           linear-gradient(to bottom, #1f2937 1px, transparent 1px);
-        background-size: 100% 100%, 40px 40px, 40px 40px;
+        background-size:
+          100% 100%,
+          40px 40px,
+          40px 40px;
       }
 
       /* Tech Borders */
@@ -151,7 +152,6 @@
     </style>
   </head>
   <body class="selection:bg-primary selection:text-white">
-
     <!-- Header / Status Bar -->
     <header
       class="border-b border-border bg-surface/80 backdrop-blur-md sticky top-0 z-50"
@@ -406,84 +406,105 @@
       const rawData = {
         src: {
           type: 'directory',
+          description: '源代码目录',
           children: {
             'App.vue': {
               type: 'file',
               code_quality: 95,
+              description: '主应用组件',
             },
             'main.ts': {
               type: 'file',
               code_quality: 100,
+              description: '应用入口文件',
             },
             'style.css': {
               type: 'file',
               code_quality: 100,
+              description: '全局样式文件',
             },
             components: {
               type: 'directory',
+              description: 'Vue组件目录',
               children: {
                 'Canvas.vue': {
                   type: 'file',
                   code_quality: 95,
+                  description: '画布组件',
                 },
                 'ElementStyleConfig.vue': {
                   type: 'file',
                   code_quality: 92,
+                  description: '元素样式配置组件',
                 },
                 'IconRenderer.vue': {
                   type: 'file',
                   code_quality: 92,
+                  description: '图标渲染组件',
                 },
                 'MenuDropdown.vue': {
                   type: 'file',
                   code_quality: 90,
+                  description: '菜单下拉组件',
                 },
                 'Toolbar.vue': {
                   type: 'file',
                   code_quality: 98,
+                  description: '工具栏组件',
                 },
                 'ToolSelector.vue': {
                   type: 'file',
                   code_quality: 95,
+                  description: '工具选择器组件',
                 },
                 'UndoRedoButtons.vue': {
                   type: 'file',
                   code_quality: 92,
+                  description: '撤销重做按钮组件',
                 },
                 'ZoomControls.vue': {
                   type: 'file',
                   code_quality: 93,
+                  description: '缩放控制组件',
                 },
                 common: {
                   type: 'directory',
+                  description: '通用组件目录',
                   children: {
                     'ArrowConfigButtons.vue': {
                       type: 'file',
                       code_quality: 95,
+                      description: '箭头配置按钮组件',
                     },
                     'ArrowPicker.vue': {
                       type: 'file',
                       code_quality: 95,
+                      description: '箭头选择器组件',
                     },
                     'ColorPicker.vue': {
                       type: 'file',
                       code_quality: 92,
+                      description: '颜色选择器组件',
                     },
                     'StrokeColorButton.vue': {
                       type: 'file',
                       code_quality: 98,
+                      description: '描边颜色按钮组件',
                     },
                     'StrokeConfig.vue': {
                       type: 'file',
                       code_quality: 93,
+                      description: '描边配置组件',
                     },
                     'StrokeConfigPopover.vue': {
                       type: 'file',
                       code_quality: 96,
+                      description: '描边配置弹出框组件',
                     },
                     'SvgIcon.vue': {
                       type: 'file',
                       code_quality: 90,
+                      description: 'SVG图标组件',
                     },
                   },
                 },
@@ -499,15 +520,29 @@
 
       // Init
       document.addEventListener('DOMContentLoaded', () => {
+        // 动态获取根目录
+        const rootKeys = Object.keys(rawData).filter(
+          (key) => rawData[key].type === 'directory',
+        )
+
+        if (rootKeys.length === 0) {
+          console.error('No root directories found in rawData')
+          return
+        }
+
+        // 使用第一个根目录作为主目录
+        const mainRootKey = rootKeys[0]
+        const mainRoot = rawData[mainRootKey]
+
         // Collect
-        collectAllFiles(rawData.src.children, 'src')
+        collectAllFiles(mainRoot.children, mainRootKey)
         // Calculate
         calculateStatistics()
         // Render Tree
         generateFileTree(
-          rawData.src.children,
+          mainRoot.children,
           document.getElementById('file-tree-root'),
-          'src'
+          mainRootKey,
         )
         // Charts
         initCharts()
@@ -528,7 +563,7 @@
           } else if (item.type === 'directory' && item.children) {
             collectAllFiles(item.children, currentPath)
             const dirFiles = allFiles.filter((file) =>
-              file.path.startsWith(currentPath + '/')
+              file.path.startsWith(currentPath + '/'),
             )
             if (dirFiles.length > 0) {
               const avgScore =
@@ -553,10 +588,10 @@
         const maxScore = Math.max(...scores)
         const minScore = Math.min(...scores)
         const maxFilesCount = scores.filter(
-          (score) => score === maxScore
+          (score) => score === maxScore,
         ).length
         const minFilesCount = scores.filter(
-          (score) => score === minScore
+          (score) => score === minScore,
         ).length
 
         // Update UI with animation triggers if needed
@@ -567,13 +602,11 @@
 
         document.getElementById('total-files').textContent = totalFiles
         document.getElementById('max-score').textContent = maxScore
-        document.getElementById(
-          'max-files-count'
-        ).textContent = `// 发现 ${maxFilesCount} 个文件`
+        document.getElementById('max-files-count').textContent =
+          `// 发现 ${maxFilesCount} 个文件`
         document.getElementById('min-score').textContent = minScore
-        document.getElementById(
-          'min-files-count'
-        ).textContent = `// 标记 ${minFilesCount} 个文件`
+        document.getElementById('min-files-count').textContent =
+          `// 标记 ${minFilesCount} 个文件`
       }
 
       // File Tree Render (Updated for New UI)
@@ -592,6 +625,7 @@
                 <span class="text-primary/50 mr-2 w-4 text-center toggle-icon">[+]</span>
                 <i class="fa fa-folder-o text-warning mr-2 group-hover:text-warning/80"></i>
                 <span class="text-textMain group-hover:text-primary transition-colors">${name}</span>
+                ${item.description ? `<span class="text-textMuted text-xs ml-2 opacity-70">- ${item.description}</span>` : ''}
             `
 
             const toggleIcon = dirNode.querySelector('.toggle-icon')
@@ -638,7 +672,10 @@
             fileNode.innerHTML = `
                 <div class="flex items-center">
                     <i class="fa fa-file-code-o text-textMuted mr-3 text-xs opacity-50"></i>
-                    <span class="text-textMuted group-hover:text-textMain transition-colors">${name}</span>
+                    <div class="flex-1">
+                        <span class="text-textMuted group-hover:text-textMain transition-colors">${name}</span>
+                        ${item.description ? `<div class="text-textMuted text-xs opacity-70 mt-1">${item.description}</div>` : ''}
+                    </div>
                 </div>
                 <div class="flex items-center gap-3">
                     <div class="w-16 h-1 bg-surfaceHighlight rounded-full overflow-hidden">

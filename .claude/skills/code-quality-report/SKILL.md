@@ -35,7 +35,7 @@ license: Complete terms in LICENSE.txt
    - 读取模板文件：`code-quality-report-template.html`
    - 读取最终的`code-quality-report.json`数据
    - 在模板文件中找到`rawData`变量（通常在 JavaScript 代码中）
-   - 将`code-quality-report.json`的内容转为js对象后赋值给`rawData`变量
+   - 将`code-quality-report.json`的内容直接赋值给`rawData`变量
    - 将更新后的模板内容保存为`${报告输出文件夹}/code-quality-report.html`
 
 5. **收尾**

@@ -162,6 +162,16 @@ const transformStyle = computed(() => {
   }
   return {}
 })
+
+const shapeFill = computed(() => {
+  const shape = currentConfig.value.shape
+  return shape && 'fill' in shape && shape.fill ? props.color : 'none'
+})
+
+const shapeStroke = computed(() => {
+  const shape = currentConfig.value.shape
+  return shape && 'fill' in shape && shape.fill ? 'none' : undefined
+})
 </script>
 
 <template>
@@ -192,16 +202,16 @@ const transformStyle = computed(() => {
       <path
         v-else-if="currentConfig.shape.type === 'path'"
         :d="currentConfig.shape.data"
-        :fill="currentConfig.shape.fill ? color : 'none'"
-        :stroke="currentConfig.shape.fill ? 'none' : undefined"
+        :fill="shapeFill"
+        :stroke="shapeStroke"
       />
       <circle
         v-else-if="currentConfig.shape.type === 'circle'"
         :cx="currentConfig.shape.data.cx"
         :cy="currentConfig.shape.data.cy"
         :r="currentConfig.shape.data.r"
-        :fill="currentConfig.shape.fill ? color : 'none'"
-        :stroke="currentConfig.shape.fill ? 'none' : undefined"
+        :fill="shapeFill"
+        :stroke="shapeStroke"
       />
       <rect
         v-else-if="currentConfig.shape.type === 'rect'"
@@ -209,8 +219,8 @@ const transformStyle = computed(() => {
         :y="currentConfig.shape.data.y"
         :width="currentConfig.shape.data.width"
         :height="currentConfig.shape.data.height"
-        :fill="currentConfig.shape.fill ? color : 'none'"
-        :stroke="currentConfig.shape.fill ? 'none' : undefined"
+        :fill="shapeFill"
+        :stroke="shapeStroke"
       />
       <line
         v-else-if="currentConfig.shape.type === 'line'"

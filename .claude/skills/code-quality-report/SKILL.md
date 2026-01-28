@@ -8,7 +8,7 @@ license: Complete terms in LICENSE.txt
 
 ## 质量判断和优化标准
 
-- 依赖`\reference\code-simplifier.md`作为质量判断和优化标准
+- 依赖`\reference\code-quality-standard.md`作为质量判断和优化标准
 
 ## 生成步骤
 
@@ -27,7 +27,7 @@ license: Complete terms in LICENSE.txt
    - 对于 JSON 中的每个代码文件：
      - 读取文件内容
      - 根据判断标准，运用 AI 能力评估其质量
-     - 每个代码文件的质量指标都是独立的，可并行处理
+     - 每个代码文件的质量指标都是独立的，可使用多个子 Agent 并行处理
      - 将评估结果（0-100 的分数）更新到该文件对应的 `code_quality` 字段
      - 将更新后的数据写回 `code-quality-report.json`
 
@@ -38,8 +38,9 @@ license: Complete terms in LICENSE.txt
    - 将`code-quality-report.json`的内容转为js对象后赋值给`rawData`变量
    - 将更新后的模板内容保存为`${报告输出文件夹}/code-quality-report.html`
 
-5. **完成**
+5. **收尾**
    - 最终报告文件位于`${报告输出文件夹}/code-quality-report.html`
    - 如果模板文件`code-quality-report-template.html`中有更改则还原
 
-最后如果存在得分低于 90 分的文件，则询问是否进行优化
+6. **优化**
+   - 最后如果存在得分低于 90 分的文件，则询问是否进行优化

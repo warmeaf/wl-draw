@@ -137,15 +137,17 @@ function openGitHub() {
   window.open(GITHUB_URL, '_blank')
 }
 
+const actionMap: Record<string, () => void> = {
+  [EXPORT_OPTION_KEYS.PNG]: () => exportImage('png'),
+  [EXPORT_OPTION_KEYS.JPG]: () => exportImage('jpg'),
+  [EXPORT_OPTION_KEYS.JSON]: exportJSON,
+  [EXPORT_OPTION_KEYS.GITHUB]: openGitHub,
+}
+
 function handleSelect(key: string) {
-  if (key === EXPORT_OPTION_KEYS.PNG) {
-    exportImage('png')
-  } else if (key === EXPORT_OPTION_KEYS.JPG) {
-    exportImage('jpg')
-  } else if (key === EXPORT_OPTION_KEYS.JSON) {
-    exportJSON()
-  } else if (key === EXPORT_OPTION_KEYS.GITHUB) {
-    openGitHub()
+  const action = actionMap[key]
+  if (action) {
+    action()
   }
 }
 </script>

@@ -12,28 +12,28 @@ export function useZoomTool(
 ) {
   const store = useCanvasStore()
 
-  function zoomIn(step = canvasConfig.zoom.step) {
-    store.updateZoom(step)
+  function hideElementPopoverIfNeeded() {
     if (elementPopover?.showPopover.value) {
       elementPopover.hidePopover()
     }
+  }
+
+  function zoomIn(step = canvasConfig.zoom.step) {
+    store.updateZoom(step)
+    hideElementPopoverIfNeeded()
   }
 
   function zoomOut(step = canvasConfig.zoom.step) {
     store.updateZoom(-step)
-    if (elementPopover?.showPopover.value) {
-      elementPopover.hidePopover()
-    }
+    hideElementPopoverIfNeeded()
   }
 
   function resetZoom() {
     store.setZoom(canvasConfig.zoom.default)
-    if (elementPopover?.showPopover.value) {
-      elementPopover.hidePopover()
-    }
+    hideElementPopoverIfNeeded()
   }
 
-  function handleZoomKeyboardEvent(e: KeyboardEvent) {
+  function preventBrowserZoomKeyboardShortcuts(e: KeyboardEvent) {
     const target = e.target as HTMLElement
     const isInputFocused =
       target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
@@ -54,9 +54,9 @@ export function useZoomTool(
   }
 
   function setupZoomKeyboardPrevention() {
-    document.addEventListener('keydown', handleZoomKeyboardEvent, true)
+    document.addEventListener('keydown', preventBrowserZoomKeyboardShortcuts, true)
     return () => {
-      document.removeEventListener('keydown', handleZoomKeyboardEvent, true)
+      document.removeEventListener('keydown', preventBrowserZoomKeyboardShortcuts, true)
     }
   }
 

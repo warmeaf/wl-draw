@@ -8,6 +8,8 @@ import { TOOL_TYPES } from '@/constants'
 import type { useCanvasStore } from '@/stores/canvas'
 import type { Tree } from '@/types'
 
+const DEFAULT_TEXT_CONTENT = '双击编辑文本'
+
 export function useTextTool(tree: Tree, store: ReturnType<typeof useCanvasStore>) {
   function handleTap(e: PointerEvent) {
     if (!tree) return
@@ -16,7 +18,7 @@ export function useTextTool(tree: Tree, store: ReturnType<typeof useCanvasStore>
     const text = new Text({
       x: point.x,
       y: point.y,
-      text: '双击编辑文本',
+      text: DEFAULT_TEXT_CONTENT,
       fontSize: store.fontSize,
       fill: store.textColor,
       editable: true,

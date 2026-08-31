@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "gh-axi": {
+      "source": "kunchenguid/gh-axi",
+      "sourceType": "github",
+      "skillPath": "skills/gh-axi/SKILL.md",
+      "computedHash": "82d5b24388772c0ba8d2e86ecf302cc6631afe730a27fa43ed86cefed528958a"
+    },
     "lavish": {
       "source": "kunchenguid/lavish-axi",
       "sourceType": "github",
